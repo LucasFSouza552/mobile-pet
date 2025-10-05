@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-import ProfileScreen from './src/views/screens/ProfileScreen';
+import ProfileScreen from './src/views/screens/splash';
 
 export default function App() {
   console.log("INICIO")
