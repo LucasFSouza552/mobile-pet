@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './src/views/screens/splash';
 import WelcomeScreen from './src/views/screens/welcome';
+import LoginScreen from './src/views/screens/login';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,6 +17,7 @@ export default function App() {
       >
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
       </Stack.Navigator>
       <StatusBar style="auto" />
     </NavigationContainer>
