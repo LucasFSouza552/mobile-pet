@@ -1,22 +1,23 @@
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
-import ProfileScreen from './src/views/screens/splash';
+import SplashScreen from './src/views/screens/splash';
+import WelcomeScreen from './src/views/screens/welcome';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
-  console.log("INICIO")
   return (
-    <View style={styles.container}>
-      <ProfileScreen />
+    <NavigationContainer>
+      <Stack.Navigator 
+        initialRouteName="Splash"
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
+      </Stack.Navigator>
       <StatusBar style="auto" />
-    </View>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

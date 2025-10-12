@@ -24,5 +24,3 @@ export const splashStyles = StyleSheet.create({
     marginTop: height * 0.01,
   },
 });
-
-
