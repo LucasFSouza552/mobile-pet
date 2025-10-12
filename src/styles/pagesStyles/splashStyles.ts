@@ -1,4 +1,6 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Dimensions } from 'react-native';
+
+const { width, height } = Dimensions.get('window');
 
 export const splashStyles = StyleSheet.create({
   container: {
@@ -6,16 +8,20 @@ export const splashStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
-    gap: 16,
+    paddingHorizontal: 20,
   },
   logo: {
-    width: 180,
-    height: 180,
-    marginBottom: 12,
+    width: width * 0.4,
+    height: width * 0.4,
+    maxWidth: 200,
+    minWidth: 120,
+    marginBottom: height * 0.02,
   },
   title: {
-    fontSize: 16,
-    color: 'B648A0',
+    fontSize: width * 0.04,
+    color: '#B648A0',
+    fontWeight: '600',
+    marginTop: height * 0.01,
   },
 });
 
