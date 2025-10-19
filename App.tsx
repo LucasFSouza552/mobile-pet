@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar';
 import SplashScreen from './src/views/screens/splash';
 import WelcomeScreen from './src/views/screens/welcome';
 import LoginScreen from './src/views/screens/login';
+import RegisterScreen from './src/views/screens/register';
+import RegisterFormScreen from './src/views/screens/registerForm';
 
 
 const Stack = createNativeStackNavigator();
@@ -19,6 +21,8 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
       </Stack.Navigator>
       <StatusBar style="auto" hidden />
     </NavigationContainer>

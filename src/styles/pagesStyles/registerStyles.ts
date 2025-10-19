@@ -2,7 +2,7 @@ import { StyleSheet, Dimensions } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 
-export const loginStyles = StyleSheet.create({
+export const registerStyles = StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -60,19 +60,44 @@ export const loginStyles = StyleSheet.create({
     marginBottom: height * 0.025,
     opacity: 0.8,
   },
-  inputContainer: {
+  selectionContainer: {
+    marginBottom: height * 0.03,
+  },
+  selectionTitle: {
+    fontSize: width * 0.04,
+    color: '#ffffff',
+    textAlign: 'center',
+    marginBottom: height * 0.02,
+    fontWeight: '500',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: height * 0.02,
   },
-  input: {
+  selectionButton: {
+    flex: 1,
     backgroundColor: '#ffffff',
     borderRadius: width * 0.03,
-    paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.015,
+    alignItems: 'center',
+    marginHorizontal: width * 0.01,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selectionButtonActive: {
+    backgroundColor: '#B648A0',
+    borderColor: '#B648A0',
+  },
+  selectionButtonText: {
     fontSize: width * 0.04,
-    marginBottom: height * 0.015,
+    fontWeight: '600',
     color: '#333333',
   },
-  loginButton: {
+  selectionButtonTextActive: {
+    color: '#ffffff',
+  },
+  continueButton: {
     backgroundColor: '#B648A0',
     borderRadius: width * 0.03,
     paddingVertical: height * 0.015,
@@ -87,19 +112,23 @@ export const loginStyles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-  loginButtonText: {
+  continueButtonDisabled: {
+    backgroundColor: '#666666',
+    shadowColor: '#666666',
+  },
+  continueButtonText: {
     color: '#ffffff',
     fontSize: width * 0.05,
     fontWeight: '600',
   },
-  registerLink: {
+  backLink: {
     alignItems: 'center',
   },
-  registerText: {
+  backText: {
     color: '#ffffff',
     fontSize: width * 0.04,
   },
-  registerLinkText: {
+  backLinkText: {
     color: '#B648A0',
     fontWeight: '600',
   },

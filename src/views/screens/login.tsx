@@ -74,10 +74,6 @@ export default function Login({ navigation }: any) {
         </View>
       </TouchableWithoutFeedback>
       </SafeAreaView>
-      
-      <View style={styles.footer}>
-        <View style={styles.mountainCurve} />
-      </View>
     </View>
   );
 }
