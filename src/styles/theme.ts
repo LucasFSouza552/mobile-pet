@@ -7,17 +7,26 @@ export const useTheme = () => {
 
   const BASE_WIDTH = 375;
   const BASE_HEIGHT = 812;
+  const scale = (size: number) => {
+    const factor = width / BASE_WIDTH;
+    return size * Math.min(factor, 1.1);
+  };
 
-  const scale = (size: number) => (width / BASE_WIDTH) * size;
-  const verticalScale = (size: number) => (height / BASE_HEIGHT) * size;
+  const verticalScale = (size: number) => {
+    const factor = height / BASE_HEIGHT;
+    return size * Math.min(factor, 1.1);
+  };
 
-  // TODO: Definir as cores baseado no tema
   const COLORS = {
-    primary: '#B648A0',
-    secondary: '#ffffff',
-    text: '#333333',
     textShadow: 'rgba(255, 255, 255, 0.8)',
     border: 'rgba(255, 255, 255, 0.2)',
+    bg: "#fff",
+    text: "#000",
+    primary: "#B648A0",
+    secondary: "#363135",
+    tertiary: "#61475C",
+    quarternary: "#332630",
+    quinary: "#4A3A46"
   };
 
   const SPACING = {
