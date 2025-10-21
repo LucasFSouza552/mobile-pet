@@ -1,8 +1,7 @@
 import { StyleSheet } from "react-native";
-import { useTheme } from "../../styles/theme";
-export const buttonStyles = (type: "primary" | "secondary" | "tertiary") => {
-    const { COLORS, scale, verticalScale, FONT_SIZE } = useTheme();
-
+import { useTheme } from "../../context/ThemeContext";
+export function buttonStyles(type: "primary" | "secondary" | "tertiary") {
+    const { scale, verticalScale, FONT_SIZE, COLORS } = useTheme();
     return StyleSheet.create({
         Button: {
             backgroundColor: COLORS[type],
@@ -10,6 +9,7 @@ export const buttonStyles = (type: "primary" | "secondary" | "tertiary") => {
             borderRadius: scale(10),
             alignItems: 'center',
             elevation: 4,
+
         },
         Text: {
             color: '#ffffff',

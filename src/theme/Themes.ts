@@ -1,18 +1,11 @@
-export type Theme = {
-  colors: {
-    bg: string;
-    text: string;
-    primary: string;
-    secondary: string;
-    tertiary: string;
-    quarternary: string;
-    quinary: string;
-  };
-}
+import { MD3LightTheme as LightTheme, MD3DarkTheme as DarkTheme } from "react-native-paper";
 
-
-const lightTheme: Theme = {
+const lightTheme = {
+  ...LightTheme,
   colors: {
+    ...LightTheme.colors,
+    textShadow: 'rgba(255, 255, 255, 0.8)',
+    border: 'rgba(255, 255, 255, 0.2)',
     bg: "#fff",
     text: "#000",
     primary: "#B648A0",
@@ -23,9 +16,13 @@ const lightTheme: Theme = {
   },
 };
 
-const darkTheme: Theme = {
+const darkTheme = {
+  ...DarkTheme,
   colors: {
+    ...DarkTheme.colors,
+    textShadow: 'rgba(0, 0, 0, 0.8)',
     bg: "#121212",
+    border: 'rgba(255, 255, 255, 0.2)',
     text: "#ffffff",
     primary: "#B648A0",
     secondary: "#E3D9E8",

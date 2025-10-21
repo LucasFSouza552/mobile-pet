@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
+import PrimaryButton from '../../components/Buttons/PrimaryButton';
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -39,7 +40,7 @@ export default function Login({ navigation }: any) {
               <View style={styles.inputContainer}>
                 <TextInput
                   style={styles.input}
-                  placeholder="Email ou nome de usuário"
+                  placeholder="Email"
                   placeholderTextColor="#999999"
                   value={email}
                   onChangeText={setEmail}
@@ -57,9 +58,7 @@ export default function Login({ navigation }: any) {
                 />
               </View>
 
-              <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                <Text style={styles.loginButtonText}>Entrar</Text>
-              </TouchableOpacity>
+              <PrimaryButton text="Entrar" onPress={handleLogin} />
 
               <TouchableOpacity style={styles.registerLink} onPress={handleRegister}>
                 <Text style={styles.registerText}>

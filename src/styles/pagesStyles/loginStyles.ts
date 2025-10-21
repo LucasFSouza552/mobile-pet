@@ -1,10 +1,11 @@
 import { StyleSheet, Dimensions } from 'react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../context/ThemeContext';
+
 
 const { width, height } = Dimensions.get('window');
 
 export const loginStyles = () => {
-  const { COLORS, SPACING, FONT_SIZE, scale, verticalScale } = useTheme();
+  const { COLORS } = useTheme()
 
   return StyleSheet.create({
     container: {
@@ -42,7 +43,7 @@ export const loginStyles = () => {
       minWidth: 40,
     },
     formContainer: {
-      backgroundColor: '#2C2C2C',
+      backgroundColor: COLORS.secondary,
       marginHorizontal: width * 0.08,
       borderRadius: width * 0.05,
       paddingHorizontal: width * 0.06,
@@ -75,26 +76,6 @@ export const loginStyles = () => {
       fontSize: width * 0.04,
       marginBottom: height * 0.015,
       color: '#333333',
-    },
-    loginButton: {
-      backgroundColor: '#B648A0',
-      borderRadius: width * 0.03,
-      paddingVertical: height * 0.015,
-      alignItems: 'center',
-      marginBottom: height * 0.02,
-      shadowColor: '#B648A0',
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
-    },
-    loginButtonText: {
-      color: '#ffffff',
-      fontSize: width * 0.05,
-      fontWeight: '600',
     },
     registerLink: {
       alignItems: 'center',

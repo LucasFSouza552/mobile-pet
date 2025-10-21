@@ -1,5 +1,5 @@
 import { TouchableOpacity, Text, StyleSheet } from "react-native";
-import { useTheme } from "../../styles/theme";
+
 import { buttonStyles } from "./ButtonStyles";
 
 interface PrimaryButtonProps {

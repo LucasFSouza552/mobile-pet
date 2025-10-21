@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, Dimensions, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { welcomeStyles } from '../../styles/pagesStyles/welcomeStyles';
+import PrimaryButton from '../../components/Buttons/PrimaryButton';
+import SecondaryButton from '../../components/Buttons/SecondaryButton';
 
 
 export default function Welcome({ navigation }: any) {
-
-  const { width, height } = useWindowDimensions();
 
   const styles = welcomeStyles();
 
@@ -33,13 +33,9 @@ export default function Welcome({ navigation }: any) {
         </Text>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Entrar</Text>
-          </TouchableOpacity>
+          <PrimaryButton text="Entrar" onPress={handleLogin} />
 
-          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-            <Text style={styles.registerButtonText}>Criar Conta</Text>
-          </TouchableOpacity>
+          <SecondaryButton text="Criar conta" onPress={handleRegister} />
         </View>
       </View>
     </SafeAreaView>

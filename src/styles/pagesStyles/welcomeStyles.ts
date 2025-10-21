@@ -1,9 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { useTheme } from '../theme';
+import { useTheme } from '../../context/ThemeContext';
 
-export const welcomeStyles = () => {
-  const { COLORS, SPACING, FONT_SIZE, scale, verticalScale } = useTheme();
-
+export function welcomeStyles() {
+  const { theme, SPACING, FONT_SIZE, scale, verticalScale, COLORS } = useTheme();
   return StyleSheet.create({
     container: {
       flex: 1,
