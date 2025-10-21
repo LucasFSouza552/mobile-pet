@@ -9,7 +9,7 @@ import RegisterScreen from './src/views/screens/register';
 import RegisterFormScreen from './src/views/screens/registerForm';
 
 
-import { initialWindowMetrics, SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 
 
@@ -17,6 +17,7 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
+
     <ThemeProvider>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
 
