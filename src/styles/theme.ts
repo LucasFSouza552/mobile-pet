@@ -1,4 +1,3 @@
-// src/styles/useTheme.ts
 import { useWindowDimensions } from 'react-native';
 import { useMemo } from 'react';
 

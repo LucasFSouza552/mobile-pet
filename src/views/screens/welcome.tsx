@@ -5,10 +5,10 @@ import { welcomeStyles } from '../../styles/pagesStyles/welcomeStyles';
 
 
 export default function Welcome({ navigation }: any) {
-  
+
   const { width, height } = useWindowDimensions();
 
-  const styles = welcomeStyles(width, height);
+  const styles = welcomeStyles();
 
   const handleLogin = () => {
     navigation.navigate('Login');

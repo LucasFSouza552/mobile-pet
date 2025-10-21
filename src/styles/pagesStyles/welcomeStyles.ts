@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
 
-export const welcomeStyles = (width: number, height: number) => {
+export const welcomeStyles = () => {
   const { COLORS, SPACING, FONT_SIZE, scale, verticalScale } = useTheme();
 
   return StyleSheet.create({

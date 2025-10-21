@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken } from '../utils/storange';
+import { getStorage } from '../utils/storange';
 
 export const api = axios.create({
     baseURL: 'http://10.0.0.29:3000/api',
@@ -8,7 +8,7 @@ export const api = axios.create({
 
 api.interceptors.request.use(
     async config => {
-        const token = await getToken();
+        const token = await getStorage("@token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

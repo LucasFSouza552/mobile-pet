@@ -3,8 +3,9 @@ import { useTheme } from '../theme';
 
 const { width, height } = Dimensions.get('window');
 
-export const loginStyles = (width: number, height: number) => {
+export const loginStyles = () => {
   const { COLORS, SPACING, FONT_SIZE, scale, verticalScale } = useTheme();
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -23,7 +24,7 @@ export const loginStyles = (width: number, height: number) => {
     },
     content: {
       flex: 1,
-      
+
     },
     header: {
       alignItems: 'center',

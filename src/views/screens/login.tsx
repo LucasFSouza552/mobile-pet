@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, Dimensions, TouchableWithoutFeedback, Keyboard, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 
@@ -7,9 +7,7 @@ export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const { width, height } = useWindowDimensions();
-
-  const styles = loginStyles(width, height);
+  const styles = loginStyles();
 
   const handleLogin = () => {
     console.log('Login attempt:', { email, password });
