@@ -7,6 +7,7 @@ import WelcomeScreen from './src/views/screens/welcome';
 import LoginScreen from './src/views/screens/login';
 import RegisterScreen from './src/views/screens/register';
 import RegisterFormScreen from './src/views/screens/registerForm';
+import Main from './src/views/screens/main';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
@@ -31,6 +32,7 @@ export default function App() {
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Register" component={RegisterScreen} />
             <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
+            <Stack.Screen name="Main" component={Main} />
           </Stack.Navigator>
           <StatusBar style="auto" hidden />
         </NavigationContainer>

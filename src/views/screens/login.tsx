@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
@@ -11,7 +19,14 @@ export default function Login({ navigation }: any) {
   const styles = loginStyles();
 
   const handleLogin = () => {
-    console.log('Login attempt:', { email, password });
+    if (!email || !password) {
+      alert('Preencha email e senha para continuar!');
+      return;
+    }
+
+    console.log('Login fake realizado com:', { email, password });
+
+    navigation.replace('Main');
   };
 
   const handleRegister = () => {
@@ -35,7 +50,9 @@ export default function Login({ navigation }: any) {
 
             <View style={styles.formContainer}>
               <Text style={styles.title}>Entrar</Text>
-              <Text style={styles.subtitle}>Digite seu email e senha para continuar</Text>
+              <Text style={styles.subtitle}>
+                Digite seu email e senha para continuar
+              </Text>
 
               <View style={styles.inputContainer}>
                 <TextInput
@@ -60,13 +77,25 @@ export default function Login({ navigation }: any) {
 
               <PrimaryButton text="Entrar" onPress={handleLogin} />
 
-              <TouchableOpacity style={styles.registerLink} onPress={handleRegister}>
+              <TouchableOpacity
+                style={styles.registerLink}
+                onPress={handleRegister}
+              >
                 <Text style={styles.registerText}>
-                  Não tem conta? <Text style={styles.registerLinkText}>Clique aqui</Text>
+                  Não tem conta?{' '}
+                  <Text style={styles.registerLinkText}>Clique aqui</Text>
                 </Text>
               </TouchableOpacity>
-            </View>
 
+              {}
+              <View style={{ marginTop: 20 }}>
+                <TouchableOpacity onPress={() => navigation.replace('Main')}>
+                  <Text style={{ color: '#007BFF', textAlign: 'center' }}>
+                    Ir para Main (Tabs)
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         </TouchableWithoutFeedback>
       </SafeAreaView>
