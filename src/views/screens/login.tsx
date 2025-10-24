@@ -11,6 +11,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
+import { authService } from '../../services/authService';
+import { getStorage } from '../../utils/storange';
+
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
@@ -18,15 +21,16 @@ export default function Login({ navigation }: any) {
 
   const styles = loginStyles();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email || !password) {
       alert('Preencha email e senha para continuar!');
       return;
     }
 
     console.log('Login fake realizado com:', { email, password });
+    const account = await authService.login(email, password);
 
-    navigation.replace('Main');
+    console.log(await getStorage("@token"));
   };
 
   const handleRegister = () => {
@@ -87,7 +91,7 @@ export default function Login({ navigation }: any) {
                 </Text>
               </TouchableOpacity>
 
-              {}
+              { }
               <View style={{ marginTop: 20 }}>
                 <TouchableOpacity onPress={() => navigation.replace('Main')}>
                   <Text style={{ color: '#007BFF', textAlign: 'center' }}>

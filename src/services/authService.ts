@@ -1,10 +1,20 @@
+import { api } from "../api";
+import { IAccount } from "../models/IAccount";
 import { saveStorage } from "../utils/storange";
-import { api } from "./api";
 
+export const authService = {
+    async login(email: string, password: string) {
+        try {
+            const response = await api.post('/auth/login', { email, password });
+            const token = response.data.token;
+            await saveStorage("@token", token);
+            console.log(response.data)
+            return response.data;
+        } catch (error) {
+            console.log(error);
+        }
+    },
+    async register(account: IAccount) {
 
-export const login = async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { email, password });
-    const token = response.data.token;
-    await saveStorage(token);
-    return response.data.user;
-};
+    }
+}

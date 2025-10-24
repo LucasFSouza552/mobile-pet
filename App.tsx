@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -13,10 +13,37 @@ import Main from './src/views/screens/main';
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  // useEffect(() => {
+  //   (async () => {
+  //     await createAccountTable();
+  //     // const account: IAccount = {
+  //     //   name: 'Leonardo Souza',
+  //     //   email: 'leonardo.souza@example.com',
+  //     //   avatar: 'file:///storage/emulated/0/Pictures/avatar1.png',
+  //     //   password: 'hashed_password_123',
+  //     //   phone_number: '+55 32 99888-7766',
+  //     //   role: 'user',
+  //     //   cpf: '123.456.789-00',
+  //     //   verified: true,
+  //     //   address: {
+  //     //     street: 'Rua das Palmeiras',
+  //     //     number: '120',
+  //     //     complement: 'Apto 202 - Bloco B',
+  //     //     city: 'Muriaé',
+  //     //     state: 'MG',
+  //     //     cep: '36880-000',
+  //     //     neighborhood: 'Centro',
+  //     //   },
+  //     // } as IAccount;
+
+  //     // accountRepository.create(account)
+
+  //   })();
+  // }, []);
+
   return (
 
     <ThemeProvider>

@@ -1,5 +1,5 @@
-import { api } from './api';
-import { IAccount } from '../models/Account';
+import { api } from '../api';
+import { IAccount } from '../models/IAccount';
 
 export const accountService = {
     async getAccount(id: string): Promise<IAccount> {
