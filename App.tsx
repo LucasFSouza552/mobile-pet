@@ -10,6 +10,7 @@ import RegisterFormScreen from './src/views/screens/registerForm';
 import Main from './src/views/screens/main';
 
 
+
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 
@@ -43,6 +44,8 @@ export default function App() {
 
   //   })();
   // }, []);
+
+   
 
   return (
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,25 +13,38 @@ import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
 import { authService } from '../../services/authService';
 import { getStorage } from '../../utils/storange';
+import { accountService } from '../../services/accountService';
+import ErrorMessage from '../../components/Buttons/ErrorComponet';
 
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string>();
 
   const styles = loginStyles();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      alert('Preencha email e senha para continuar!');
+      setError("Preencha todos os campos.");
       return;
     }
+    try {
+      const success = await authService.login(email, password);
+      if (success) {
+        navigation.navigate('Main');
+      }
 
-    console.log('Login fake realizado com:', { email, password });
-    const account = await authService.login(email, password);
-
-    console.log(await getStorage("@token"));
+    } catch (error) {
+      setError("Email ou senha inválidos.");
+    }
   };
+
+  useEffect(() => {
+    if (!error) return;
+    const timer = setTimeout(() => setError(''), 3000);
+    return () => clearTimeout(timer);
+  }, [error]);
 
   const handleRegister = () => {
     navigation.navigate('Register');
@@ -91,7 +104,6 @@ export default function Login({ navigation }: any) {
                 </Text>
               </TouchableOpacity>
 
-              { }
               <View style={{ marginTop: 20 }}>
                 <TouchableOpacity onPress={() => navigation.replace('Main')}>
                   <Text style={{ color: '#007BFF', textAlign: 'center' }}>
@@ -99,6 +111,7 @@ export default function Login({ navigation }: any) {
                   </Text>
                 </TouchableOpacity>
               </View>
+              <ErrorMessage message={error} />
             </View>
           </View>
         </TouchableWithoutFeedback>

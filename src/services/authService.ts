@@ -8,7 +8,6 @@ export const authService = {
             const response = await api.post('/auth/login', { email, password });
             const token = response.data.token;
             await saveStorage("@token", token);
-            console.log(response.data)
             return response.data;
         } catch (error) {
             console.log(error);

@@ -9,5 +9,13 @@ export const accountService = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+    async getProfile(): Promise<IAccount> {
+        try {
+            const response = await api.get('/account/profile/me');
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    },
 };
