@@ -6,15 +6,16 @@ import {
   TouchableOpacity,
   Image,
   TouchableWithoutFeedback,
-  Keyboard,
+  Keyboard, KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
 import { authService } from '../../services/authService';
-import { getStorage } from '../../utils/storange';
-import { accountService } from '../../services/accountService';
 import ErrorMessage from '../../components/Buttons/ErrorComponet';
+
+import Toast, { ErrorToast } from 'react-native-toast-message';
 
 
 export default function Login({ navigation }: any) {
@@ -25,8 +26,9 @@ export default function Login({ navigation }: any) {
   const styles = loginStyles();
 
   const handleLogin = async () => {
+     Keyboard.dismiss();
     if (!email || !password) {
-      setError("Preencha todos os campos.");
+      Toast.show({ type: 'error', text1: 'Erro', text2: 'Preencha todos os campos.', position: 'bottom' });
       return;
     }
     try {
@@ -36,7 +38,7 @@ export default function Login({ navigation }: any) {
       }
 
     } catch (error) {
-      setError("Email ou senha inválidos.");
+      Toast.show({ type: 'error', text1: 'Erro', text2: 'Email ou senha inválidos.', position: 'bottom' });
     }
   };
 
@@ -51,71 +53,72 @@ export default function Login({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require('../../../assets/img/logoPet.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
-              </View>
-            </View>
-
-            <View style={styles.formContainer}>
-              <Text style={styles.title}>Entrar</Text>
-              <Text style={styles.subtitle}>
-                Digite seu email e senha para continuar
-              </Text>
-
-              <View style={styles.inputContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  placeholderTextColor="#999999"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
-
-                <TextInput
-                  style={styles.input}
-                  placeholder="Senha"
-                  placeholderTextColor="#999999"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
+        <View style={styles.container}>
+          <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
+            <View style={styles.content}>
+              <View style={styles.header}>
+                <View style={styles.logoContainer}>
+                  <Image
+                    source={require('../../../assets/img/logoPet.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                </View>
               </View>
 
-              <PrimaryButton text="Entrar" onPress={handleLogin} />
-
-              <TouchableOpacity
-                style={styles.registerLink}
-                onPress={handleRegister}
-              >
-                <Text style={styles.registerText}>
-                  Não tem conta?{' '}
-                  <Text style={styles.registerLinkText}>Clique aqui</Text>
+              <View style={styles.formContainer}>
+                <Text style={styles.title}>Entrar</Text>
+                <Text style={styles.subtitle}>
+                  Digite seu email e senha para continuar
                 </Text>
-              </TouchableOpacity>
 
-              <View style={{ marginTop: 20 }}>
-                <TouchableOpacity onPress={() => navigation.replace('Main')}>
-                  <Text style={{ color: '#007BFF', textAlign: 'center' }}>
-                    Ir para Main (Tabs)
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Email"
+                    placeholderTextColor="#999999"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    returnKeyType="next"
+                  />
+
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Senha"
+                    placeholderTextColor="#999999"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin} 
+                  />
+                </View>
+
+                <PrimaryButton text="Entrar" onPress={() => handleLogin()} />
+
+                <TouchableOpacity
+                  style={styles.registerLink}
+                  onPress={handleRegister}
+                >
+                  <Text style={styles.registerText}>
+                    Não tem conta?{' '}
+                    <Text style={styles.registerLinkText}>Clique aqui</Text>
                   </Text>
                 </TouchableOpacity>
               </View>
-              <ErrorMessage message={error} />
+
             </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </SafeAreaView>
-    </View>
+          </SafeAreaView>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+
   );
 }

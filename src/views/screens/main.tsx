@@ -4,10 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Profile from './profile';
 import Donate from './donate';
+import { useEffect } from 'react';
+import NetInfo from "@react-native-community/netinfo";
 
 const Tab = createBottomTabNavigator();
 
 export default function Main() {
+
+  useEffect(() => {
+    const checkConnection = async () => {
+      const netState = await NetInfo.fetch();
+      
+      // Acessar os dados no banco local
+      
+    }
+  },[]);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -15,16 +27,15 @@ export default function Main() {
         tabBarActiveTintColor: '#fff',
         tabBarInactiveTintColor: '#f2f2f2',
         tabBarStyle: { backgroundColor: '#B04BA0' },
+        tabBarItemStyle: { paddingVertical: 10 },
         tabBarShowLabel: false,
         tabBarIcon: ({ color, size }) => {
-          let iconName: string; 
+          let iconName: keyof typeof Ionicons.glyphMap = 'alert-circle';
 
           if (route.name === 'Profile') {
             iconName = 'person';
           } else if (route.name === 'Donate') {
             iconName = 'heart';
-          } else {
-            iconName = 'alert-circle';
           }
 
           return <Ionicons name={iconName} size={28} color={color} />;

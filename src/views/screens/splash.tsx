@@ -3,16 +3,15 @@ import { ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { splashStyles as styles } from '../../styles/pagesStyles/splashStyles';
 import NetInfo from "@react-native-community/netinfo";
-import { getStorage } from '../../utils/storange';
+import { getStorage, removeStorage } from '../../utils/storange';
 import { accountService } from '../../services/accountService';
 
 export default function Splash({ navigation }: any) {
-  useEffect(() => {
-
-  }, [navigation]);
 
   useEffect(() => {
-    (async () => {
+    let timer: NodeJS.Timeout | null = null;
+
+    const checkConnectionAndNavigate = async () => {
       const netState = await NetInfo.fetch();
 
       if (!netState.isConnected) {
@@ -22,20 +21,31 @@ export default function Splash({ navigation }: any) {
 
       const token = await getStorage('@token');
       if (token) {
-        const account = await accountService.getProfile();
-        if (account) {
-          navigation.navigate('Main');
-          return;
+        try {
+          const account = await accountService.getProfile();
+
+          if (account) {
+            navigation.navigate('Main');
+            return;
+          }
+        } catch (error) {
+          await removeStorage('@token');
+          navigation.replace('Welcome');
+          throw error;
         }
       }
 
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         navigation.replace('Welcome');
-      }, 3000);
+      }, 5000);
+    };
 
-      return () => clearTimeout(timer);
-    })();
-  }, [navigation])
+    checkConnectionAndNavigate();
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.container}>

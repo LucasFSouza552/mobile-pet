@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -13,39 +13,32 @@ import Main from './src/views/screens/main';
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
+import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import { Keyboard } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  // useEffect(() => {
-  //   (async () => {
-  //     await createAccountTable();
-  //     // const account: IAccount = {
-  //     //   name: 'Leonardo Souza',
-  //     //   email: 'leonardo.souza@example.com',
-  //     //   avatar: 'file:///storage/emulated/0/Pictures/avatar1.png',
-  //     //   password: 'hashed_password_123',
-  //     //   phone_number: '+55 32 99888-7766',
-  //     //   role: 'user',
-  //     //   cpf: '123.456.789-00',
-  //     //   verified: true,
-  //     //   address: {
-  //     //     street: 'Rua das Palmeiras',
-  //     //     number: '120',
-  //     //     complement: 'Apto 202 - Bloco B',
-  //     //     city: 'Muriaé',
-  //     //     state: 'MG',
-  //     //     cep: '36880-000',
-  //     //     neighborhood: 'Centro',
-  //     //   },
-  //     // } as IAccount;
 
-  //     // accountRepository.create(account)
+  const [keyboardOffset, setKeyboardOffset] = useState(50);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-  //   })();
-  // }, []);
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
+      setKeyboardVisible(true);
+      setKeyboardOffset(e.endCoordinates.height + 30);
+    });
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+      setKeyboardOffset(50);
+    });
 
-   
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
+
 
   return (
 
@@ -55,7 +48,9 @@ export default function App() {
         <NavigationContainer>
           <Stack.Navigator
             initialRouteName="Splash"
-            screenOptions={{ headerShown: false }}
+            screenOptions={{
+              headerShown: false,
+            }}
           >
             <Stack.Screen name="Splash" component={SplashScreen} />
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
@@ -64,9 +59,64 @@ export default function App() {
             <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
             <Stack.Screen name="Main" component={Main} />
           </Stack.Navigator>
+
+
+          <Toast
+            config={toastConfig}
+            position="top"     
+            topOffset={60}
+            visibilityTime={2500}
+          />
+
           <StatusBar style="auto" hidden />
         </NavigationContainer>
       </SafeAreaProvider>
     </ThemeProvider>
   );
 }
+
+
+const toastConfig = {
+  success: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#2ECC71',
+        borderRadius: 10,
+        minHeight: 70,
+        width: '90%',
+        alignSelf: 'center',
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#2ECC71',
+      }}
+      text2Style={{
+        fontSize: 14,
+        color: '#333',
+      }}
+    />
+  ),
+  error: (props: any) => (
+    <ErrorToast
+      {...props}
+      style={{
+        borderLeftColor: '#E74C3C',
+        borderRadius: 10,
+        minHeight: 70,
+        width: '90%',
+        alignSelf: 'center',
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#E74C3C',
+      }}
+      text2Style={{
+        fontSize: 14,
+        color: '#555',
+      }}
+    />
+  ),
+};

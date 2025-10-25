@@ -12,7 +12,12 @@ export const loginStyles = () => {
       flex: 1,
     },
     safeArea: {
-      flex: 1
+      flex: 1,
+      paddingBottom: 0,
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
     },
     backgroundImage: {
       position: 'absolute',

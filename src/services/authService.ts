@@ -10,7 +10,7 @@ export const authService = {
             await saveStorage("@token", token);
             return response.data;
         } catch (error) {
-            console.log(error);
+            throw error;
         }
     },
     async register(account: IAccount) {
