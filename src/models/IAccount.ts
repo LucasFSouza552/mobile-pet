@@ -6,7 +6,6 @@ export interface IAccount {
     name: string;
     email: string;
     avatar?: string;
-    password?: string;
     phone_number: string;
     role: ITypeAccounts;
     cpf?: string;
