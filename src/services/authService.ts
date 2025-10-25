@@ -14,6 +14,11 @@ export const authService = {
         }
     },
     async register(account: IAccount) {
-
+        try {
+            const response = await api.post('/auth/register', account);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
     }
 }
