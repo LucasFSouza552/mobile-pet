@@ -6,29 +6,31 @@ import {
   TouchableOpacity,
   Image,
   TouchableWithoutFeedback,
-  Keyboard, KeyboardAvoidingView,
+  Keyboard,
+  KeyboardAvoidingView,
   Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
 import { authService } from '../../services/authService';
-import ErrorMessage from '../../components/Buttons/ErrorComponet';
-
-import Toast, { ErrorToast } from 'react-native-toast-message';
-
+import Toast from 'react-native-toast-message';
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>();
-
   const styles = loginStyles();
 
   const handleLogin = async () => {
-     Keyboard.dismiss();
+    Keyboard.dismiss();
     if (!email || !password) {
-      Toast.show({ type: 'error', text1: 'Erro', text2: 'Preencha todos os campos.', position: 'bottom' });
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Preencha todos os campos.',
+        position: 'bottom',
+      });
       return;
     }
     try {
@@ -36,10 +38,22 @@ export default function Login({ navigation }: any) {
       if (success) {
         navigation.navigate('Main');
       }
-
     } catch (error) {
-      Toast.show({ type: 'error', text1: 'Erro', text2: 'Email ou senha inválidos.', position: 'bottom' });
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Email ou senha inválidos.',
+        position: 'bottom',
+      });
     }
+  };
+
+  const handleRegister = () => {
+    navigation.navigate('Register');
+  };
+
+  const goToMain = () => {
+    navigation.navigate('Main');
   };
 
   useEffect(() => {
@@ -48,16 +62,12 @@ export default function Login({ navigation }: any) {
     return () => clearTimeout(timer);
   }, [error]);
 
-  const handleRegister = () => {
-    navigation.navigate('Register');
-  };
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
             <View style={styles.content}>
@@ -97,11 +107,11 @@ export default function Login({ navigation }: any) {
                     onChangeText={setPassword}
                     secureTextEntry
                     returnKeyType="done"
-                    onSubmitEditing={handleLogin} 
+                    onSubmitEditing={handleLogin}
                   />
                 </View>
 
-                <PrimaryButton text="Entrar" onPress={() => handleLogin()} />
+                <PrimaryButton text="Entrar" onPress={handleLogin} />
 
                 <TouchableOpacity
                   style={styles.registerLink}
@@ -112,13 +122,21 @@ export default function Login({ navigation }: any) {
                     <Text style={styles.registerLinkText}>Clique aqui</Text>
                   </Text>
                 </TouchableOpacity>
-              </View>
 
+                {/* botão temporário! Tirar quando login funcionar!!!!!!!!!!! */}
+                <TouchableOpacity
+                  style={[styles.registerLink, { marginTop: 20 }]}
+                  onPress={goToMain}
+                >
+                  <Text style={[styles.registerLinkText, { color: '#007BFF' }]}>
+                    Ir para a tela principal
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </SafeAreaView>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
-
   );
 }
