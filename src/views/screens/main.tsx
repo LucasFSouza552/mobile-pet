@@ -6,6 +6,8 @@ import Profile from './profile';
 import Donate from './donate';
 import { useEffect } from 'react';
 import NetInfo from "@react-native-community/netinfo";
+import FindPets from './findPets';
+import Community from './community';
 
 const Tab = createBottomTabNavigator();
 
@@ -14,11 +16,10 @@ export default function Main() {
   useEffect(() => {
     const checkConnection = async () => {
       const netState = await NetInfo.fetch();
-      
-      // Acessar os dados no banco local
-      
+
     }
-  },[]);
+  }, []);
+
 
   return (
     <Tab.Navigator
@@ -34,7 +35,12 @@ export default function Main() {
 
           if (route.name === 'Profile') {
             iconName = 'person';
-          } else if (route.name === 'Donate') {
+          }else if (route.name === 'Community') {
+            iconName = 'chatbox-outline';
+          } 
+          else if (route.name === 'FindPets') {
+            iconName = 'heart-outline';
+          }else if (route.name === 'Donate') {
             iconName = 'heart';
           }
 
@@ -42,7 +48,9 @@ export default function Main() {
         },
       })}
     >
+      <Tab.Screen name="FindPets" component={FindPets} />
       <Tab.Screen name="Donate" component={Donate} />
+      <Tab.Screen name="Community" component={Community} />
       <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
