@@ -6,7 +6,10 @@ import SplashScreen from './src/views/screens/splash';
 import WelcomeScreen from './src/views/screens/welcome';
 import LoginScreen from './src/views/screens/login';
 import RegisterScreen from './src/views/screens/register';
-import RegisterFormScreen from './src/views/screens/registerForm';
+import RegisterStep1Screen from './src/views/screens/registerStep1';
+import RegisterStep2Screen from './src/views/screens/registerStep2';
+import RegisterStep3Screen from './src/views/screens/registerStep3';
+import RegisterStep4Screen from './src/views/screens/registerStep4';
 import Main from './src/views/screens/main';
 
 
@@ -59,7 +62,10 @@ export default function App() {
               <Stack.Screen name="Welcome" component={WelcomeScreen} />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
+              <Stack.Screen name="RegisterStep1" component={RegisterStep1Screen} />
+              <Stack.Screen name="RegisterStep2" component={RegisterStep2Screen} />
+              <Stack.Screen name="RegisterStep3" component={RegisterStep3Screen} />
+              <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
               <Stack.Screen name="Main" component={Main} />
             </Stack.Navigator>
 

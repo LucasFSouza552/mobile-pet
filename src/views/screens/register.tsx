@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Dimensions, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  Image, 
+  TouchableWithoutFeedback, 
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  useWindowDimensions
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { registerStyles as styles } from '../../styles/pagesStyles/registerStyles';
+import { FontAwesome } from '@expo/vector-icons';
+import { createRegisterStepStyles } from '../../styles/pagesStyles/registerStepStyles';
 
 type DocumentType = 'cpf' | 'cnpj' | null;
 
 export default function Register({ navigation }: any) {
+  const { width, height } = useWindowDimensions();
+  const registerStepStyles = createRegisterStepStyles(width, height);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType>(null);
 
   const handleDocumentTypeSelect = (type: DocumentType) => {
@@ -14,8 +27,7 @@ export default function Register({ navigation }: any) {
 
   const handleContinue = () => {
     if (selectedDocumentType) {
-      console.log('Selected document type:', selectedDocumentType);
-      navigation.navigate('RegisterForm', { documentType: selectedDocumentType });
+      navigation.navigate('RegisterStep1', { documentType: selectedDocumentType });
     }
   };
 
@@ -23,86 +35,136 @@ export default function Register({ navigation }: any) {
     navigation.navigate('Login');
   };
 
-  const isContinueDisabled = selectedDocumentType === null;
-
   return (
-    <View style={styles.container}>
+    <View style={registerStepStyles.container}>
       <Image
         source={require('../../../assets/img/petfundo.png')}
-        style={styles.backgroundImage}
+        style={registerStepStyles.backgroundImage}
         resizeMode="cover"
       />
-      <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
-            <View style={styles.header}>
-              <View style={styles.logoContainer}>
-                <Image
-                  source={require('../../../assets/img/logoPet.png')}
-                  style={styles.logo}
-                  resizeMode="contain"
-                />
+      
+      <SafeAreaView style={registerStepStyles.safeArea} edges={['top', 'left', 'right']}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              <View style={registerStepStyles.content}>
+              {/* Header */}
+              <View style={registerStepStyles.header}>
+                <Text style={registerStepStyles.headerTitle}>Registrar</Text>
+                <Text style={registerStepStyles.headerSubtitle}>
+                  Primeiro, queremos saber quem é você.
+                </Text>
               </View>
-            </View>
 
-            <View style={styles.formContainer}>
-              <Text style={styles.title}>Cadastrar</Text>
-              
-              <View style={styles.selectionContainer}>
-                <Text style={styles.selectionTitle}>Como você deseja se cadastrar?</Text>
-                
-                <View style={styles.buttonContainer}>
+              {/* Progress Indicator */}
+              <View style={registerStepStyles.progressContainer}>
+                <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
+                  <FontAwesome name="user" size={20} color="#fff" />
+                </View>
+                <View style={registerStepStyles.progressLine} />
+                <View style={registerStepStyles.progressStep}>
+                  <FontAwesome name="envelope" size={20} color="#666" />
+                </View>
+                <View style={registerStepStyles.progressLine} />
+                <View style={registerStepStyles.progressStep}>
+                  <FontAwesome name="id-card" size={20} color="#666" />
+                </View>
+                <View style={registerStepStyles.progressLine} />
+                <View style={registerStepStyles.progressStep}>
+                  <FontAwesome name="lock" size={20} color="#666" />
+                </View>
+              </View>
+
+              {/* Form */}
+              <View style={registerStepStyles.formContainer}>
+                <Text style={registerStepStyles.title}>
+                  Como você deseja{'\n'}se cadastrar?
+                </Text>
+
+                {/* Document Type Selection */}
+                <View style={registerStepStyles.documentTypeContainer}>
                   <TouchableOpacity
                     style={[
-                      styles.selectionButton,
-                      selectedDocumentType === 'cpf' && styles.selectionButtonActive
+                      registerStepStyles.documentTypeButton,
+                      selectedDocumentType === 'cpf' && registerStepStyles.documentTypeButtonActive
                     ]}
                     onPress={() => handleDocumentTypeSelect('cpf')}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[
-                      styles.selectionButtonText,
-                      selectedDocumentType === 'cpf' && styles.selectionButtonTextActive
-                    ]}>
-                      CPF
-                    </Text>
+                    <FontAwesome 
+                      name={selectedDocumentType === 'cpf' ? 'check-circle' : 'circle-o'} 
+                      size={24} 
+                      color={selectedDocumentType === 'cpf' ? '#B648A0' : '#999'} 
+                    />
+                    <View style={registerStepStyles.documentTypeTextContainer}>
+                      <Text style={[
+                        registerStepStyles.documentTypeTitle,
+                        selectedDocumentType === 'cpf' && registerStepStyles.documentTypeTitleActive
+                      ]}>
+                        CPF
+                      </Text>
+                      <Text style={registerStepStyles.documentTypeSubtitle}>
+                        Cadastro como pessoa física
+                      </Text>
+                    </View>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={[
-                      styles.selectionButton,
-                      selectedDocumentType === 'cnpj' && styles.selectionButtonActive
+                      registerStepStyles.documentTypeButton,
+                      selectedDocumentType === 'cnpj' && registerStepStyles.documentTypeButtonActive
                     ]}
                     onPress={() => handleDocumentTypeSelect('cnpj')}
+                    activeOpacity={0.7}
                   >
-                    <Text style={[
-                      styles.selectionButtonText,
-                      selectedDocumentType === 'cnpj' && styles.selectionButtonTextActive
-                    ]}>
-                      CNPJ
-                    </Text>
+                    <FontAwesome 
+                      name={selectedDocumentType === 'cnpj' ? 'check-circle' : 'circle-o'} 
+                      size={24} 
+                      color={selectedDocumentType === 'cnpj' ? '#B648A0' : '#999'} 
+                    />
+                    <View style={registerStepStyles.documentTypeTextContainer}>
+                      <Text style={[
+                        registerStepStyles.documentTypeTitle,
+                        selectedDocumentType === 'cnpj' && registerStepStyles.documentTypeTitleActive
+                      ]}>
+                        CNPJ
+                      </Text>
+                      <Text style={registerStepStyles.documentTypeSubtitle}>
+                        Cadastro como instituição
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
 
-              <TouchableOpacity
-                style={[
-                  styles.continueButton,
-                  isContinueDisabled && styles.continueButtonDisabled
-                ]}
-                onPress={handleContinue}
-                disabled={isContinueDisabled}
-              >
-                <Text style={styles.continueButtonText}>Continuar</Text>
-              </TouchableOpacity>
+              {/* Buttons */}
+              <View style={registerStepStyles.buttonContainer}>
+                <TouchableOpacity 
+                  style={registerStepStyles.backButton} 
+                  onPress={handleBackToLogin}
+                >
+                  <Text style={registerStepStyles.backButtonText}>Voltar</Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity style={styles.backLink} onPress={handleBackToLogin}>
-                <Text style={styles.backText}>
-                  Já tem conta? <Text style={styles.backLinkText}>Voltar ao login</Text>
-                </Text>
-              </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[
+                    registerStepStyles.nextButton,
+                    !selectedDocumentType && registerStepStyles.nextButtonDisabled
+                  ]} 
+                  onPress={handleContinue}
+                  disabled={!selectedDocumentType}
+                >
+                  <Text style={registerStepStyles.nextButtonText}>Próximo</Text>
+                </TouchableOpacity>
+              </View>
+              </View>
             </View>
-          </View>
-        </TouchableWithoutFeedback>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
   );
