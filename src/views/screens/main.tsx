@@ -1,50 +1,41 @@
 import * as React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { AntDesign, Ionicons, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 
 import Profile from './profile';
 import Donate from './donate';
-import { useEffect } from 'react';
-import NetInfo from "@react-native-community/netinfo";
 import FindPets from './findPets';
 import Community from './community';
+import { useTheme } from '../../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 
+const Icons = {
+  Profile: { name: 'user-alt', family: FontAwesome5 },
+  Donate: { name: 'hands-helping', family: FontAwesome5 },
+  FindPets: { name: 'heart', family: AntDesign },
+  Community: { name: 'comments', family: FontAwesome },
+};
+
 export default function Main() {
 
-  useEffect(() => {
-    const checkConnection = async () => {
-      const netState = await NetInfo.fetch();
-
-    }
-  }, []);
-
+  const { COLORS } = useTheme();
 
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#fff',
+        tabBarActiveTintColor: COLORS.quarternary,
         tabBarInactiveTintColor: '#f2f2f2',
         tabBarStyle: { backgroundColor: '#B04BA0' },
         tabBarItemStyle: { paddingVertical: 10 },
         tabBarShowLabel: false,
         tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'alert-circle';
 
-          if (route.name === 'Profile') {
-            iconName = 'person';
-          }else if (route.name === 'Community') {
-            iconName = 'chatbox-outline';
-          } 
-          else if (route.name === 'FindPets') {
-            iconName = 'heart-outline';
-          }else if (route.name === 'Donate') {
-            iconName = 'heart';
-          }
+          const { name, family: IconFamily } =
+            Icons[route?.name as keyof typeof Icons] || { name: 'question-circle', family: FontAwesome };
 
-          return <Ionicons name={iconName} size={28} color={color} />;
+          return <IconFamily name={name} size={24} color={color} />
         },
       })}
     >
@@ -55,3 +46,4 @@ export default function Main() {
     </Tab.Navigator>
   );
 }
+

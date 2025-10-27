@@ -5,6 +5,7 @@ import { splashStyles as styles } from '../../styles/pagesStyles/splashStyles';
 import NetInfo from "@react-native-community/netinfo";
 import { getStorage, removeStorage } from '../../utils/storange';
 import { accountService } from '../../services/accountService';
+import { runMigrations } from '../../data/local/database/migrations';
 
 export default function Splash({ navigation }: any) {
 
@@ -12,6 +13,9 @@ export default function Splash({ navigation }: any) {
     let timer: NodeJS.Timeout | null = null;
 
     const checkConnectionAndNavigate = async () => {
+      
+      await runMigrations();
+      
       const netState = await NetInfo.fetch();
 
       if (!netState.isConnected) {

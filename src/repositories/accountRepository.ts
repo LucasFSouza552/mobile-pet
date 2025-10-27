@@ -1,24 +1,24 @@
-import { getDbConnection } from "../database/db";
+import { getLocalDb } from "../database/LocalDb";
 import { IAccount } from "../models/IAccount";
 
 
 export const accountRepository = {
     getAll: async (): Promise<IAccount[]> => {
-        const db = await getDbConnection();
+        const db = await getLocalDb();
         const accounts = await db.getAllAsync("SELECT * FROM accounts");
         return accounts as IAccount[];
     },
     getById: async (id: string): Promise<IAccount> => {
-        const db = await getDbConnection();
+        const db = await getLocalDb();
         const account = await db.getFirstAsync("SELECT * FROM accounts WHERE id = ?", [id]);
         return account as IAccount;
     },
     create: async (account: IAccount): Promise<void> => {
-        const db = await getDbConnection();
+        const db = await getLocalDb();
         await db.runAsync(
             `
   INSERT INTO accounts (
-    name, email, avatar, password, phone_number, role, cpf, cnpj, verified,
+    name, email, avatar, phone_number, role, cpf, cnpj, verified,
     street, number, complement, city, state, cep, neighborhood
   )
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -27,7 +27,6 @@ export const accountRepository = {
                 account.name ?? null,
                 account.email ?? null,
                 account.avatar ?? null,
-                account.password ?? null,
                 account.phone_number ?? null,
                 account.role ?? null,
                 account.cpf ?? null,
@@ -44,7 +43,7 @@ export const accountRepository = {
         );
     },
     findLocalAccount: async (): Promise<IAccount | null> => {
-        const db = await getDbConnection();
+        const db = await getLocalDb();
         const account = await db.getFirstAsync(`SELECT * FROM accounts ORDER BY createdAt DESC LIMIT 1`);
         return account as IAccount ?? null;
     },

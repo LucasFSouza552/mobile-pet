@@ -33,16 +33,25 @@ export default function Login({ navigation }: any) {
       });
       return;
     }
+
     try {
-      const success = await authService.login(email, password);
-      if (success) {
-        navigation.navigate('Main');
+      const response = await authService.login(email, password);
+      
+      if (response) {
+        Toast.show({
+          type: 'success',
+          text1: 'Sucesso',
+          text2: 'Login realizado com sucesso!',
+          position: 'bottom',
+        });
+        navigation.replace('Main');
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Erro no login:', error);
       Toast.show({
         type: 'error',
         text1: 'Erro',
-        text2: 'Email ou senha inválidos.',
+        text2: error.message || 'Email ou senha inválidos.',
         position: 'bottom',
       });
     }

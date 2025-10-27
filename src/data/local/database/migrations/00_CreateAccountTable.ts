@@ -1,8 +1,7 @@
-import { getDbConnection } from "../db";
+import { getLocalDb } from "../LocalDb";
 
 export default async function createAccountTable() {
-    console.log("Conectando ao banco de dados...");
-    const db = await getDbConnection();
+    const db = await getLocalDb();
 
     await db.execAsync(`
     CREATE TABLE IF NOT EXISTS accounts (
@@ -10,7 +9,6 @@ export default async function createAccountTable() {
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       avatar TEXT,
-      password TEXT NOT NULL,
       phone_number TEXT NOT NULL,
       role TEXT NOT NULL,
       cpf TEXT,
@@ -24,7 +22,8 @@ export default async function createAccountTable() {
       cep TEXT,
       neighborhood TEXT,
       createdAt TEXT DEFAULT (datetime('now')),
-      updatedAt TEXT DEFAULT (datetime('now'))
+      updatedAt TEXT DEFAULT (datetime('now')),
+      lastSyncedAt TEXT DEFAULT (datetime('now'))
     );
   `);
 }

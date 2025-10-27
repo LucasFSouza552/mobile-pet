@@ -167,7 +167,7 @@ export default function RegisterForm({ navigation, route }: any) {
   const scrollToInput = (inputRef: React.RefObject<TextInput | null>) => {
     setTimeout(() => {
       inputRef.current?.measureInWindow((x, y, width, height) => {
-        const scrollOffset = y - 200; // Offset para deixar o campo visível
+        const scrollOffset = y - 200;
         scrollViewRef.current?.scrollTo({
           y: Math.max(0, scrollOffset),
           animated: true,
@@ -185,7 +185,6 @@ export default function RegisterForm({ navigation, route }: any) {
     try {
       setIsLoadingLocation(true);
 
-      // Solicitar permissão de localização
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(
@@ -196,12 +195,10 @@ export default function RegisterForm({ navigation, route }: any) {
         return;
       }
 
-      // Obter localização atual
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
 
-      // Fazer geocoding reverso para obter o endereço
       const reverseGeocode = await Location.reverseGeocodeAsync({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -210,7 +207,6 @@ export default function RegisterForm({ navigation, route }: any) {
       if (reverseGeocode.length > 0) {
         const address = reverseGeocode[0];
 
-        // Preencher os campos com os dados obtidos
         setFormData(prev => ({
           ...prev,
           address: `${address.street || ''} ${address.streetNumber || ''}`.trim(),
@@ -256,8 +252,6 @@ export default function RegisterForm({ navigation, route }: any) {
   const handleRegister = () => {
     if (validateForm()) {
       console.log('Register data:', { documentType, ...formData });
-      // Aqui você pode navegar para a próxima etapa ou processar o registro
-      // navigation.navigate('NextStep', { documentType, formData });
     }
   };
 

@@ -15,6 +15,7 @@ import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-c
 import { ThemeProvider } from './src/context/ThemeContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Keyboard } from 'react-native';
+import { AccountProvider } from './src/context/AccountContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,34 +44,38 @@ export default function App() {
   return (
 
     <ThemeProvider>
-      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <AccountProvider>
 
-        <NavigationContainer>
-          <Stack.Navigator
-            initialRouteName="Splash"
-            screenOptions={{
-              headerShown: false,
-            }}
-          >
-            <Stack.Screen name="Splash" component={SplashScreen} />
-            <Stack.Screen name="Welcome" component={WelcomeScreen} />
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-            <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
-            <Stack.Screen name="Main" component={Main} />
-          </Stack.Navigator>
+        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+
+          <NavigationContainer>
+            <Stack.Navigator
+              initialRouteName="Splash"
+              screenOptions={{
+                headerShown: false,
+              }}
+            >
+              <Stack.Screen name="Splash" component={SplashScreen} />
+              <Stack.Screen name="Welcome" component={WelcomeScreen} />
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="RegisterForm" component={RegisterFormScreen} />
+              <Stack.Screen name="Main" component={Main} />
+            </Stack.Navigator>
 
 
-          <Toast
-            config={toastConfig}
-            position="top"     
-            topOffset={60}
-            visibilityTime={2500}
-          />
+            <Toast
+              config={toastConfig}
+              position="top"
+              topOffset={60}
+              visibilityTime={2500}
+            />
 
-          <StatusBar style="auto" hidden />
-        </NavigationContainer>
-      </SafeAreaProvider>
+            <StatusBar style="auto" hidden />
+          </NavigationContainer>
+        </SafeAreaProvider>
+
+      </AccountProvider>
     </ThemeProvider>
   );
 }

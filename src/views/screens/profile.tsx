@@ -1,19 +1,32 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { useAccount } from '../../context/AccountContext';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function Profile() {
+  const { account, refreshAccount } = useAccount();
+
+  useEffect(() => {
+    refreshAccount();
+  }, [])
+
+  if(!account) {
+    // carregar o skeleton
+    console.log(account);
+    return null;
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Image
-          source={{ uri: 'https://example.com/avatar.jpg' }}
+          source={{ uri: `http://10.0.2.2:3000/api/picture/${account?.avatar}` }}
           style={styles.avatar}
         />
         <View style={styles.headerInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>Jardan</Text>
+            <Text style={styles.name}>{account.name}</Text>
             <Text style={styles.badge}>🏅</Text>
             <Text style={styles.badge}>🐾</Text>
           </View>
