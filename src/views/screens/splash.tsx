@@ -3,7 +3,7 @@ import { ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { splashStyles as styles } from '../../styles/pagesStyles/splashStyles';
 import NetInfo from "@react-native-community/netinfo";
-import { getStorage, removeStorage } from '../../utils/storange';
+import { getStorage, removeStorage, saveStorage } from '../../utils/storange';
 import { accountService } from '../../services/accountService';
 import { runMigrations } from '../../data/local/database/migrations';
 

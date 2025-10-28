@@ -1,9 +1,11 @@
 export interface IComment {
     id: string;          
-    postId: string;
-    parentId?: string | null;
+    post: string;
+    parent?: string | null;
     content: string;
-    accountId: string;
+    account: string;
+    isDeleted: boolean;
     createdAt: string; 
     updatedAt: string;
+    lastSyncedAt?: string;
 }

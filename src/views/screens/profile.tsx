@@ -17,8 +17,6 @@ export default function Profile({ navigation }: any) {
     navigation.navigate('Welcome');
     return;
   } 
-
-  console.log(`${API_URL}/picture/${account?.avatar}`);
   
   return (
     <SafeAreaView style={styles.container}>

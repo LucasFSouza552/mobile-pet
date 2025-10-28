@@ -2,7 +2,7 @@ import { getLocalDb } from "../LocalDb";
 
 export default async function createAccountTable() {
     const db = await getLocalDb();
-      
+    
     await db.execAsync(`
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,

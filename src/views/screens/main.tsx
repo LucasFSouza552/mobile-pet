@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { AntDesign,FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 
 import Profile from './profile';
 import Donate from './donate';
@@ -23,6 +23,7 @@ export default function Main() {
 
   return (
     <Tab.Navigator
+      initialRouteName='Profile'
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.quarternary,

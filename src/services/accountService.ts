@@ -17,4 +17,8 @@ export const accountService = {
   async syncFromServer(): Promise<void> {
     return accountSync.syncFromServer();
   },
+  async syncToServer(): Promise<void> {
+    return accountSync.syncToServer();
+  },
+
 };

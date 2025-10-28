@@ -70,6 +70,10 @@ export const accountLocalRepository = {
         const db = await getLocalDb();
         await db.runAsync("DELETE FROM accounts WHERE id = ?", [id]);
     },
+    deleteAll: async (): Promise<void> => {
+        const db = await getLocalDb();
+        await db.runAsync("DELETE FROM accounts");
+    },
 
     getLastSyncTime: async () => {
         const db = await getLocalDb();
