@@ -12,8 +12,6 @@ import RegisterStep3Screen from './src/views/screens/registerStep3';
 import RegisterStep4Screen from './src/views/screens/registerStep4';
 import Main from './src/views/screens/main';
 
-
-
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
@@ -21,6 +19,7 @@ import { Keyboard } from 'react-native';
 import { AccountProvider } from './src/context/AccountContext';
 
 const Stack = createNativeStackNavigator();
+
 
 export default function App() {
 
@@ -42,7 +41,6 @@ export default function App() {
       hideSubscription.remove();
     };
   }, []);
-
 
   return (
 
