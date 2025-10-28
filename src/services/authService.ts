@@ -34,7 +34,11 @@ export const authService = {
     },
 
     async register(account: IAccount) {
-        await accountLocalRepository.create(account);
+        try {
+            await accountLocalRepository.create(account);
+        } catch (error: any) {
+            throw new Error("Erro ao criar conta localmente");
+        }
 
         try {
             const response = await authRemoteRepository.register(account);
@@ -50,6 +54,7 @@ export const authService = {
 
             return response;
         } catch (error) {
+            console.log('Erro ao registrar:', error);
             throw error;
         }
     },

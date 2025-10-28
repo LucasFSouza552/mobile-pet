@@ -14,8 +14,10 @@ export const accountLocalRepository = {
     },
     create: async (account: IAccount): Promise<void> => {
         const db = await getLocalDb();
-        await db.runAsync(
-            `
+
+        try {
+            await db.runAsync(
+                `
         INSERT INTO accounts (
             name, email, avatar, phone_number, role, cpf, cnpj, verified,
             street, number, complement, city, state, cep, neighborhood, lastSyncedAt, countPost
@@ -39,26 +41,29 @@ export const accountLocalRepository = {
             lastSyncedAt = excluded.lastSyncedAt,
             countPost = excluded.countPost
         `,
-            [
-                account.name ?? null,
-                account.email ?? null,
-                account.avatar ?? null,
-                account.phone_number ?? null,
-                account.role ?? null,
-                account.cpf ?? null,
-                account.cnpj ?? null,
-                account.verified ? 1 : 0,
-                account.address?.street ?? null,
-                account.address?.number ?? null,
-                account.address?.complement ?? null,
-                account.address?.city ?? null,
-                account.address?.state ?? null,
-                account.address?.cep ?? null,
-                account.address?.neighborhood ?? null,
-                null,
-                account.countPost ?? 0
-            ]
-        );
+                [
+                    account.name ?? null,
+                    account.email ?? null,
+                    account.avatar ?? null,
+                    account.phone_number ?? null,
+                    account.role ?? null,
+                    account.cpf ?? null,
+                    account.cnpj ?? null,
+                    account.verified ? 1 : 0,
+                    account.address?.street ?? null,
+                    account.address?.number ?? null,
+                    account.address?.complement ?? null,
+                    account.address?.city ?? null,
+                    account.address?.state ?? null,
+                    account.address?.cep ?? null,
+                    account.address?.neighborhood ?? null,
+                    null,
+                    account.countPost ?? 0
+                ]
+            );
+        } catch (error) {
+            console.log(error)
+        }
 
     },
     findLocalAccount: async (): Promise<IAccount | null> => {

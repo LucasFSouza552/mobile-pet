@@ -13,6 +13,7 @@ export const authRemoteRepository = {
     },
 
     async register(account: IAccount) {
+        console.log("Registrando conta...");
         const response = await apiClient.post('/auth/register', account);
         return response.data;
     },

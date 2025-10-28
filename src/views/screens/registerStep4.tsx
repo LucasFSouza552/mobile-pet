@@ -65,7 +65,7 @@ export default function RegisterStep4({ navigation, route }: any) {
         avatar: avatar || undefined,
         phone_number,
         role,
-        cpf: cpf || undefined,
+        cpf: cpf?.replaceAll("-", "")?.replaceAll(".", "") || undefined,
         cnpj: cnpj || undefined,
         verified: false,
         address: {
@@ -78,9 +78,11 @@ export default function RegisterStep4({ navigation, route }: any) {
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        lastSyncedAt: "",
+        countPost: 0
+
       };
 
-      // Adicionar senha ao objeto (não está no tipo IAccount, mas a API espera)
       const registerData = {
         ...accountData,
         password,
@@ -103,6 +105,7 @@ export default function RegisterStep4({ navigation, route }: any) {
 
     } catch (error: any) {
       console.error('Erro no cadastro:', error);
+      console.log("motivo;",error?.message);
       Toast.show({
         type: 'error',
         text1: 'Erro',
