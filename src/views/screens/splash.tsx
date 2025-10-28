@@ -10,38 +10,51 @@ import { runMigrations } from '../../data/local/database/migrations';
 export default function Splash({ navigation }: any) {
 
   useEffect(() => {
-    let timer: NodeJS.Timeout | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const checkConnectionAndNavigate = async () => {
-      
-      await runMigrations();
-      
-      const netState = await NetInfo.fetch();
+      try {
+        await runMigrations();
 
-      if (!netState.isConnected) {
-        navigation.navigate('Main');
-        return;
-      }
+        const netState = await NetInfo.fetch();
+        const token = await getStorage('@token');
 
-      const token = await getStorage('@token');
-      if (token) {
-        try {
-          const account = await accountService.getProfile();
+        if (!netState.isConnected && token) {
+          navigation.replace('Main');
+          return;
+        }
 
-          if (account) {
-            navigation.navigate('Main');
+        if (token) {
+          try {
+            const account = await accountService.getProfile();
+
+            if (!account) {
+              await removeStorage('@token');
+              navigation.replace('Welcome');
+              return;
+            }
+
+            navigation.replace('Main');
+            return;
+          } catch (error) {
+            await removeStorage('@token');
+            navigation.replace('Welcome');
             return;
           }
-        } catch (error) {
-          await removeStorage('@token');
-          navigation.replace('Welcome');
-          throw error;
         }
-      }
 
-      timer = setTimeout(() => {
+        timer = setTimeout(() => {
+          navigation.replace('Welcome');
+        }, 10000);
+      } catch (error: any) {
+        console.error('Erro em Splash:', error);
+        try {
+          await removeStorage('@token');
+        } catch (e) {
+
+        }
         navigation.replace('Welcome');
-      }, 5000);
+      }
     };
 
     checkConnectionAndNavigate();

@@ -2,7 +2,7 @@ import createAccountTable from "./migrations/00_CreateAccountTable";
 import * as SQLite from 'expo-sqlite';
 
 export async function runMigrations() {
-  await resetDatabase();
+  // await resetDatabase();
   await createAccountTable();
 }
 

@@ -5,6 +5,7 @@ import { IAccount } from "../../models/IAccount";
 
 export const accountSync = {
 
+    // Atualiza o banco local com as alterações vindas do servidor.
     async syncFromServer(): Promise<void> {
         const netState = await NetInfo.fetch();
         if (!netState.isConnected) {
@@ -13,15 +14,19 @@ export const accountSync = {
         }
 
         try {
+            console.log("Realizando sincronização...");
             const account = await accountRemoteRepository.getProfile();
+            console.log("Perfil recebido:", account);
+            
             if (account) {
                 await accountLocalRepository.create(account);
             }
         } catch (error) {
-            console.error("Erro ao sincronizar do servidor:", error);
+            console.error("...Erro ao sincronizar do servidor:", error);
         }
     },
 
+    // Envia para o servidor as alterações feitas localmente (WIP)
     async syncToServer(): Promise<void> {
         const netState = await NetInfo.fetch();
         if (!netState.isConnected) {
@@ -37,6 +42,31 @@ export const accountSync = {
         } catch (error) {
             console.error("Erro ao sincronizar para servidor:", error);
         }
+    },
+
+    async getProfile() {
+        const localAccount = await accountLocalRepository.findLocalAccount();
+        const netState = await NetInfo.fetch();
+        
+        if (!netState.isConnected && !localAccount) {
+            return null;
+        }
+
+        if(!netState.isConnected) {
+            return localAccount;
+        }
+
+        try {
+            const remoteAccount = await accountRemoteRepository.getProfile();
+            if (remoteAccount) {
+                console.log("Perfil recebido:", remoteAccount);
+                await accountLocalRepository.create(remoteAccount);
+            }
+            return remoteAccount;
+        } catch (error) {
+            console.error("Erro ao buscar do servidor:", error);
+        }
+        return null;
     },
 
     async getAccount(id: string): Promise<IAccount | null> {

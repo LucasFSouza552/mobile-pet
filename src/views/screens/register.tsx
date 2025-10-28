@@ -14,7 +14,6 @@ export default function Register({ navigation }: any) {
 
   const handleContinue = () => {
     if (selectedDocumentType) {
-      console.log('Selected document type:', selectedDocumentType);
       navigation.navigate('RegisterForm', { documentType: selectedDocumentType });
     }
   };
