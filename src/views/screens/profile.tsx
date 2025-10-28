@@ -1,44 +1,42 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { useAccount } from '../../context/AccountContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { API_URL } from '@env';
 
 const screenWidth = Dimensions.get('window').width;
 
-export default function Profile() {
+export default function Profile({ navigation }: any) {
   const { account, refreshAccount } = useAccount();
 
   useEffect(() => {
     refreshAccount();
   }, [])
 
-  if(!account) {
-    // carregar o skeleton
-    console.log(account);
-    return null;
-  }
-
+  if (!account) {
+    navigation.navigate('Welcome');
+    return;
+  } 
+  
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Image
-          source={{ uri: `http://10.0.2.2:3000/api/picture/${account?.avatar}` }}
-          style={styles.avatar}
-        />
-        <View style={styles.headerInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{account.name}</Text>
-            <Text style={styles.badge}>🏅</Text>
-            <Text style={styles.badge}>🐾</Text>
-          </View>
-          <View style={styles.postsRow}>
-            <Text style={styles.posts}>985 Posts</Text>
-            <Text style={styles.posts}>1.294 Posts</Text>
+    <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Image
+            source={{ uri: `${API_URL}/picture/${account?.avatar}` }}
+            style={styles.avatar}
+          />
+          <View style={styles.headerInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{account.name}</Text>
+            </View>
+            <View style={styles.postsRow}>
+              <Text style={styles.posts}>{account.countPost} Publicações</Text>
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.background}>
-      </View>
-    </ScrollView>
+        <View style={styles.background}>
+        </View>
+    </SafeAreaView>
   );
 }
 
@@ -96,7 +94,7 @@ const styles = StyleSheet.create({
   background: {
     flex: 1,
     width: screenWidth,
-    height: 400, 
+    height: 400,
     justifyContent: 'center',
     alignItems: 'center',
   },

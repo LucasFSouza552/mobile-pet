@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { AntDesign, Ionicons, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 
 import Profile from './profile';
 import Donate from './donate';
@@ -23,6 +23,7 @@ export default function Main() {
 
   return (
     <Tab.Navigator
+      initialRouteName='Profile'
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarActiveTintColor: COLORS.quarternary,
@@ -35,7 +36,7 @@ export default function Main() {
           const { name, family: IconFamily } =
             Icons[route?.name as keyof typeof Icons] || { name: 'question-circle', family: FontAwesome };
 
-          return <IconFamily name={name} size={24} color={color} />
+          return <IconFamily name={name} size={size} color={color} />
         },
       })}
     >

@@ -2,7 +2,7 @@ import { getLocalDb } from "../LocalDb";
 
 export default async function createAccountTable() {
     const db = await getLocalDb();
-
+    
     await db.execAsync(`
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,7 +23,8 @@ export default async function createAccountTable() {
       neighborhood TEXT,
       createdAt TEXT DEFAULT (datetime('now')),
       updatedAt TEXT DEFAULT (datetime('now')),
-      lastSyncedAt TEXT DEFAULT (datetime('now'))
+      lastSyncedAt TEXT DEFAULT (datetime('now')),
+      countPost INTEGER DEFAULT 0
     );
   `);
 }

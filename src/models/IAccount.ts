@@ -14,4 +14,6 @@ export interface IAccount {
     address: IAddress;
     createdAt: string;
     updatedAt: string;
+    lastSyncedAt: string;
+    countPost: number;
 }

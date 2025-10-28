@@ -18,9 +18,9 @@ export const accountLocalRepository = {
             `
         INSERT INTO accounts (
             name, email, avatar, phone_number, role, cpf, cnpj, verified,
-            street, number, complement, city, state, cep, neighborhood, lastSyncedAt
+            street, number, complement, city, state, cep, neighborhood, lastSyncedAt, countPost
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
             name = excluded.name,
             avatar = excluded.avatar,
@@ -36,7 +36,8 @@ export const accountLocalRepository = {
             state = excluded.state,
             cep = excluded.cep,
             neighborhood = excluded.neighborhood,
-            lastSyncedAt = excluded.lastSyncedAt
+            lastSyncedAt = excluded.lastSyncedAt,
+            countPost = excluded.countPost
         `,
             [
                 account.name ?? null,
@@ -54,7 +55,8 @@ export const accountLocalRepository = {
                 account.address?.state ?? null,
                 account.address?.cep ?? null,
                 account.address?.neighborhood ?? null,
-                null 
+                null,
+                account.countPost ?? 0
             ]
         );
 
@@ -67,6 +69,10 @@ export const accountLocalRepository = {
     delete: async (id: string): Promise<void> => {
         const db = await getLocalDb();
         await db.runAsync("DELETE FROM accounts WHERE id = ?", [id]);
+    },
+    deleteAll: async (): Promise<void> => {
+        const db = await getLocalDb();
+        await db.runAsync("DELETE FROM accounts");
     },
 
     getLastSyncTime: async () => {

@@ -1,8 +1,9 @@
 import axios from "axios";
 import { getStorage } from "../../../utils/storange";
-
+import { API_URL } from '@env';
+console.log("APIURL",API_URL);
 export const apiClient = axios.create({
-    baseURL: "http://10.0.2.2:3000/api",
+    baseURL: API_URL,
     timeout: 5000,
     headers: { "Content-Type": "application/json" },
 });
