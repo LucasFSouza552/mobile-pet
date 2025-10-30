@@ -39,25 +39,9 @@ export const authService = {
     },
 
     async register(account: IAccount) {
-        try {
-            await accountLocalRepository.create(account);
-        } catch (error: any) {
-            throw new Error("Erro ao criar conta localmente");
-        }
 
         try {
-            const response = await authRemoteRepository.register(account);
-
-            try {
-                const userProfile = await accountRemoteRepository.getProfile();
-                if (userProfile) {
-                    await accountLocalRepository.create(userProfile);
-                }
-            } catch (error) {
-                console.error('Erro ao buscar perfil após registro:', error);
-            }
-
-            return response;
+            await authRemoteRepository.register(account);
         } catch (error) {
             console.log('Erro ao registrar:', error);
             throw error;

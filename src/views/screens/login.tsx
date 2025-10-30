@@ -15,12 +15,14 @@ import { loginStyles } from '../../styles/pagesStyles/loginStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
 import { authService } from '../../services/authService';
 import Toast from 'react-native-toast-message';
+import { useAccount } from '../../context/AccountContext';
 
 export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string>();
   const styles = loginStyles();
+  const { refreshAccount } = useAccount();
 
   const handleLogin = async () => {
     Keyboard.dismiss();
@@ -45,7 +47,7 @@ export default function Login({ navigation }: any) {
         });
         throw new Error('Email ou senha inválidos.');
       }
-      console.log("IR PARA MAIN")
+      await refreshAccount();
       navigation.navigate('Main');
     } catch (error: any) {
       Toast.show({

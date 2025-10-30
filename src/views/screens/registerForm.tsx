@@ -14,13 +14,6 @@ interface RegisterFormData {
   role: ITypeAccounts;
   cpf?: string;
   cnpj?: string;
-  street: string;
-  number: string;
-  complement?: string;
-  city: string;
-  cep: string;
-  state: string;
-  neighborhood: string
 }
 
 
@@ -46,13 +39,6 @@ export default function RegisterForm({ navigation, route }: any) {
     role: 'user',
     cpf: '',
     cnpj: '',
-    street: '',
-    number: '',
-    complement: '',
-    city: '',
-    cep: '',
-    state: '',
-    neighborhood: ''
   });
 
   const [error, setError] = useState<string>("");

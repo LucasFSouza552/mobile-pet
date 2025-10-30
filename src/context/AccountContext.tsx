@@ -20,24 +20,25 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const [account, setAccount] = useState<IAccount | null>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadAccount();
-    }, []);
 
     const loadAccount = async () => {
         try {
             setLoading(true);
+            console.log("Buscando conta do servidor...");
             const localAccount = await accountService.getLoggedAccount();
-
             if (localAccount) {
+                console.log("Conta encontrada no context:", localAccount);
                 setAccount(localAccount);
             } else {
+                console.log("Conta nenhuma encontrada.");
                 setAccount(null);
             }
 
         } catch (error) {
+            console.log("AccountContexttt")
             console.error("Erro ao buscar do servidor:", error);
         } finally {
+            console.log("Busca de conta finalizada.");
             setLoading(false);
         }
     };
@@ -45,6 +46,12 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const refreshAccount = async () => {
         await loadAccount();
     };
+
+    useEffect(() => {
+       refreshAccount()
+    }, []);
+
+
 
     const logout = async () => {
         setAccount(null)

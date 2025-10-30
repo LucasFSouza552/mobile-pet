@@ -59,7 +59,6 @@ export default function RegisterStep4({ navigation, route }: any) {
       const role: ITypeAccounts = documentType === 'cnpj' ? 'institution' : 'user';
 
       const accountData: IAccount = {
-        id: '',
         name,
         email,
         avatar: avatar || undefined,
@@ -67,21 +66,9 @@ export default function RegisterStep4({ navigation, route }: any) {
         role,
         cpf: cpf?.replaceAll("-", "")?.replaceAll(".", "") || undefined,
         cnpj: cnpj || undefined,
-        verified: false,
-        address: {
-          street: '',
-          number: '',
-          city: '',
-          cep: '',
-          state: '',
-          neighborhood: '',
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         lastSyncedAt: "",
-        countPost: 0
-
-      };
+        postCount: 0
+      } as IAccount;
 
       const registerData = {
         ...accountData,
@@ -97,11 +84,7 @@ export default function RegisterStep4({ navigation, route }: any) {
         position: 'bottom',
       });
 
-      // Navegar para tela de login
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      });
+      navigation.replace("Login")
 
     } catch (error: any) {
       console.error('Erro no cadastro:', error);

@@ -8,23 +8,18 @@ import PrimaryButton from '../../components/Buttons/PrimaryButton';
 const screenWidth = Dimensions.get('window').width;
 
 export default function Profile({ navigation }: any) {
-  const { account, refreshAccount, loading, logout } = useAccount();
-
+  const { account, loading, logout } = useAccount();
 
 
   useEffect(() => {
-    if (!account)
-      refreshAccount();
-  }, []);
+    if (!loading && account === null) {
+      console.log('Nenhuma conta encontrada');
+      navigation.replace('Welcome');
+    }
+  }, [loading, account, navigation]);
 
-  if (loading) {
+  if (loading || !account) {
     return <Text>Carregando...</Text>;
-  }
-
-  if (account === null) {
-    console.log("Por motivos de forças maiores o usuário foi deslogado.");
-    navigation.replace('Welcome');
-    return;
   }
 
 

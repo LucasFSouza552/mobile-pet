@@ -18,13 +18,19 @@ export const accountSync = {
             console.log("Sincronizando contas...");
             const account = await accountRemoteRepository.getProfile();
             if (!account) {
-                await accountLocalRepository.logout();
+
                 return;
             }
             console.log("Conta encontrada:", account);
             await accountLocalRepository.create(account);
-        } catch (error) {
-            await removeStorage('@token');
+        } catch (error: any) {
+
+            const status = error?.response?.status;
+            if (status === 401 || status === 403) {
+                await accountLocalRepository.logout();
+                return;
+            }
+            console.log("Erro de rede/servidor ao sincronizar. Mantendo sessão.");
         }
     },
 
@@ -52,10 +58,6 @@ export const accountSync = {
             const localAccount = await accountLocalRepository.findLocalAccount();
             const netState = await NetInfo.fetch();
 
-            if (!netState.isConnected && !localAccount) {
-                return null;
-            }
-
             if (!netState.isConnected) {
                 return localAccount;
             }
@@ -64,10 +66,16 @@ export const accountSync = {
                 const remoteAccount = await accountRemoteRepository.getProfile();
                 if (remoteAccount) {
                     await accountLocalRepository.create(remoteAccount);
+                    return remoteAccount;
                 }
-                return remoteAccount;
-            } catch (error) {
-                accountLocalRepository.logout();
+                return localAccount ?? null;
+            } catch (error: any) {
+                const status = error?.response?.status;
+                if (status === 401 || status === 403) {
+                    await accountLocalRepository.logout();
+                    return null;
+                }
+                return localAccount ?? null;
             }
             return null;
         } catch (error) {
