@@ -1,5 +1,6 @@
 import { getLocalDb } from "../database/LocalDb";
 import { IAccount } from "../../../models/IAccount";
+import { removeStorage } from "../../../utils/storange";
 
 export const accountLocalRepository = {
     getAll: async (): Promise<IAccount[]> => {
@@ -20,7 +21,7 @@ export const accountLocalRepository = {
                 `
         INSERT INTO accounts (
             name, email, avatar, phone_number, role, cpf, cnpj, verified,
-            street, number, complement, city, state, cep, neighborhood, lastSyncedAt, countPost
+            street, number, complement, city, state, cep, neighborhood, lastSyncedAt, postCount
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
@@ -39,7 +40,7 @@ export const accountLocalRepository = {
             cep = excluded.cep,
             neighborhood = excluded.neighborhood,
             lastSyncedAt = excluded.lastSyncedAt,
-            countPost = excluded.countPost
+            postCount = excluded.postCount
         `,
                 [
                     account.name ?? null,
@@ -58,7 +59,7 @@ export const accountLocalRepository = {
                     account.address?.cep ?? null,
                     account.address?.neighborhood ?? null,
                     null,
-                    account.countPost ?? 0
+                    account.postCount ?? 0
                 ]
             );
         } catch (error) {
@@ -75,9 +76,11 @@ export const accountLocalRepository = {
         const db = await getLocalDb();
         await db.runAsync("DELETE FROM accounts WHERE id = ?", [id]);
     },
-    deleteAll: async (): Promise<void> => {
+    logout: async (): Promise<void> => {
         const db = await getLocalDb();
         await db.runAsync("DELETE FROM accounts");
+        await removeStorage("@token");
+        await removeStorage("@email");
     },
 
     getLastSyncTime: async () => {

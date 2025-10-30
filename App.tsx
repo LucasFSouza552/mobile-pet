@@ -57,7 +57,7 @@ export default function App() {
               }}
             >
               <Stack.Screen name="Splash" component={SplashScreen} />
-              <Stack.Screen name="Welcome" component={WelcomeScreen} />
+              <Stack.Screen name="Welcome" component={WelcomeScreen}  />
               <Stack.Screen name="Login" component={LoginScreen} />
               <Stack.Screen name="Register" component={RegisterScreen} />
               <Stack.Screen name="RegisterStep1" component={RegisterStep1Screen} />
@@ -75,7 +75,7 @@ export default function App() {
               visibilityTime={2500}
             />
 
-            <StatusBar style="auto" hidden />
+            <StatusBar style="auto" hidden  />
           </NavigationContainer>
         </SafeAreaProvider>
 

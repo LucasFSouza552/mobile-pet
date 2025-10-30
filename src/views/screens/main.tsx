@@ -7,6 +7,7 @@ import Donate from './donate';
 import FindPets from './findPets';
 import Community from './community';
 import { useTheme } from '../../context/ThemeContext';
+import { useAccount } from '../../context/AccountContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,7 +21,8 @@ const Icons = {
 export default function Main() {
 
   const { COLORS } = useTheme();
-
+  
+  
   return (
     <Tab.Navigator
       initialRouteName='Profile'

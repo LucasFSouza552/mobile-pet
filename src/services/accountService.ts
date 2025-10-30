@@ -1,5 +1,7 @@
+import { accountLocalRepository } from '../data';
 import { accountSync } from '../data/sync/accountSync';
 import { IAccount } from '../models/IAccount';
+import { getStorage } from '../utils/storange';
 
 /**
  * Service que gerencia accounts
@@ -10,8 +12,25 @@ export const accountService = {
     return accountSync.getAccount(id);
   },
 
-  async getProfile(): Promise<IAccount | null> {
-    return accountSync.getProfile();
+  async getLoggedAccount(): Promise<IAccount | null> {
+    const token = await getStorage("@token");
+    if (!token) {
+      await accountLocalRepository.logout();
+      return null;
+    }
+
+    let account = await accountSync.getProfile();
+    
+    if (!account) {
+      await this.syncFromServer();
+      account = await accountLocalRepository.findLocalAccount();
+    }
+    return account;
+  },
+
+  async getLogout() {
+    await accountLocalRepository.logout();
+
   },
 
   async syncFromServer(): Promise<void> {

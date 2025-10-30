@@ -6,9 +6,7 @@ export const apiClient = axios.create({
     baseURL: "http://10.0.2.2:3000/api",
     timeout: 5000,
     headers: { "Content-Type": "application/json" },
-})
-
-
+});
 
 apiClient.interceptors.request.use(
     async config => {
@@ -22,20 +20,20 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response) => {
-    console.log("✅ [RESPONSE]", {
-      url: response.config.url,
-      status: response.status,
-      data: response.data,
-    });
+    // console.log("✅ [RESPONSE]", {
+    //   url: response.config.url,
+    //   status: response.status,
+    //   data: response.data,
+    // });
     return response;
   },
   (error) => {
     if (error.response) {
-      console.log("❌ [RESPONSE ERROR]", {
-        url: error.response.config?.url,
-        status: error.response.status,
-        data: error.response.data.message,
-      });
+      // console.log("❌ [RESPONSE ERROR]", {
+      //   url: error.response.config?.url,
+      //   status: error.response.status,
+      //   data: error.response.data.message,
+      // });
 
       return Promise.reject(error.response?.data?.message);
 

@@ -35,19 +35,19 @@ export default function Login({ navigation }: any) {
     }
 
     try {
-      const response = await authService.login(email, password);
-      
-      if (response) {
+      const token = await authService.login(email, password);
+      if (!token) {
         Toast.show({
-          type: 'success',
-          text1: 'Sucesso',
-          text2: 'Login realizado com sucesso!',
+          type: 'error',
+          text1: 'Erro',
+          text2: 'Email ou senha inválidos.',
           position: 'bottom',
         });
-        navigation.replace('Main');
+        throw new Error('Email ou senha inválidos.');
       }
+      console.log("IR PARA MAIN")
+      navigation.navigate('Main');
     } catch (error: any) {
-      console.error('Erro no login:', error);
       Toast.show({
         type: 'error',
         text1: 'Erro',
@@ -64,12 +64,6 @@ export default function Login({ navigation }: any) {
   const goToMain = () => {
     navigation.navigate('Main');
   };
-
-  useEffect(() => {
-    if (!error) return;
-    const timer = setTimeout(() => setError(''), 3000);
-    return () => clearTimeout(timer);
-  }, [error]);
 
   return (
     <KeyboardAvoidingView

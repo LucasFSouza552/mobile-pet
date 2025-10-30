@@ -15,10 +15,13 @@ export const accountSync = {
         }
 
         try {
+            console.log("Sincronizando contas...");
             const account = await accountRemoteRepository.getProfile();
             if (!account) {
+                await accountLocalRepository.logout();
                 return;
             }
+            console.log("Conta encontrada:", account);
             await accountLocalRepository.create(account);
         } catch (error) {
             await removeStorage('@token');
@@ -36,11 +39,11 @@ export const accountSync = {
         try {
             const localAccount = await accountLocalRepository.findLocalAccount();
 
-            
+
 
         } catch (error) {
-            await removeStorage('@token');
-            // console.error("Erro ao sincronizar para servidor:", error);
+            console.log("Erro ao sincronizar:", error);
+            accountLocalRepository.logout();
         }
     },
 
@@ -64,7 +67,7 @@ export const accountSync = {
                 }
                 return remoteAccount;
             } catch (error) {
-                await removeStorage('@token');
+                accountLocalRepository.logout();
             }
             return null;
         } catch (error) {

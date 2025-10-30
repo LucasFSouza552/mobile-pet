@@ -24,7 +24,7 @@ export default async function createAccountTable() {
       createdAt TEXT DEFAULT (datetime('now')),
       updatedAt TEXT DEFAULT (datetime('now')),
       lastSyncedAt TEXT DEFAULT (datetime('now')),
-      countPost INTEGER DEFAULT 0
+      postCount INTEGER DEFAULT 0
     );
   `);
 }

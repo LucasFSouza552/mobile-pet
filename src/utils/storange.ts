@@ -9,5 +9,6 @@ export async function getStorage(key: string): Promise<string | null> {
 }
 
 export async function removeStorage(key: string): Promise<void> {
+    console.log("Remover", key)
     AsyncStorage.removeItem(key);
 }

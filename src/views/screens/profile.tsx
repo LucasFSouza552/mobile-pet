@@ -3,39 +3,52 @@ import { View, Text, Image, StyleSheet, Dimensions, ScrollView } from 'react-nat
 import { useAccount } from '../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { API_URL } from '@env';
+import PrimaryButton from '../../components/Buttons/PrimaryButton';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function Profile({ navigation }: any) {
-  const { account, refreshAccount } = useAccount();
+  const { account, refreshAccount, loading, logout } = useAccount();
+
+
 
   useEffect(() => {
-    refreshAccount();
-  }, [])
+    if (!account)
+      refreshAccount();
+  }, []);
 
-  if (!account) {
-    navigation.navigate('Welcome');
+  if (loading) {
+    return <Text>Carregando...</Text>;
+  }
+
+  if (account === null) {
+    console.log("Por motivos de forças maiores o usuário foi deslogado.");
+    navigation.replace('Welcome');
     return;
-  } 
-  
+  }
+
+
+
   return (
     <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Image
-            source={{ uri: `${API_URL}/picture/${account?.avatar}` }}
-            style={styles.avatar}
-          />
-          <View style={styles.headerInfo}>
-            <View style={styles.nameRow}>
-              <Text style={styles.name}>{account.name}</Text>
-            </View>
-            <View style={styles.postsRow}>
-              <Text style={styles.posts}>{account.countPost} Publicações</Text>
-            </View>
+      <View style={styles.header}>
+        <Image
+          source={{ uri: `${API_URL}/picture/${account?.avatar}` }}
+          style={styles.avatar}
+        />
+        <View style={styles.headerInfo}>
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{account.name}</Text>
           </View>
+          <View style={styles.postsRow}>
+            <Text style={styles.posts}>{account.postCount} Publicações</Text>
+          </View>
+
+          <PrimaryButton text='X' onPress={logout} />
         </View>
-        <View style={styles.background}>
-        </View>
+      </View>
+      <View style={styles.background}>
+      </View>
     </SafeAreaView>
   );
 }

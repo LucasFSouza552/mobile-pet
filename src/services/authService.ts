@@ -2,7 +2,7 @@ import { authRemoteRepository } from "../data/remote/repositories/authRemoteRepo
 import { accountLocalRepository } from "../data/local/repositories/accountLocalRepository";
 import { accountRemoteRepository } from "../data/remote/repositories/accountRemoteRepository";
 import { IAccount } from "../models/IAccount";
-import { getStorage, saveStorage } from "../utils/storange";
+import { saveStorage } from "../utils/storange";
 
 /**
  * Service que gerencia autenticação
@@ -10,27 +10,32 @@ import { getStorage, saveStorage } from "../utils/storange";
  */
 export const authService = {
     async login(email: string, password: string) {
-        const response = await authRemoteRepository.login(email, password);
 
         try {
-            const userProfile = await accountRemoteRepository.getProfile();
-            console.log("Perfil recebido:", userProfile);
 
-            if (userProfile) {
-                const email = await getStorage('@email');
-                if (email !== userProfile.email) {
-                    await accountLocalRepository.deleteAll();
-                }
-                await saveStorage('@email', userProfile.email);
-                console.log("Perfil salvo localmente:", userProfile);
+            const response = await authRemoteRepository.login(email, password);
+            const token = response?.token;
 
-                await accountLocalRepository.create(userProfile);
+            if (!token) {
+                throw new Error("Ocorreu um erro ao logar")
             }
+
+            await saveStorage('@token', token);
+            const userProfile = await accountRemoteRepository.getProfile();
+
+            if (!userProfile) {
+                await accountLocalRepository.logout();
+                throw new Error('Erro ao buscar perfil');
+            }
+
+            await saveStorage('@email', userProfile.email);
+            await accountLocalRepository.create(userProfile);
+
+            return token;
         } catch (error) {
             console.error('Erro ao buscar perfil após login:', error);
         }
 
-        return response;
     },
 
     async register(account: IAccount) {
@@ -59,9 +64,7 @@ export const authService = {
         }
     },
 
-    async logout () {
-        await accountLocalRepository.deleteAll();
-        await saveStorage('@token', '');
-        await saveStorage('@email', '');
+    async logout() {
+        await accountLocalRepository.logout();
     },
 };
