@@ -1,97 +1,122 @@
-import { StyleSheet, Dimensions } from 'react-native';
-import { useTheme } from '../../context/ThemeContext';
+import { StyleSheet } from 'react-native';
 
-
-const { width, height } = Dimensions.get('window');
-
-export const loginStyles = () => {
-  const { COLORS } = useTheme()
-
+export const createLoginStyles = (width: number, height: number) => {
+  const scale = (size: number) => (width / 375) * size;
+  const verticalScale = (size: number) => (height / 812) * size;
+  
   return StyleSheet.create({
     container: {
       flex: 1,
-    },
-    safeArea: {
-      flex: 1,
-      paddingBottom: 0,
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center'
+      backgroundColor: '#332630',
     },
     backgroundImage: {
       position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
       width: '100%',
       height: '100%',
+      opacity: 0.3,
+    },
+    safeArea: {
+      flex: 1,
     },
     content: {
       flex: 1,
-
+      paddingHorizontal: scale(30),
+      paddingTop: verticalScale(20),
     },
     header: {
       alignItems: 'center',
-      paddingHorizontal: width * 0.05,
-      paddingTop: height * 0.03,
-      paddingBottom: height * 0.005,
+      marginBottom: verticalScale(20),
     },
-    logoContainer: {
-      alignItems: 'center',
-    },
-    logo: {
-      width: width * 0.15,
-      height: width * 0.15,
-      maxWidth: 60,
-      minWidth: 40,
-    },
-    formContainer: {
-      backgroundColor: COLORS.secondary,
-      marginHorizontal: width * 0.08,
-      borderRadius: width * 0.05,
-      paddingHorizontal: width * 0.06,
-      paddingVertical: height * 0.03,
-      marginTop: height * 0.05,
-      marginBottom: height * 0.1,
-    },
-    title: {
-      fontSize: width * 0.07,
+    headerTitle: {
+      fontSize: scale(32),
       fontWeight: 'bold',
-      color: '#ffffff',
-      textAlign: 'center',
-      marginBottom: height * 0.008,
+      color: '#fff',
+      marginBottom: verticalScale(5),
     },
-    subtitle: {
-      fontSize: width * 0.035,
-      color: '#ffffff',
+    headerSubtitle: {
+      fontSize: scale(14),
+      color: '#ddd',
       textAlign: 'center',
-      marginBottom: height * 0.025,
-      opacity: 0.8,
     },
+  
+    // Form
+    formContainer: {
+      flex: 1,
+      alignItems: 'center',
+      marginTop: verticalScale(40),
+    },
+    
+    // Inputs
     inputContainer: {
-      marginBottom: height * 0.02,
+      width: '100%',
     },
     input: {
-      backgroundColor: '#ffffff',
-      borderRadius: width * 0.03,
-      paddingHorizontal: width * 0.04,
-      paddingVertical: height * 0.015,
-      fontSize: width * 0.04,
-      marginBottom: height * 0.015,
-      color: '#333333',
+      width: '100%',
+      height: verticalScale(55),
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: '#B648A0',
+      borderRadius: scale(10),
+      paddingHorizontal: scale(20),
+      fontSize: scale(16),
+      color: '#fff',
+      marginBottom: verticalScale(20),
     },
-    registerLink: {
+
+    // Password Input with Eye Icon
+    passwordContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#B648A0',
+      borderRadius: scale(10),
+      marginBottom: verticalScale(20),
+      backgroundColor: 'transparent',
+      height: verticalScale(55),
+    },
+    passwordInput: {
+      flex: 1,
+      height: '100%',
+      paddingHorizontal: scale(20),
+      fontSize: scale(16),
+      color: '#fff',
+    },
+    eyeButton: {
+      paddingHorizontal: scale(15),
+      height: '100%',
+      justifyContent: 'center',
+    },
+
+    // Buttons
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingBottom: verticalScale(30),
+      width: '100%',
+    },
+    backButton: {
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(30),
+    },
+    backButtonText: {
+      fontSize: scale(18),
+      fontWeight: 'bold',
+      color: '#fff',
+    },
+    loginButton: {
+      backgroundColor: '#B648A0',
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(40),
+      borderRadius: scale(25),
+      minWidth: scale(140),
       alignItems: 'center',
     },
-    registerText: {
-      color: '#ffffff',
-      fontSize: width * 0.04,
-    },
-    registerLinkText: {
-      color: '#B648A0',
-      fontWeight: '600',
+    loginButtonText: {
+      fontSize: scale(18),
+      fontWeight: 'bold',
+      color: '#fff',
     },
   });
-}
+};
