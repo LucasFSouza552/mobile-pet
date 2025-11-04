@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 
-import Profile from './profile';
+import Profile from './profile/profile';
 import Donate from './donate';
 import FindPets from './findPets';
 import Community from './community';
