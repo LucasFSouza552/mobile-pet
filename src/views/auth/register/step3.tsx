@@ -15,65 +15,81 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { createRegisterStepStyles } from '../../styles/pagesStyles/registerStepStyles';
+import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
+import { Images } from '../../../../assets';
 
-export default function RegisterStep2({ navigation, route }: any) {
+export default function RegisterStep3({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar } = route.params;
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const { documentType, name, avatar, email, phone_number } = route.params;
+  const [document, setDocument] = useState('');
 
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+  const formatCPF = (text: string): string => {
+    const numbers = text.replace(/\D/g, '');
+    if (numbers.length <= 3) {
+      return numbers;
+    } else if (numbers.length <= 6) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    } else if (numbers.length <= 9) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+    } else {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+    }
   };
 
-  const formatPhone = (text: string): string => {
+  const formatCNPJ = (text: string): string => {
     const numbers = text.replace(/\D/g, '');
     if (numbers.length <= 2) {
       return numbers;
-    } else if (numbers.length <= 7) {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-    } else if (numbers.length <= 11) {
-      return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
+    } else if (numbers.length <= 5) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+    } else if (numbers.length <= 8) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5)}`;
+    } else if (numbers.length <= 12) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8)}`;
+    } else {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(5, 8)}/${numbers.slice(8, 12)}-${numbers.slice(12, 14)}`;
     }
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
   };
 
-  const handlePhoneChange = (text: string) => {
-    const formatted = formatPhone(text);
-    setPhone(formatted);
+  const handleDocumentChange = (text: string) => {
+    const formatted = documentType === 'cpf' ? formatCPF(text) : formatCNPJ(text);
+    setDocument(formatted);
+  };
+
+  const validateCPF = (cpf: string): boolean => {
+    const numbers = cpf.replace(/\D/g, '');
+    return numbers.length === 11;
+  };
+
+  const validateCNPJ = (cnpj: string): boolean => {
+    const numbers = cnpj.replace(/\D/g, '');
+    return numbers.length === 14;
   };
 
   const handleNext = () => {
-    if (!email.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe seu e-mail.');
+    if (!document.trim()) {
+      Alert.alert('Atenção', `Por favor, informe seu ${documentType.toUpperCase()}.`);
       return;
     }
 
-    if (!validateEmail(email)) {
-      Alert.alert('Atenção', 'Por favor, informe um e-mail válido.');
+    const isValid = documentType === 'cpf' ? validateCPF(document) : validateCNPJ(document);
+    if (!isValid) {
+      Alert.alert('Atenção', `Por favor, informe um ${documentType.toUpperCase()} válido.`);
       return;
     }
 
-    if (!phone.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe seu telefone.');
-      return;
-    }
+    const documentData = documentType === 'cpf' 
+      ? { cpf: document, cnpj: undefined }
+      : { cpf: undefined, cnpj: document };
 
-    const phoneNumbers = phone.replace(/\D/g, '');
-    if (phoneNumbers.length < 10) {
-      Alert.alert('Atenção', 'Por favor, informe um telefone válido.');
-      return;
-    }
-
-    navigation.navigate('RegisterStep3', {
+    navigation.navigate('RegisterStep4', {
       documentType,
       name,
       avatar,
-      email: email.trim(),
-      phone_number: phone,
+      email,
+      phone_number,
+      ...documentData,
     });
   };
 
@@ -81,12 +97,13 @@ export default function RegisterStep2({ navigation, route }: any) {
     navigation.goBack();
   };
 
-  const isFormValid = email.trim() !== '' && phone.trim() !== '' && validateEmail(email);
+  const isFormValid = document.trim() !== '' && 
+    (documentType === 'cpf' ? validateCPF(document) : validateCNPJ(document));
 
   return (
     <View style={registerStepStyles.container}>
       <Image
-        source={require('../../../assets/img/petfundo.png')}
+          source={Images.petfundo}
         style={registerStepStyles.backgroundImage}
         resizeMode="cover"
       />
@@ -108,9 +125,7 @@ export default function RegisterStep2({ navigation, route }: any) {
           {/* Header */}
           <View style={registerStepStyles.header}>
             <Text style={registerStepStyles.headerTitle}>Registrar</Text>
-            <Text style={registerStepStyles.headerSubtitle}>
-              Agora, conte pra gente como podemos te encontrar.
-            </Text>
+            <Text style={registerStepStyles.headerSubtitle}>Quase lá!</Text>
           </View>
 
           {/* Progress Indicator */}
@@ -119,12 +134,12 @@ export default function RegisterStep2({ navigation, route }: any) {
               <FontAwesome name="check" size={20} color="#fff" />
             </View>
             <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-              <FontAwesome name="envelope" size={20} color="#fff" />
+            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
+              <FontAwesome name="check" size={20} color="#fff" />
             </View>
-            <View style={registerStepStyles.progressLine} />
-            <View style={registerStepStyles.progressStep}>
-              <FontAwesome name="id-card" size={20} color="#666" />
+            <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
+            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
+              <FontAwesome name="id-card" size={20} color="#fff" />
             </View>
             <View style={registerStepStyles.progressLine} />
             <View style={registerStepStyles.progressStep}>
@@ -134,30 +149,20 @@ export default function RegisterStep2({ navigation, route }: any) {
 
           {/* Form */}
           <View style={registerStepStyles.formContainer}>
-            <Text style={registerStepStyles.title}>Qual é o seu{'\n'}e-mail e telefone?</Text>
+            <Text style={registerStepStyles.title}>
+              Informe seu {documentType.toUpperCase()}
+            </Text>
 
-            {/* Email Input */}
+            {/* Document Input */}
             <TextInput
               style={registerStepStyles.input}
-              placeholder="Email"
+              placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
               placeholderTextColor="#999999"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-            />
-
-            {/* Phone Input */}
-            <TextInput
-              style={registerStepStyles.input}
-              placeholder="Telefone"
-              placeholderTextColor="#999999"
-              value={phone}
-              onChangeText={handlePhoneChange}
-              keyboardType="phone-pad"
+              value={document}
+              onChangeText={handleDocumentChange}
+              keyboardType="numeric"
               returnKeyType="done"
-              maxLength={15}
+              maxLength={documentType === 'cpf' ? 14 : 18}
               onSubmitEditing={handleNext}
             />
           </View>

@@ -9,7 +9,6 @@ export function buttonStyles(type: "primary" | "secondary" | "tertiary") {
             borderRadius: scale(10),
             alignItems: 'center',
             elevation: 4,
-
         },
         Text: {
             color: '#ffffff',

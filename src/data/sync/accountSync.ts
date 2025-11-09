@@ -2,7 +2,6 @@ import NetInfo from "@react-native-community/netinfo";
 import { accountLocalRepository } from "../local/repositories/accountLocalRepository";
 import { accountRemoteRepository } from "../remote/repositories/accountRemoteRepository";
 import { IAccount } from "../../models/IAccount";
-import { removeStorage } from "../../utils/storange";
 
 export const accountSync = {
 
@@ -15,13 +14,22 @@ export const accountSync = {
         }
 
         try {
+            console.log("Sincronizando contas...");
             const account = await accountRemoteRepository.getProfile();
             if (!account) {
+
                 return;
             }
+            console.log("Conta encontrada:", account);
             await accountLocalRepository.create(account);
-        } catch (error) {
-            await removeStorage('@token');
+        } catch (error: any) {
+
+            const status = error?.response?.status;
+            if (status === 401 || status === 403) {
+                await accountLocalRepository.logout();
+                return;
+            }
+            console.log("Erro de rede/servidor ao sincronizar. Mantendo sessão.");
         }
     },
 
@@ -36,22 +44,18 @@ export const accountSync = {
         try {
             const localAccount = await accountLocalRepository.findLocalAccount();
 
-            
+
 
         } catch (error) {
-            await removeStorage('@token');
-            // console.error("Erro ao sincronizar para servidor:", error);
+            console.log("Erro ao sincronizar:", error);
+            accountLocalRepository.logout();
         }
     },
 
-    async getProfile() {
+    async getProfile(): Promise<IAccount | null> {
         try {
             const localAccount = await accountLocalRepository.findLocalAccount();
             const netState = await NetInfo.fetch();
-
-            if (!netState.isConnected && !localAccount) {
-                return null;
-            }
 
             if (!netState.isConnected) {
                 return localAccount;
@@ -61,10 +65,16 @@ export const accountSync = {
                 const remoteAccount = await accountRemoteRepository.getProfile();
                 if (remoteAccount) {
                     await accountLocalRepository.create(remoteAccount);
+                    return remoteAccount;
                 }
-                return remoteAccount;
-            } catch (error) {
-                await removeStorage('@token');
+                return localAccount ?? null;
+            } catch (error: any) {
+                const status = error?.response?.status;
+                if (status === 401 || status === 403) {
+                    await accountLocalRepository.logout();
+                    return null;
+                }
+                return localAccount ?? null;
             }
             return null;
         } catch (error) {

@@ -15,5 +15,5 @@ export interface IAccount {
     createdAt: string;
     updatedAt: string;
     lastSyncedAt: string;
-    countPost: number;
+    postCount: number;
 }

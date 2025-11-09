@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { welcomeStyles } from '../../styles/pagesStyles/welcomeStyles';
 import PrimaryButton from '../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../components/Buttons/SecondaryButton';
+import { Images } from '../../../assets';
 
 
 export default function Welcome({ navigation }: any) {
@@ -22,7 +23,7 @@ export default function Welcome({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require('../../../assets/img/logoPet.png')}
+          source={Images.logoPet}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -41,3 +42,4 @@ export default function Welcome({ navigation }: any) {
     </SafeAreaView>
   );
 }
+

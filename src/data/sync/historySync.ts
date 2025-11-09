@@ -107,17 +107,17 @@ export const historySync = {
         }
         return null;
     },
-    async createHistory(history: Partial<IHistory>, accountId: string): Promise<IHistory | null> {
+    async createHistory(history: IHistory, accountId: string): Promise<IHistory | null> {
         try {
             const newHistory: IHistory = {
-                id: history.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                type: history.type!,
+                id: history.id,
+                type: history.type,
                 status: history.status || 'pending',
-                pet: history.pet || null,
+                pet: history.pet,
                 institution: history.institution,
                 account: accountId,
                 amount: history.amount,
-                externalReference: history.externalReference || null,
+                externalReference: history.externalReference,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 lastSyncedAt: undefined

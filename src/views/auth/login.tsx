@@ -14,8 +14,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { createLoginStyles } from '../../styles/pagesStyles/loginStyles';
-import { authService } from '../../services/authService';
+import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
 import Toast from 'react-native-toast-message';
+import { useAccount } from '../../context/AccountContext';
+import { accountSync } from '../../data/sync/accountSync';
+import { Images } from '../../../assets';
 
 export default function Login({ navigation }: any) {
   const { width, height } = useWindowDimensions();
@@ -24,6 +27,7 @@ export default function Login({ navigation }: any) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string>();
+  const { refreshAccount } = useAccount();
 
   const handleLogin = async () => {
     Keyboard.dismiss();
@@ -38,19 +42,20 @@ export default function Login({ navigation }: any) {
     }
 
     try {
-      const response = await authService.login(email, password);
-      
-      if (response) {
+      const response = await authRemoteRepository.login(email, password);
+      if (!response?.token) {
         Toast.show({
-          type: 'success',
-          text1: 'Sucesso',
-          text2: 'Login realizado com sucesso!',
+          type: 'error',
+          text1: 'Erro',
+          text2: 'Email ou senha inválidos.',
           position: 'bottom',
         });
-        navigation.replace('Main');
+        throw new Error('Email ou senha inválidos.');
       }
+      await accountSync.syncFromServer();
+      await refreshAccount();
+      navigation.navigate('Main');
     } catch (error: any) {
-      console.error('Erro no login:', error);
       Toast.show({
         type: 'error',
         text1: 'Erro',
@@ -64,16 +69,14 @@ export default function Login({ navigation }: any) {
     navigation.navigate('Register');
   };
 
-  useEffect(() => {
-    if (!error) return;
-    const timer = setTimeout(() => setError(''), 3000);
-    return () => clearTimeout(timer);
-  }, [error]);
+  const goToMain = () => {
+    navigation.navigate('Main');
+  };
 
   return (
     <View style={loginStepStyles.container}>
       <Image
-        source={require('../../../assets/img/petfundo.png')}
+          source={Images.petfundo}
         style={loginStepStyles.backgroundImage}
         resizeMode="cover"
       />
@@ -158,3 +161,4 @@ export default function Login({ navigation }: any) {
     </View>
   );
 }
+

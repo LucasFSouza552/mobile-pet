@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { createRegisterStepStyles } from '../../styles/pagesStyles/registerStepStyles';
+import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
+import { Images } from '../../../../assets';
 
 type DocumentType = 'cpf' | 'cnpj' | null;
 
@@ -38,7 +39,7 @@ export default function Register({ navigation }: any) {
   return (
     <View style={registerStepStyles.container}>
       <Image
-        source={require('../../../assets/img/petfundo.png')}
+          source={Images.petfundo}
         style={registerStepStyles.backgroundImage}
         resizeMode="cover"
       />
@@ -169,3 +170,4 @@ export default function Register({ navigation }: any) {
     </View>
   );
 }
+

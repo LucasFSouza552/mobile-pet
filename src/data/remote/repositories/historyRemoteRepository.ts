@@ -2,33 +2,53 @@ import { apiClient } from "../api/apiClient";
 import { IHistory } from "../../../models/IHistory";
 
 export const historyRemoteRepository = {
-    getAll: async (): Promise<IHistory[]> => {
-        const response = await apiClient.get("/history");
-        return response.data;
+    async getByAccount(accountId: string): Promise<IHistory[]> {
+        try {
+            const response = await apiClient.get(`/history/account/${accountId}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Erro ao buscar histórico da conta ${accountId}:`, error);
+            throw error;
+        }
     },
 
-    getById: async (id: string): Promise<IHistory | null> => {
-        const response = await apiClient.get(`/history/${id}`);
-        return response.data;
+    async getById(id: string): Promise<IHistory | null> {
+        try {
+            const response = await apiClient.get(`/history/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Erro ao buscar histórico ${id}:`, error);
+            throw error;
+        }
     },
 
-    getByAccount: async (accountId: string): Promise<IHistory[]> => {
-        const response = await apiClient.get(`/history/account/${accountId}`);
-        return response.data;
+    async create(history: Partial<IHistory>): Promise<IHistory> {
+        try {
+            const response = await apiClient.post("/history", history);
+            return response.data;
+        } catch (error) {
+            console.error("Erro ao criar histórico:", error);
+            throw error;
+        }
     },
 
-    create: async (history: Partial<IHistory>): Promise<IHistory> => {
-        const response = await apiClient.post("/history", history);
-        return response.data;
+    async update(id: string, history: Partial<IHistory>): Promise<IHistory> {
+        try {
+            const response = await apiClient.patch(`/history/${id}`, history);
+            return response.data;
+        } catch (error) {
+            console.error(`Erro ao atualizar histórico ${id}:`, error);
+            throw error;
+        }
     },
 
-    update: async (id: string, history: Partial<IHistory>): Promise<IHistory> => {
-        const response = await apiClient.put(`/history/${id}`, history);
-        return response.data;
-    },
-
-    delete: async (id: string): Promise<void> => {
-        await apiClient.delete(`/history/${id}`);
+    async delete(id: string): Promise<void> {
+        try {
+            await apiClient.delete(`/history/${id}`);
+        } catch (error) {
+            console.error(`Erro ao deletar histórico ${id}:`, error);
+            throw error;
+        }
     }
 };
 

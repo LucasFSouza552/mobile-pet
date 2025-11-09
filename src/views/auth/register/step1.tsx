@@ -16,7 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
-import { createRegisterStepStyles } from '../../styles/pagesStyles/registerStepStyles';
+import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
+import { Images } from '../../../../assets';
 
 export default function RegisterStep1({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
@@ -65,7 +66,7 @@ export default function RegisterStep1({ navigation, route }: any) {
   return (
     <View style={registerStepStyles.container}>
       <Image
-        source={require('../../../assets/img/petfundo.png')}
+        source={Images.petfundo}
         style={registerStepStyles.backgroundImage}
         resizeMode="cover"
       />

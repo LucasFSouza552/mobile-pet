@@ -7,29 +7,26 @@ interface AccountContextProps {
     account: IAccount | null;
     setAccount: (account: IAccount | null) => void;
     refreshAccount: () => Promise<void>;
+    loading: boolean;
+    logout: () => Promise<void>;
 }
 
 const AccountContext = createContext<AccountContextProps | undefined>(undefined);
 
 export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const [account, setAccount] = useState<IAccount | null>(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadAccount();
-    }, []);
 
     const loadAccount = async () => {
-        const localAccount = await accountLocalRepository.findLocalAccount();
-        
-        if (localAccount) {
-            setAccount(localAccount);
-        }
-        
-        await accountSync.syncFromServer();
-        
-        const syncedAccount = await accountLocalRepository.findLocalAccount();
-        if (syncedAccount) {
-            setAccount(syncedAccount);
+        try {
+            setLoading(true);
+            const localAccount = await accountSync.getProfile();
+            if (localAccount) {
+                setAccount(localAccount);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar conta:", error);
         }
     };
 
@@ -37,11 +34,21 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
         await loadAccount();
     };
 
+    useEffect(() => {
+       refreshAccount()
+    }, []);
+
+    const logout = async () => {
+        await accountLocalRepository.logout();
+    }
+
     return (
         <AccountContext.Provider value={{
             account,
             setAccount,
             refreshAccount,
+            loading,
+            logout
         }}>
             {children}
         </AccountContext.Provider>

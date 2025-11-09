@@ -7,7 +7,7 @@ const lightTheme = {
     textShadow: 'rgba(255, 255, 255, 0.8)',
     border: 'rgba(255, 255, 255, 0.2)',
     bg: "#fff",
-    text: "#000",
+    text: "#fff",
     primary: "#B648A0",
     secondary: "#363135",
     tertiary: "#61475C",
@@ -23,12 +23,12 @@ const darkTheme = {
     textShadow: 'rgba(0, 0, 0, 0.8)',
     bg: "#121212",
     border: 'rgba(255, 255, 255, 0.2)',
-    text: "#ffffff",
+    text: "#fff",
     primary: "#B648A0",
     secondary: "#E3D9E8",
     tertiary: "#61475C",
     quarternary: "#332630",
-    quinary: "#4A3A46"
+    quinary: "#4A3A46",
   },
 };
 

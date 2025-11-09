@@ -1,32 +1,42 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, useTheme } from '@react-navigation/native';
+import { StatusBar, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StatusBar } from 'expo-status-bar';
-import SplashScreen from './src/views/screens/splash';
-import WelcomeScreen from './src/views/screens/welcome';
-import LoginScreen from './src/views/screens/login';
-import RegisterScreen from './src/views/screens/register';
-import RegisterStep1Screen from './src/views/screens/registerStep1';
-import RegisterStep2Screen from './src/views/screens/registerStep2';
-import RegisterStep3Screen from './src/views/screens/registerStep3';
-import RegisterStep4Screen from './src/views/screens/registerStep4';
-import Main from './src/views/screens/main';
+import SplashScreen from './src/views/auth/splash';
+import WelcomeScreen from './src/views/auth/welcome';
+import LoginScreen from './src/views/auth/login';
+import RegisterScreen from './src/views/auth/register';
+import RegisterStep1Screen from './src/views/auth/register/step1';
+import RegisterStep2Screen from './src/views/auth/register/step2';
+import RegisterStep3Screen from './src/views/auth/register/step3';
+import RegisterStep4Screen from './src/views/auth/register/step4';
+import Main from './src/views/app/main';
+import PostDetails from './src/views/app/postDetails';
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Keyboard } from 'react-native';
 import { AccountProvider } from './src/context/AccountContext';
+import { PostProvider } from './src/context/PostContext';
+import { runMigrations } from './src/data';
 
 const Stack = createNativeStackNavigator();
-
 
 export default function App() {
 
   const [keyboardOffset, setKeyboardOffset] = useState(50);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
-
+  const [dbReady, setDbReady] = useState(false);
   useEffect(() => {
+    (async () => {
+      try {
+        await runMigrations();
+      } finally {
+        setDbReady(true);
+      }
+    })();
+
     const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
       setKeyboardVisible(true);
       setKeyboardOffset(e.endCoordinates.height + 30);
@@ -42,46 +52,61 @@ export default function App() {
     };
   }, []);
 
+  if (!dbReady) {
+    return null;
+  }
+
   return (
+    <>
 
-    <ThemeProvider>
-      <AccountProvider>
+      <View style={{ backgroundColor: '#B648A0', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 35 }}>
+      
+      <StatusBar barStyle="light-content" translucent={false} backgroundColor="#B648A0" />
+      </View>
+      <ThemeProvider>
+        <AccountProvider>
 
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+          <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+            
+            <PostProvider>
+              <NavigationContainer>
+                <Stack.Navigator
+                  initialRouteName="Splash"
+                  screenOptions={{
+                    headerShown: false,
+                  }}
+                >
+                  <Stack.Screen name="Splash" component={SplashScreen} />
+                  <Stack.Screen name="Welcome" component={WelcomeScreen} />
+                  <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="Register" component={RegisterScreen} />
+                  <Stack.Screen name="RegisterStep1" component={RegisterStep1Screen} />
+                  <Stack.Screen name="RegisterStep2" component={RegisterStep2Screen} />
+                  <Stack.Screen name="RegisterStep3" component={RegisterStep3Screen} />
+                  <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
+                  <Stack.Screen name="Main" component={Main} />
+                <Stack.Screen name="PostDetails" component={PostDetails} />
+                </Stack.Navigator>
 
-          <NavigationContainer>
-            <Stack.Navigator
-              initialRouteName="Splash"
-              screenOptions={{
-                headerShown: false,
-              }}
-            >
-              <Stack.Screen name="Splash" component={SplashScreen} />
-              <Stack.Screen name="Welcome" component={WelcomeScreen} />
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
-              <Stack.Screen name="RegisterStep1" component={RegisterStep1Screen} />
-              <Stack.Screen name="RegisterStep2" component={RegisterStep2Screen} />
-              <Stack.Screen name="RegisterStep3" component={RegisterStep3Screen} />
-              <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
-              <Stack.Screen name="Main" component={Main} />
-            </Stack.Navigator>
 
+                <Toast
+                  config={toastConfig}
+                  position="top"
+                  topOffset={60}
+                  visibilityTime={2500}
+                />
 
-            <Toast
-              config={toastConfig}
-              position="top"
-              topOffset={60}
-              visibilityTime={2500}
-            />
+              </NavigationContainer>
+            </PostProvider>
+            
+          </SafeAreaProvider>
 
-            <StatusBar style="auto" hidden />
-          </NavigationContainer>
-        </SafeAreaProvider>
+        </AccountProvider>
+      </ThemeProvider >
+    </>
 
-      </AccountProvider>
-    </ThemeProvider>
   );
+
 }
 
 
