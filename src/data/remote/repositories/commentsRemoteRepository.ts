@@ -60,9 +60,9 @@ export const commentRepository = {
         }
     },
 
-    async updateComment(commentId: string, comment: string) {
+    async updateComment(commentId: string, content: string) {
         try {
-            const response = await apiClient.patch(`/comment/${commentId}`, { comment });
+            const response = await apiClient.patch(`/comment/${commentId}`, { content });
             return response.data;
         } catch (error) {
             console.error(`Erro ao atualizar comentário ${commentId}:`, error);

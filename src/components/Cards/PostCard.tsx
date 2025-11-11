@@ -11,6 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { usePost } from '../../context/PostContext';
 import { darkTheme, lightTheme } from '../../theme/Themes';
 import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
+import { useAccount } from '../../context/AccountContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -55,6 +56,7 @@ function PostCardComponent({
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
 	const { likePost: likePostFromContext } = usePost();
+	const { account } = useAccount();
 	const [animateLike, setAnimateLike] = useState(false);
 	const [showShareMessage, setShowShareMessage] = useState(false);
 	const { width, height } = useWindowDimensions();
@@ -70,6 +72,10 @@ function PostCardComponent({
 	const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
 	const aboutSlideY = React.useRef(new Animated.Value(height)).current;
+	const [editingComment, setEditingComment] = useState<IComment | null>(null);
+	const [editCommentText, setEditCommentText] = useState('');
+	const editSlideY = React.useRef(new Animated.Value(height)).current;
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
 	if (!post) return null;
 
@@ -174,6 +180,89 @@ function PostCardComponent({
 		} finally {
 			setCommentsLoading(false);
 		}
+	};
+
+	const handleEditComment = (comment: IComment) => {
+		setEditingComment(comment);
+		setEditCommentText(comment.content);
+		setIsEditModalOpen(true);
+		editSlideY.setValue(height);
+		Animated.timing(editSlideY, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const closeEditModal = () => {
+		Animated.timing(editSlideY, {
+			toValue: height,
+			duration: 220,
+			useNativeDriver: true,
+		}).start(({ finished }) => {
+			if (finished) {
+				setIsEditModalOpen(false);
+				setEditingComment(null);
+				setEditCommentText('');
+			}
+		});
+	};
+
+	const saveEditedComment = async () => {
+		if (!editingComment || !editCommentText.trim()) return;
+		try {
+			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
+			setComments(prev => prev.map(c => c.id === editingComment.id ? updated : c));
+			closeEditModal();
+			Toast.show({
+				type: 'success',
+				text1: 'Comentário editado com sucesso',
+				position: 'bottom',
+			});
+		} catch (e) {
+			Toast.show({
+				type: 'error',
+				text1: 'Erro ao editar comentário',
+				position: 'bottom',
+			});
+		}
+	};
+
+	const handleDeleteComment = (comment: IComment) => {
+		Alert.alert(
+			'Excluir comentário',
+			'Tem certeza que deseja excluir este comentário?',
+			[
+				{ text: 'Cancelar', style: 'cancel' },
+				{
+					text: 'Excluir',
+					style: 'destructive',
+					onPress: async () => {
+						try {
+							await commentRepository.deleteOwnComment(comment.id);
+							setComments(prev => prev.filter(c => c.id !== comment.id));
+							Toast.show({
+								type: 'success',
+								text1: 'Comentário excluído com sucesso',
+								position: 'bottom',
+							});
+						} catch (e) {
+							Toast.show({
+								type: 'error',
+								text1: 'Erro ao excluir comentário',
+								position: 'bottom',
+							});
+						}
+					},
+				},
+			]
+		);
+	};
+
+	const isCommentOwner = (comment: IComment) => {
+		if (!account || !comment.account) return false;
+		const commentAccountId = typeof comment.account === 'string' ? comment.account : (comment.account as any).id || (comment.account as any)._id;
+		return account.id === commentAccountId;
 	};
 
 	const handleSharePress = async () => {
@@ -292,14 +381,35 @@ function PostCardComponent({
 					<FlatList
 						data={comments}
 						keyExtractor={(item) => item.id}
-						renderItem={({ item }) => (
-							<View style={styles.commentItem}>
-								<Text style={styles.commentText}>{item.content}</Text>
-								<Text style={styles.commentMeta}>
-									{new Date(item.createdAt).toLocaleString()}
-								</Text>
-							</View>
-						)}
+						renderItem={({ item }) => {
+							const isOwner = isCommentOwner(item);
+							return (
+								<View style={styles.commentItem}>
+									<View style={styles.commentContent}>
+										<Text style={styles.commentText}>{item.content}</Text>
+										<Text style={styles.commentMeta}>
+											{new Date(item.createdAt).toLocaleString()}
+										</Text>
+									</View>
+									{isOwner && (
+										<View style={styles.commentActions}>
+											<TouchableOpacity
+												onPress={() => handleEditComment(item)}
+												style={styles.commentActionButton}
+											>
+												<MaterialCommunityIcons name="pencil" size={16} color={COLORS.primary} />
+											</TouchableOpacity>
+											<TouchableOpacity
+												onPress={() => handleDeleteComment(item)}
+												style={styles.commentActionButton}
+											>
+												<MaterialCommunityIcons name="delete" size={16} color="#E74C3C" />
+											</TouchableOpacity>
+										</View>
+									)}
+								</View>
+							);
+						}}
 						onEndReachedThreshold={0.2}
 						onEndReached={() => {
 							if (hasMoreComments && !commentsLoading) {
@@ -340,6 +450,49 @@ function PostCardComponent({
 						>
 							<Text style={styles.commentButtonText}>Enviar</Text>
 						</TouchableOpacity>
+					</View>
+				</Animated.View>
+			</View>
+		</Modal>
+
+		<Modal visible={isEditModalOpen} transparent animationType="none" onRequestClose={closeEditModal} style={styles.modalOverlay}>
+			<View style={styles.modalOverlay}>
+				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closeEditModal} />
+				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: editSlideY }] }]}>
+					<View style={styles.sheetHandleContainer}>
+						<View style={styles.sheetHandle} />
+					</View>
+					<View style={styles.sheetHeader}>
+						<Text style={styles.sheetTitle}>Editar comentário</Text>
+						<TouchableOpacity onPress={closeEditModal} style={styles.closeBtn}>
+							<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
+						</TouchableOpacity>
+					</View>
+					<View style={styles.sheetContent}>
+						<TextInput
+							value={editCommentText}
+							onChangeText={setEditCommentText}
+							placeholder="Edite seu comentário..."
+							placeholderTextColor={COLORS.text}
+							style={styles.commentInput}
+							multiline
+							autoFocus
+						/>
+						<View style={styles.editActions}>
+							<TouchableOpacity
+								style={[styles.commentButton, styles.cancelButton]}
+								onPress={closeEditModal}
+							>
+								<Text style={styles.commentButtonText}>Cancelar</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.commentButton}
+								onPress={saveEditedComment}
+								disabled={!editCommentText.trim()}
+							>
+								<Text style={styles.commentButtonText}>Salvar</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</Animated.View>
 			</View>
@@ -688,6 +841,13 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			backgroundColor: COLORS.quarternary,
 			padding: 10,
 			borderRadius: 10,
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'flex-start',
+			gap: 8,
+		},
+		commentContent: {
+			flex: 1,
 		},
 		commentText: {
 			color: COLORS.text,
@@ -697,6 +857,24 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			opacity: 0.6,
 			fontSize: 10,
 			marginTop: 4,
+		},
+		commentActions: {
+			flexDirection: 'row',
+			gap: 8,
+		},
+		commentActionButton: {
+			padding: 6,
+			borderRadius: 6,
+			backgroundColor: COLORS.tertiary,
+		},
+		editActions: {
+			flexDirection: 'row',
+			gap: 8,
+			marginTop: 12,
+		},
+		cancelButton: {
+			backgroundColor: COLORS.tertiary,
+			flex: 1,
 		},
 		commentEmpty: {
 			color: COLORS.text,
