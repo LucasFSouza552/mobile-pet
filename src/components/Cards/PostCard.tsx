@@ -105,6 +105,7 @@ function PostCardComponent({
 	const editSlideY = React.useRef(new Animated.Value(height)).current;
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [deleted, setDeleted] = useState(false);
+	const [editSaving, setEditSaving] = useState(false);
 
 	if (!post || deleted) return null;
 
@@ -238,8 +239,9 @@ function PostCardComponent({
 	};
 
 	const saveEditedComment = async () => {
-		if (!editingComment || !editCommentText.trim()) return;
+		if (!editingComment || !editCommentText.trim() || editSaving) return;
 		try {
+			setEditSaving(true);
 			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
 			setComments(prev => prev.map(c => c.id === editingComment.id ? updated : c));
 			closeEditModal();
@@ -254,6 +256,8 @@ function PostCardComponent({
 				text1: 'Erro ao editar comentário',
 				position: 'bottom',
 			});
+		} finally {
+			setEditSaving(false);
 		}
 	};
 
@@ -486,14 +490,14 @@ function PostCardComponent({
 
 		<Modal visible={isEditModalOpen} transparent animationType="none" onRequestClose={closeEditModal} style={styles.modalOverlay}>
 			<View style={styles.modalOverlay}>
-				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closeEditModal} />
+				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => { if (!editSaving) closeEditModal(); }} />
 				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: editSlideY }] }]}>
 					<View style={styles.sheetHandleContainer}>
 						<View style={styles.sheetHandle} />
 					</View>
 					<View style={styles.sheetHeader}>
 						<Text style={styles.sheetTitle}>Editar comentário</Text>
-						<TouchableOpacity onPress={closeEditModal} style={styles.closeBtn}>
+						<TouchableOpacity onPress={() => { if (!editSaving) closeEditModal(); }} style={styles.closeBtn}>
 							<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
 						</TouchableOpacity>
 					</View>
@@ -506,20 +510,22 @@ function PostCardComponent({
 							style={styles.commentInput}
 							multiline
 							autoFocus
+							editable={!editSaving}
 						/>
 						<View style={styles.editActions}>
 							<TouchableOpacity
 								style={[styles.commentButton, styles.cancelButton]}
 								onPress={closeEditModal}
+								disabled={editSaving}
 							>
 								<Text style={styles.commentButtonText}>Cancelar</Text>
 							</TouchableOpacity>
 							<TouchableOpacity
 								style={styles.commentButton}
 								onPress={saveEditedComment}
-								disabled={!editCommentText.trim()}
+								disabled={!editCommentText.trim() || editSaving}
 							>
-								<Text style={styles.commentButtonText}>Salvar</Text>
+								<Text style={styles.commentButtonText}>{editSaving ? 'Salvando...' : 'Salvar'}</Text>
 							</TouchableOpacity>
 						</View>
 					</View>
@@ -997,7 +1003,6 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			borderRadius: 10,
 			paddingHorizontal: 12,
 			paddingVertical: 8,
-			maxHeight: 100,
 		},
 		commentButton: {
 			backgroundColor: COLORS.primary,
