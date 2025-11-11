@@ -5,6 +5,7 @@ import PostList from '../../components/Cards/PostList';
 import { usePost } from '../../context/PostContext';
 import { useAccount } from '../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface CommunityPageProps {
   navigation: any;
@@ -35,6 +36,12 @@ export default function Community({ navigation }: CommunityPageProps) {
       navigation.navigate('Welcome');
     }
   }, [loading, account, navigation]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refresh();
+    }, [])
+  );
 
   if (!account) {
     return null;

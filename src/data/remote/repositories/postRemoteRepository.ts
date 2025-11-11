@@ -44,7 +44,6 @@ export const postRepository = {
                 formData = data;
             } else {
                 formData = new FormData();
-                formData.append("title", data.title);
                 formData.append("content", data.content);
                 if (data.image) {
                     data.image.forEach(image => {
