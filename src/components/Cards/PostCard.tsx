@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Share, useWindowDimensions, Modal, Animated, TextInput, FlatList, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Share, useWindowDimensions, Modal, Animated, TextInput, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
 import { Images } from '../../../assets';
@@ -11,6 +11,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { usePost } from '../../context/PostContext';
 import { darkTheme, lightTheme } from '../../theme/Themes';
 import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
+import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
+import { useAccount } from '../../context/AccountContext';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -27,19 +29,46 @@ interface PostCardProps {
 const PostPictureContainer = ({ images, styles }: { images: string[]; styles: ReturnType<typeof makeStyles> }) => {
 	if (!images || images.length === 0) return null;
 
+	const [activeIndex, setActiveIndex] = useState(0);
+	const [containerWidth, setContainerWidth] = useState(screenWidth);
+
 	return (
 		<View
 			style={styles.picturesScroll}
+			onLayout={({ nativeEvent }) => {
+				const width = nativeEvent?.layout?.width || screenWidth;
+				if (width && width !== containerWidth) setContainerWidth(width);
+			}}
 		>
-			{images.map((imageId) => (
-				<View key={imageId} style={styles.postPicture}>
-					<Image
-						source={pictureRepository.getSource(imageId)}
-						style={styles.postPictureImage}
-						defaultSource={Images.avatarDefault as unknown as number}
-					/>
-				</View>
-			))}
+			<ScrollView
+				horizontal
+				pagingEnabled
+				showsHorizontalScrollIndicator={false}
+				decelerationRate="fast"
+				snapToInterval={containerWidth}
+				scrollEventThrottle={16}
+				onScroll={({ nativeEvent }) => {
+					const x = nativeEvent?.contentOffset?.x ?? 0;
+					const idx = Math.round(x / Math.max(containerWidth, 1));
+					if (idx !== activeIndex) setActiveIndex(idx);
+				}}
+			>
+				{images.map((imageId) => (
+					<View key={imageId} style={[styles.postPicture, { width: containerWidth }]}>
+						<Image
+							source={pictureRepository.getSource(imageId)}
+							style={styles.postPictureImage}
+							defaultSource={Images.avatarDefault as unknown as number}
+						/>
+					</View>
+				))}
+			</ScrollView>
+
+			{images.length > 1 && <View style={styles.carouselDots}>
+				{images.map((_, i) => (
+					<View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
+				))}
+			</View>}
 		</View>
 	);
 };
@@ -55,6 +84,7 @@ function PostCardComponent({
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
 	const { likePost: likePostFromContext } = usePost();
+	const { account } = useAccount();
 	const [animateLike, setAnimateLike] = useState(false);
 	const [showShareMessage, setShowShareMessage] = useState(false);
 	const { width, height } = useWindowDimensions();
@@ -70,8 +100,14 @@ function PostCardComponent({
 	const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
 	const aboutSlideY = React.useRef(new Animated.Value(height)).current;
+	const [editingComment, setEditingComment] = useState<IComment | null>(null);
+	const [editCommentText, setEditCommentText] = useState('');
+	const editSlideY = React.useRef(new Animated.Value(height)).current;
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+	const [deleted, setDeleted] = useState(false);
+	const [editSaving, setEditSaving] = useState(false);
 
-	if (!post) return null;
+	if (!post || deleted) return null;
 
 	const isLiked = useMemo(
 		() => !!(accountId && post?.likes?.includes(accountId)),
@@ -176,6 +212,92 @@ function PostCardComponent({
 		}
 	};
 
+	const handleEditComment = (comment: IComment) => {
+		setEditingComment(comment);
+		setEditCommentText(comment.content);
+		setIsEditModalOpen(true);
+		editSlideY.setValue(height);
+		Animated.timing(editSlideY, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const closeEditModal = () => {
+		Animated.timing(editSlideY, {
+			toValue: height,
+			duration: 220,
+			useNativeDriver: true,
+		}).start(({ finished }) => {
+			if (finished) {
+				setIsEditModalOpen(false);
+				setEditingComment(null);
+				setEditCommentText('');
+			}
+		});
+	};
+
+	const saveEditedComment = async () => {
+		if (!editingComment || !editCommentText.trim() || editSaving) return;
+		try {
+			setEditSaving(true);
+			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
+			setComments(prev => prev.map(c => c.id === editingComment.id ? updated : c));
+			closeEditModal();
+			Toast.show({
+				type: 'success',
+				text1: 'Comentário editado com sucesso',
+				position: 'bottom',
+			});
+		} catch (e) {
+			Toast.show({
+				type: 'error',
+				text1: 'Erro ao editar comentário',
+				position: 'bottom',
+			});
+		} finally {
+			setEditSaving(false);
+		}
+	};
+
+	const handleDeleteComment = (comment: IComment) => {
+		Alert.alert(
+			'Excluir comentário',
+			'Tem certeza que deseja excluir este comentário?',
+			[
+				{ text: 'Cancelar', style: 'cancel' },
+				{
+					text: 'Excluir',
+					style: 'destructive',
+					onPress: async () => {
+						try {
+							await commentRepository.deleteOwnComment(comment.id);
+							setComments(prev => prev.filter(c => c.id !== comment.id));
+							Toast.show({
+								type: 'success',
+								text1: 'Comentário excluído com sucesso',
+								position: 'bottom',
+							});
+						} catch (e) {
+							Toast.show({
+								type: 'error',
+								text1: 'Erro ao excluir comentário',
+								position: 'bottom',
+							});
+						}
+					},
+				},
+			]
+		);
+	};
+
+	const isCommentOwner = (comment: IComment) => {
+		if (!account || !comment.account) return false;
+		const commentAccountId = typeof comment.account === 'string' ? comment.account : (comment.account as any).id || (comment.account as any)._id;
+		return account.id === commentAccountId;
+	};
+
 	const handleSharePress = async () => {
 		try {
 			const postUrl = `${post?.id}`;
@@ -202,79 +324,79 @@ function PostCardComponent({
 
 	return (
 		<>
-		<View style={styles.postContainer}>
-			<View style={styles.postContent}>
-				<View style={styles.postHeader}>
-					<TouchableOpacity
-						style={styles.postProfileContainer}
-						activeOpacity={0.8}
-						onPress={() => handleAbout?.(post.account.id)}
-					>
-						<Image
-							source={pictureRepository.getSource(post.account?.avatar)}
-							style={styles.avatar}
-							defaultSource={Images.avatarDefault as unknown as number}
-						/>
-						<View style={styles.profileInfo}>
-							<Text style={styles.profileName}>{post.account?.name || 'Unknown'}</Text>
-							<Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
-						</View>
-					</TouchableOpacity>
-					
-					<TouchableOpacity
-						style={styles.postOptions}
-						activeOpacity={0.7}
-						onPress={() => {
-							slideY.setValue(height);
-							setIsOptionsOpen(true);
-							Animated.timing(slideY, {
-								toValue: 0,
-								duration: 250,
-								useNativeDriver: true,
-							}).start();
-						}}
-					>
-						<MaterialCommunityIcons name="dots-vertical" size={22} color="#fff" />
-					</TouchableOpacity>
-				</View>
+			<View style={styles.postContainer}>
+				<View style={styles.postContent}>
+					<View style={styles.postHeader}>
+						<TouchableOpacity
+							style={styles.postProfileContainer}
+							activeOpacity={0.8}
+							onPress={() => handleAbout?.(post.account.id)}
+						>
+							<Image
+								source={pictureRepository.getSource(post.account?.avatar)}
+								style={styles.avatar}
+								defaultSource={Images.avatarDefault as unknown as number}
+							/>
+							<View style={styles.profileInfo}>
+								<Text style={styles.profileName}>{post.account?.name || 'Unknown'}</Text>
+								<Text style={styles.postDate}>{formatDate(post.createdAt)}</Text>
+							</View>
+						</TouchableOpacity>
 
-				<Text style={styles.postText}>{post.content || 'Sem conteúdo'}</Text>
-
-				{post?.image && <PostPictureContainer images={post.image} styles={styles} />}
-			</View>
-
-			<View style={styles.optionsContainer}>
-				<View style={styles.itemOptionsContainer}>
-					<TouchableOpacity style={styles.circleIcon} onPress={handleLikePress} activeOpacity={0.8}>
-						<FontAwesome
-							name="heart"
-							size={18}
-							color={isLiked ? 'red' : 'white'}
-						/>
-					</TouchableOpacity>
-					{!hideMetaText && (
-						<Text style={styles.metaText}>{post?.likes?.length || 0} Curtidas</Text>
-					)}
-				</View>
-
-				<TouchableOpacity style={styles.itemOptionsContainer} onPress={handleCommentsPress} activeOpacity={0.8}>
-					<View style={styles.circleIcon}>
-						<Ionicons name="chatbubble" size={18} color="#fff" />
+						<TouchableOpacity
+							style={styles.postOptions}
+							activeOpacity={0.7}
+							onPress={() => {
+								slideY.setValue(height);
+								setIsOptionsOpen(true);
+								Animated.timing(slideY, {
+									toValue: 0,
+									duration: 250,
+									useNativeDriver: true,
+								}).start();
+							}}
+						>
+							<MaterialCommunityIcons name="dots-vertical" size={22} color="#fff" />
+						</TouchableOpacity>
 					</View>
-					{!hideMetaText && <Text style={styles.metaText}>Comentários</Text>}
-				</TouchableOpacity>
 
-				<TouchableOpacity style={styles.itemOptionsContainer} onPress={handleSharePress} activeOpacity={0.8}>
-					<View style={styles.shareIconContainer}>
+					<Text style={styles.postText}>{post.content || 'Sem conteúdo'}</Text>
+
+					{post?.image && <PostPictureContainer images={post.image} styles={styles} />}
+				</View>
+
+				<View style={styles.optionsContainer}>
+					<View style={styles.itemOptionsContainer}>
+						<TouchableOpacity style={styles.circleIcon} onPress={handleLikePress} activeOpacity={0.8}>
+							<FontAwesome
+								name="heart"
+								size={18}
+								color={isLiked ? 'red' : 'white'}
+							/>
+						</TouchableOpacity>
+						{!hideMetaText && (
+							<Text style={styles.metaText}>{post?.likes?.length || 0} Curtidas</Text>
+						)}
+					</View>
+
+					<TouchableOpacity style={styles.itemOptionsContainer} onPress={handleCommentsPress} activeOpacity={0.8}>
 						<View style={styles.circleIcon}>
-							<Feather name="share-2" size={18} color="#fff" />
+							<Ionicons name="chatbubble" size={18} color="#fff" />
 						</View>
-						{showShareMessage && <Text style={styles.shareMessage}>Link copiado!</Text>}
-					</View>
-					{!hideMetaText && <Text style={styles.metaText}>Compartilhar</Text>}
-				</TouchableOpacity>
+						{!hideMetaText && <Text style={styles.metaText}>Comentários</Text>}
+					</TouchableOpacity>
+
+					<TouchableOpacity style={styles.itemOptionsContainer} onPress={handleSharePress} activeOpacity={0.8}>
+						<View style={styles.shareIconContainer}>
+							<View style={styles.circleIcon}>
+								<Feather name="share-2" size={18} color="#fff" />
+							</View>
+							{showShareMessage && <Text style={styles.shareMessage}>Link copiado!</Text>}
+						</View>
+						{!hideMetaText && <Text style={styles.metaText}>Compartilhar</Text>}
+					</TouchableOpacity>
+				</View>
 			</View>
-		</View>
 
 		<Modal visible={isCommentsOpen} transparent animationType="none" onRequestClose={closeComments} style={styles.modalOverlay}>
 			<View style={styles.modalOverlay}>
@@ -292,14 +414,35 @@ function PostCardComponent({
 					<FlatList
 						data={comments}
 						keyExtractor={(item) => item.id}
-						renderItem={({ item }) => (
-							<View style={styles.commentItem}>
-								<Text style={styles.commentText}>{item.content}</Text>
-								<Text style={styles.commentMeta}>
-									{new Date(item.createdAt).toLocaleString()}
-								</Text>
-							</View>
-						)}
+						renderItem={({ item }) => {
+							const isOwner = isCommentOwner(item);
+							return (
+								<View style={styles.commentItem}>
+									<View style={styles.commentContent}>
+										<Text style={styles.commentText}>{item.content}</Text>
+										<Text style={styles.commentMeta}>
+											{new Date(item.createdAt).toLocaleString()}
+										</Text>
+									</View>
+									{isOwner && (
+										<View style={styles.commentActions}>
+											<TouchableOpacity
+												onPress={() => handleEditComment(item)}
+												style={styles.commentActionButton}
+											>
+												<MaterialCommunityIcons name="pencil" size={16} color={COLORS.primary} />
+											</TouchableOpacity>
+											<TouchableOpacity
+												onPress={() => handleDeleteComment(item)}
+												style={styles.commentActionButton}
+											>
+												<MaterialCommunityIcons name="delete" size={16} color="#E74C3C" />
+											</TouchableOpacity>
+										</View>
+									)}
+								</View>
+							);
+						}}
 						onEndReachedThreshold={0.2}
 						onEndReached={() => {
 							if (hasMoreComments && !commentsLoading) {
@@ -345,140 +488,223 @@ function PostCardComponent({
 			</View>
 		</Modal>
 
-		<Modal visible={isOptionsOpen} transparent animationType="none" onRequestClose={() => {
-			Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-				if (finished) setIsOptionsOpen(false);
-			});
-		}} style={styles.modalOverlay}>
+		<Modal visible={isEditModalOpen} transparent animationType="none" onRequestClose={closeEditModal} style={styles.modalOverlay}>
 			<View style={styles.modalOverlay}>
-				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => {
-					Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-						if (finished) setIsOptionsOpen(false);
-					});
-				}} />
-				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slideY }] }]}>
+				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => { if (!editSaving) closeEditModal(); }} />
+				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: editSlideY }] }]}>
 					<View style={styles.sheetHandleContainer}>
 						<View style={styles.sheetHandle} />
 					</View>
 					<View style={styles.sheetHeader}>
-						<Text style={styles.sheetTitle}>Opções</Text>
-						<TouchableOpacity onPress={() => {
-							Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-								if (finished) setIsOptionsOpen(false);
-							});
-						}} style={styles.closeBtn}>
+						<Text style={styles.sheetTitle}>Editar comentário</Text>
+						<TouchableOpacity onPress={() => { if (!editSaving) closeEditModal(); }} style={styles.closeBtn}>
 							<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
 						</TouchableOpacity>
 					</View>
-
 					<View style={styles.sheetContent}>
-						<TouchableOpacity
-							style={styles.optItem}
-							onPress={async () => {
-								Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(async ({ finished }) => {
-									if (finished) setIsOptionsOpen(false);
-									await handleSharePress();
-								});
-							}}
-						>
-							<Feather name="share-2" size={18} color={COLORS.primary} />
-							<Text style={styles.optText}>Compartilhar</Text>
-						</TouchableOpacity>
-
-						<View style={styles.optSeparator} />
-
-						<TouchableOpacity
-							style={styles.optItem}
-							onPress={async () => {
-								Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-									if (finished) {
-										setIsOptionsOpen(false);
-										aboutSlideY.setValue(height);
-										setIsAboutOpen(true);
-										Animated.timing(aboutSlideY, { toValue: 0, duration: 250, useNativeDriver: true }).start();
-									}
-								});
-							}}
-						>
-							<MaterialCommunityIcons name="account" size={18} color={COLORS.primary} />
-							<Text style={styles.optText}>Sobre a conta</Text>
-						</TouchableOpacity>
+						<TextInput
+							value={editCommentText}
+							onChangeText={setEditCommentText}
+							placeholder="Edite seu comentário..."
+							placeholderTextColor={COLORS.text}
+							style={styles.commentInput}
+							multiline
+							autoFocus
+							editable={!editSaving}
+						/>
+						<View style={styles.editActions}>
+							<TouchableOpacity
+								style={[styles.commentButton, styles.cancelButton]}
+								onPress={closeEditModal}
+								disabled={editSaving}
+							>
+								<Text style={styles.commentButtonText}>Cancelar</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.commentButton}
+								onPress={saveEditedComment}
+								disabled={!editCommentText.trim() || editSaving}
+							>
+								<Text style={styles.commentButtonText}>{editSaving ? 'Salvando...' : 'Salvar'}</Text>
+							</TouchableOpacity>
+						</View>
 					</View>
 				</Animated.View>
 			</View>
 		</Modal>
 
-		<Modal
-			visible={isAboutOpen}
-			transparent
-			animationType="none"
-			onRequestClose={() => {
-				Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-					if (finished) setIsAboutOpen(false);
+			<Modal visible={isOptionsOpen} transparent animationType="none" onRequestClose={() => {
+				Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+					if (finished) setIsOptionsOpen(false);
 				});
-			}}
-			style={styles.modalOverlay}
-		>
-			<View style={styles.modalOverlay}>
-				<TouchableOpacity
-					style={styles.modalBackdrop}
-					activeOpacity={1}
-					onPress={() => {
-						Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-							if (finished) setIsAboutOpen(false);
+			}} style={styles.modalOverlay}>
+				<View style={styles.modalOverlay}>
+					<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => {
+						Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+							if (finished) setIsOptionsOpen(false);
 						});
-					}}
-				/>
-				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: aboutSlideY }] }]}>
-					<View style={styles.sheetHandleContainer}>
-						<View style={styles.sheetHandle} />
-					</View>
-					<View style={styles.sheetHeader}>
-						<Text style={styles.sheetTitle}>Sobre a conta</Text>
-						<TouchableOpacity
-							onPress={() => {
-								Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-									if (finished) setIsAboutOpen(false);
+					}} />
+					<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slideY }] }]}>
+						<View style={styles.sheetHandleContainer}>
+							<View style={styles.sheetHandle} />
+						</View>
+						<View style={styles.sheetHeader}>
+							<Text style={styles.sheetTitle}>Opções</Text>
+							<TouchableOpacity onPress={() => {
+								Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+									if (finished) setIsOptionsOpen(false);
 								});
-							}}
-							style={styles.closeBtn}
-						>
-							<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
-						</TouchableOpacity>
-					</View>
-
-					<View style={[styles.sheetContent, { gap: 12 }]}>
-						<View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-							<Image
-								source={pictureRepository.getSource(post.account?.avatar)}
-								style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.bg }}
-								defaultSource={Images.avatarDefault as unknown as number}
-							/>
-							<View style={{ flex: 1 }}>
-								<Text style={[styles.profileName, { fontSize: 18 }]}>{post.account?.name}</Text>
-								<Text style={styles.postDate}>{post.account?.email || ''}</Text>
-							</View>
+							}} style={styles.closeBtn}>
+								<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
+							</TouchableOpacity>
 						</View>
 
-						<TouchableOpacity
-							style={[styles.commentButton, { alignSelf: 'flex-start' }]}
-							onPress={() => {
-								if (handleAbout) {
-									handleAbout(post.id);
+						<View style={styles.sheetContent}>
+							<TouchableOpacity
+								style={styles.optItem}
+								onPress={async () => {
+									Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(async ({ finished }) => {
+										if (finished) setIsOptionsOpen(false);
+										await handleSharePress();
+									});
+								}}
+							>
+								<Feather name="share-2" size={18} color={COLORS.primary} />
+								<Text style={styles.optText}>Compartilhar</Text>
+							</TouchableOpacity>
+
+							<View style={styles.optSeparator} />
+
+							<TouchableOpacity
+								style={styles.optItem}
+								onPress={async () => {
+									Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+										if (finished) {
+											setIsOptionsOpen(false);
+											aboutSlideY.setValue(height);
+											setIsAboutOpen(true);
+											Animated.timing(aboutSlideY, { toValue: 0, duration: 250, useNativeDriver: true }).start();
+										}
+									});
+								}}
+							>
+								<MaterialCommunityIcons name="account" size={18} color={COLORS.primary} />
+								<Text style={styles.optText}>Sobre a conta</Text>
+							</TouchableOpacity>
+
+
+							<View style={styles.optSeparator} />
+							{accountId === post?.account?.id && (
+								<TouchableOpacity
+									style={styles.optItem}
+									onPress={() => {
+										Alert.alert(
+											'Excluir post',
+											'Tem certeza que deseja excluir este post?',
+											[
+												{ text: 'Cancelar', style: 'cancel' },
+												{
+													text: 'Excluir',
+													style: 'destructive',
+													onPress: async () => {
+														if (!post?.id) return;
+														try {
+															await postRepository.softDeletePostById(post.id);
+															setDeleted(true);
+															Toast.show({ type: 'success', text1: 'Post excluído', position: 'bottom' });
+															Animated.timing(slideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+																if (finished) setIsOptionsOpen(false);
+															});
+														} catch (e) {
+															Toast.show({ type: 'error', text1: 'Erro ao excluir post', position: 'bottom' });
+														}
+													},
+												},
+											],
+											{ cancelable: true }
+										);
+									}}
+								>
+									<MaterialCommunityIcons name="trash-can-outline" size={18} color="#E74C3C" />
+									<Text style={[styles.optText, { color: '#E74C3C' }]}>Excluir post</Text>
+								</TouchableOpacity>
+							)}
+						</View>
+					</Animated.View>
+				</View>
+			</Modal>
+
+			<Modal
+				visible={isAboutOpen}
+				transparent
+				animationType="none"
+				onRequestClose={() => {
+					Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+						if (finished) setIsAboutOpen(false);
+					});
+				}}
+				style={styles.modalOverlay}
+			>
+				<View style={styles.modalOverlay}>
+					<TouchableOpacity
+						style={styles.modalBackdrop}
+						activeOpacity={1}
+						onPress={() => {
+							Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+								if (finished) setIsAboutOpen(false);
+							});
+						}}
+					/>
+					<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: aboutSlideY }] }]}>
+						<View style={styles.sheetHandleContainer}>
+							<View style={styles.sheetHandle} />
+						</View>
+						<View style={styles.sheetHeader}>
+							<Text style={styles.sheetTitle}>Sobre a conta</Text>
+							<TouchableOpacity
+								onPress={() => {
 									Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
 										if (finished) setIsAboutOpen(false);
 									});
-								} else {
-									Toast.show({ type: 'info', text1: 'Ação indisponível', position: 'bottom' });
-								}
-							}}
-						>
-							<Text style={styles.commentButtonText}>Ver perfil</Text>
-						</TouchableOpacity>
-					</View>
-				</Animated.View>
-			</View>
-		</Modal>
+								}}
+								style={styles.closeBtn}
+							>
+								<MaterialCommunityIcons name="close" size={20} color={COLORS.text} />
+							</TouchableOpacity>
+						</View>
+
+						<View style={[styles.sheetContent, { gap: 12 }]}>
+							<View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+								<Image
+									source={pictureRepository.getSource(post.account?.avatar)}
+									style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: COLORS.bg }}
+									defaultSource={Images.avatarDefault as unknown as number}
+								/>
+								<View style={{ flex: 1 }}>
+									<Text style={[styles.profileName, { fontSize: 18 }]}>{post.account?.name}</Text>
+									<Text style={styles.postDate}>{post.account?.email || ''}</Text>
+								</View>
+							</View>
+
+							<TouchableOpacity
+								style={[styles.commentButton, { alignSelf: 'flex-start' }]}
+								onPress={() => {
+									if (handleAbout) {
+										handleAbout(post.id);
+										Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+											if (finished) setIsAboutOpen(false);
+										});
+									} else {
+										Toast.show({ type: 'info', text1: 'Ação indisponível', position: 'bottom' });
+									}
+								}}
+							>
+								<Text style={styles.commentButtonText}>Ver perfil</Text>
+							</TouchableOpacity>
+						</View>
+					</Animated.View>
+				</View>
+			</Modal>
 		</>
 	);
 }
@@ -623,6 +849,26 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			borderRadius: 12,
 			overflow: 'hidden',
 		},
+		carouselDots: {
+			position: 'absolute',
+			bottom: 8,
+			left: 0,
+			right: 0,
+			flexDirection: 'row',
+			justifyContent: 'center',
+			gap: 6,
+		},
+		dot: {
+			width: 6,
+			height: 6,
+			borderRadius: 3,
+			backgroundColor: COLORS.tertiary,
+			opacity: 0.6,
+		},
+		dotActive: {
+			opacity: 1,
+			backgroundColor: COLORS.text,
+		},
 		postPicture: {
 			position: 'relative',
 			width: '100%',
@@ -688,6 +934,13 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			backgroundColor: COLORS.quarternary,
 			padding: 10,
 			borderRadius: 10,
+			flexDirection: 'row',
+			justifyContent: 'space-between',
+			alignItems: 'flex-start',
+			gap: 8,
+		},
+		commentContent: {
+			flex: 1,
 		},
 		commentText: {
 			color: COLORS.text,
@@ -697,6 +950,24 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			opacity: 0.6,
 			fontSize: 10,
 			marginTop: 4,
+		},
+		commentActions: {
+			flexDirection: 'row',
+			gap: 8,
+		},
+		commentActionButton: {
+			padding: 6,
+			borderRadius: 6,
+			backgroundColor: COLORS.tertiary,
+		},
+		editActions: {
+			flexDirection: 'row',
+			gap: 8,
+			marginTop: 12,
+		},
+		cancelButton: {
+			backgroundColor: COLORS.tertiary,
+			flex: 1,
 		},
 		commentEmpty: {
 			color: COLORS.text,
@@ -732,7 +1003,6 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			borderRadius: 10,
 			paddingHorizontal: 12,
 			paddingVertical: 8,
-			maxHeight: 100,
 		},
 		commentButton: {
 			backgroundColor: COLORS.primary,

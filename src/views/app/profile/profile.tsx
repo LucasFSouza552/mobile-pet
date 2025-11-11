@@ -7,6 +7,7 @@ import PostList from '../../../components/Cards/PostList';
 import { usePost } from '../../../context/PostContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { useFocusEffect } from '@react-navigation/native';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -19,15 +20,15 @@ export default function Profile({ navigation }: ProfileProps) {
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading } = usePost();
   const { COLORS } = useTheme();
 
-  useEffect(() => {
-    if (account?.id) {
-      refreshUserPosts(account.id);
-    }
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      if (account?.id) {
+        refreshUserPosts(account.id);
+      }
+    }, [account?.id])
+  );
 
-  useEffect(() => {
-    console.log("userPosts", userPosts.map(post => post.id));
-  }, [userPosts]);
+  // remove noisy logs in production
 
   useEffect(() => {
     if (!loading && !account) {
@@ -35,9 +36,7 @@ export default function Profile({ navigation }: ProfileProps) {
     }
   }, [loading, account, navigation]);
 
-  useEffect(() => {
-    console.log("userPosts", userPosts.length);
-  }, [userPosts]);
+  // remove noisy logs in production
 
 
   if (!account) {

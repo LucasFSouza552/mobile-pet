@@ -3,8 +3,8 @@ export interface IComment {
     post: string;
     parent?: string | null;
     content: string;
-    account: string;
-    isDeleted: boolean;
+    account: string | { id?: string; _id?: string; name?: string; avatar?: string; role?: string; verified?: boolean };
+    isDeleted?: boolean;
     createdAt: string; 
     updatedAt: string;
     lastSyncedAt?: string;

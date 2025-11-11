@@ -36,7 +36,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error?.response) {
-      return Promise.reject(error);
+      return Promise.reject(error.response?.data);
     } else {
       console.error("[NETWORK ERROR]", error?.message ?? error, BASE_URL);
       return Promise.reject(error);

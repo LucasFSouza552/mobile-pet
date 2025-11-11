@@ -25,7 +25,7 @@ const slides = [
 export default function Donate({ navigation }: any) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
-  const slidesRef = useRef(null);
+  const slidesRef = useRef<FlatList>(null);
 
   const viewableItemsChanged = useRef(({ viewableItems }: any) => {
     setCurrentIndex(viewableItems[0].index);
@@ -35,7 +35,7 @@ export default function Donate({ navigation }: any) {
 
   const handleNext = () => {
     if (currentIndex < slides.length - 1) {
-      slidesRef.current.scrollToIndex({ index: currentIndex + 1 });
+      slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       navigation?.navigate('Main');
     }
