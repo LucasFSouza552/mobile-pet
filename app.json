@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logoPet.png",
+        "foregroundImage": "./assets/img/logoPet.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -31,13 +31,19 @@
         "READ_MEDIA_IMAGES"
       ],
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.lucas552.mobilepet"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6e73d393-3951-4eb2-8682-b0977c705a0a"
+      }
+    }
   }
 }

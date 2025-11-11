@@ -42,6 +42,7 @@ async function getAppliedMigrationIds(): Promise<Set<number>> {
 }
 
 export async function runMigrations() {
+  // resetDatabase();
   await ensureMigrationsTable();
   const db = await getLocalDb();
   const applied = await getAppliedMigrationIds();
