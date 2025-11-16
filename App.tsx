@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { NavigationContainer, useTheme } from '@react-navigation/native';
+import { NavigationContainer } from '@react-navigation/native';
 import { StatusBar, View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SplashScreen from './src/views/auth/splash';
@@ -11,10 +11,11 @@ import RegisterStep2Screen from './src/views/auth/register/step2';
 import RegisterStep3Screen from './src/views/auth/register/step3';
 import RegisterStep4Screen from './src/views/auth/register/step4';
 import Main from './src/views/app/main';
-import PostDetails from './src/views/app/postDetails';
+
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
+import { useTheme as useAppTheme } from './src/context/ThemeContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Keyboard } from 'react-native';
 import { AccountProvider } from './src/context/AccountContext';
@@ -58,12 +59,8 @@ export default function App() {
 
   return (
     <>
-
-      <View style={{ backgroundColor: '#B648A0', display: 'flex', justifyContent: 'center', alignItems: 'center', height: 35 }}>
-      
-      <StatusBar barStyle="light-content" translucent={false} backgroundColor="#B648A0" />
-      </View>
       <ThemeProvider>
+        <ThemedStatusBar />
         <AccountProvider>
 
           <SafeAreaProvider initialMetrics={initialWindowMetrics}>
@@ -85,7 +82,6 @@ export default function App() {
                   <Stack.Screen name="RegisterStep3" component={RegisterStep3Screen} />
                   <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
                   <Stack.Screen name="Main" component={Main} />
-                <Stack.Screen name="PostDetails" component={PostDetails} />
                 </Stack.Navigator>
 
 
@@ -107,6 +103,15 @@ export default function App() {
 
   );
 
+}
+
+function ThemedStatusBar() {
+  const { COLORS } = useAppTheme();
+  return (
+    <View style={{ backgroundColor: COLORS.primary, display: 'flex', justifyContent: 'center', alignItems: 'center', height: 35 }}>
+      <StatusBar barStyle="light-content" translucent={false} backgroundColor={COLORS.primary} />
+    </View>
+  );
 }
 
 
