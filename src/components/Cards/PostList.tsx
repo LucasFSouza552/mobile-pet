@@ -76,8 +76,6 @@ const styles = StyleSheet.create({
 		width: '100%',
 		display: 'flex',
 		flexDirection: 'column',
-		justifyContent: 'center',
-		alignItems: 'center',
 		flex: 1,
 	},
 	title: {
@@ -91,11 +89,11 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	postWrapper: {
+		flex: 1,
 		width: '100%',
 		display: 'flex',
-		alignItems: 'flex-start',
-		position: 'relative',
 		paddingHorizontal: 1,
+
 	},
 	empty: {
 		color: '#999',

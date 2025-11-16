@@ -31,14 +31,10 @@ export default function NewPost({ navigation }: any) {
       setImages([]);
       setContent('');
       setSubmitting(false);
-      setIsCameraOpen(false);
       setCameraType('back');
       setFlash('off');
       cameraRef.current = null;
-      openCamera();
-    } else {
-      setIsCameraOpen(false);
-    }
+    } 
   }, [isFocused]);
 
 
@@ -228,7 +224,6 @@ export default function NewPost({ navigation }: any) {
               style={styles.roundBtn}
               onPress={() => {
                 setIsCameraOpen(false);
-                navigation.navigate('Community');
               }}
               accessibilityLabel="Fechar câmera"
             >

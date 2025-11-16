@@ -9,6 +9,7 @@ import { useTheme } from '../../context/ThemeContext';
 import NewPost from './newPost';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAccount } from '../../context/AccountContext';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -24,7 +25,8 @@ export default function Main() {
 
   const { COLORS } = useTheme();
   const insets = useSafeAreaInsets();
-
+  const { account, loading } = useAccount();
+  
   return (
     <Tab.Navigator
       initialRouteName='Profile'
@@ -62,7 +64,15 @@ export default function Main() {
         }}
       />
       <Tab.Screen name="Community" component={Community} />
-      <Tab.Screen name="Profile" component={Profile} />
+      <Tab.Screen
+        name="Profile"
+        component={Profile}
+        listeners={({ navigation }) => ({
+          tabPress: () => {
+            navigation.navigate('Profile', {});
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 }

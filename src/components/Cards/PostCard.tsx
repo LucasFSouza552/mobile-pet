@@ -1,15 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet,  Share, useWindowDimensions,  Animated, Alert } from 'react-native';
+import { View, Text, StyleSheet, Share, useWindowDimensions, Animated, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { IPost } from '../../models/IPost';
 import { IComment } from '../../models/IComment';
 import Toast from 'react-native-toast-message';
 import { useTheme } from '../../context/ThemeContext';
 import { usePost } from '../../context/PostContext';
 import { darkTheme, lightTheme } from '../../theme/Themes';
-import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
 import { formatDate } from '../../utils/date';
+import { usePostComments } from './hooks/usePostComments';
+import { useShareMessage } from './hooks/useShareMessage';
 
 interface PostCardProps {
 	post: IPost;
@@ -40,16 +42,14 @@ function PostCardComponent({
 	const styles = makeStyles(COLORS);
 	const { likePost: likePostFromContext } = usePost();
 	const { account } = useAccount();
-	const [showShareMessage, setShowShareMessage] = useState(false);
 	const { width, height } = useWindowDimensions();
+	const navigation = useNavigation<any>();
 	const hideMetaText = width < 380;
 	const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 	const slideY = React.useRef(new Animated.Value(height)).current;
 	const [commentText, setCommentText] = useState('');
-	const [comments, setComments] = useState<IComment[]>([]);
-	const [commentsLoading, setCommentsLoading] = useState(false);
-	const [commentsPage, setCommentsPage] = useState(1);
-	const [hasMoreComments, setHasMoreComments] = useState(true);
+	const { comments, loading: commentsLoading, hasMore: hasMoreComments, load: loadComments, add: addComment, remove: removeComment, update: updateComment } = usePostComments(post?.id);
+	const { show: showShareMessage, trigger: triggerShareMessage } = useShareMessage(2000);
 	const [isOptionsOpen, setIsOptionsOpen] = useState(false);
 	const [isAboutOpen, setIsAboutOpen] = useState(false);
 	const aboutSlideY = React.useRef(new Animated.Value(height)).current;
@@ -128,32 +128,6 @@ function PostCardComponent({
 		openComments();
 	};
 
-	const loadComments = async (reset = false) => {
-		if (!post?.id) return;
-		try {
-			setCommentsLoading(true);
-			const pageToLoad = reset ? 1 : commentsPage;
-			const fetched: IComment[] = await commentRepository.fetchCommentsByPost(post.id, pageToLoad, 10);
-			if (reset) {
-				setComments(fetched);
-			} else {
-				const existing = new Set(comments.map(c => c.id));
-				const merged = [...comments, ...fetched.filter(c => !existing.has(c.id))];
-				setComments(merged);
-			}
-			setHasMoreComments(fetched.length >= 10);
-			setCommentsPage(pageToLoad + 1);
-		} catch (e) {
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao carregar comentários',
-				position: 'bottom',
-			});
-		} finally {
-			setCommentsLoading(false);
-		}
-	};
-
 	const handleEditComment = (comment: IComment) => {
 		setEditingComment(comment);
 		setEditCommentText(comment.content);
@@ -184,8 +158,8 @@ function PostCardComponent({
 		if (!editingComment || !editCommentText.trim() || editSaving) return;
 		try {
 			setEditSaving(true);
-			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
-			setComments(prev => prev.map(c => c.id === editingComment.id ? updated : c));
+			const updated = { ...(editingComment as IComment), content: editCommentText.trim() } as IComment;
+			updateComment(updated);
 			closeEditModal();
 			Toast.show({
 				type: 'success',
@@ -214,8 +188,7 @@ function PostCardComponent({
 					style: 'destructive',
 					onPress: async () => {
 						try {
-							await commentRepository.deleteOwnComment(comment.id);
-							setComments(prev => prev.filter(c => c.id !== comment.id));
+							await removeComment(comment.id);
 							Toast.show({
 								type: 'success',
 								text1: 'Comentário excluído com sucesso',
@@ -250,8 +223,7 @@ function PostCardComponent({
 						? `${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}\n${postUrl}`
 						: `Confira este post de ${post.account.name ?? ''}! ${postUrl}`,
 			});
-			setShowShareMessage(true);
-			setTimeout(() => setShowShareMessage(false), 2000);
+			triggerShareMessage();
 		} catch {
 			Toast.show({
 				type: 'error',
@@ -259,8 +231,6 @@ function PostCardComponent({
 				text2: 'Tente novamente mais tarde.',
 				position: 'bottom',
 			});
-			setShowShareMessage(false);
-			setTimeout(() => setShowShareMessage(false), 2000);
 		}
 	};
 
@@ -305,50 +275,49 @@ function PostCardComponent({
 				/>
 			</View>
 
-		<PostCommentsModal
-			visible={isCommentsOpen}
-			onRequestClose={closeComments}
-			slideY={slideY}
-			styles={styles}
-			COLORS={COLORS}
-			comments={comments}
-			commentsLoading={commentsLoading}
-			hasMoreComments={hasMoreComments}
-			onEndReached={() => loadComments(false)}
-			commentText={commentText}
-			setCommentText={setCommentText}
-			onSubmitComment={() => {
-				(async () => {
-					if (!commentText.trim() || !post?.id) return;
-					try {
-						const created = await commentRepository.createComment(post.id, commentText.trim());
-						setComments(prev => [created, ...prev]);
-						setCommentText('');
-					} catch (e) {
-						Toast.show({
-							type: 'error',
-							text1: 'Erro ao comentar',
-							position: 'bottom',
-						});
-					}
-				})();
-			}}
-			renderIsOwner={isCommentOwner}
-			onEditComment={handleEditComment}
-			onDeleteComment={handleDeleteComment}
-		/>
+			<PostCommentsModal
+				visible={isCommentsOpen}
+				onRequestClose={closeComments}
+				slideY={slideY}
+				styles={styles}
+				COLORS={COLORS}
+				comments={comments}
+				commentsLoading={commentsLoading}
+				hasMoreComments={hasMoreComments}
+				onEndReached={() => loadComments(false)}
+				commentText={commentText}
+				setCommentText={setCommentText}
+				onSubmitComment={() => {
+					(async () => {
+						if (!commentText.trim() || !post?.id) return;
+						try {
+							await addComment(commentText);
+							setCommentText('');
+						} catch (e) {
+							Toast.show({
+								type: 'error',
+								text1: 'Erro ao comentar',
+								position: 'bottom',
+							});
+						}
+					})();
+				}}
+				renderIsOwner={isCommentOwner}
+				onEditComment={handleEditComment}
+				onDeleteComment={handleDeleteComment}
+			/>
 
-		<PostEditCommentModal
-			visible={isEditModalOpen}
-			onRequestClose={closeEditModal}
-			editSlideY={editSlideY}
-			styles={styles}
-			COLORS={COLORS}
-			editCommentText={editCommentText}
-			setEditCommentText={setEditCommentText}
-			editSaving={editSaving}
-			onSave={saveEditedComment}
-		/>
+			<PostEditCommentModal
+				visible={isEditModalOpen}
+				onRequestClose={closeEditModal}
+				editSlideY={editSlideY}
+				styles={styles}
+				COLORS={COLORS}
+				editCommentText={editCommentText}
+				setEditCommentText={setEditCommentText}
+				editSaving={editSaving}
+				onSave={saveEditedComment}
+			/>
 
 			<PostOptionsModal
 				visible={isOptionsOpen}
@@ -377,13 +346,12 @@ function PostCardComponent({
 				COLORS={COLORS}
 				post={post}
 				onPressViewProfile={() => {
-					if (handleAbout) {
-						handleAbout(post.id);
+					try {
+						navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } });
+					} finally {
 						Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
 							if (finished) setIsAboutOpen(false);
 						});
-					} else {
-						Toast.show({ type: 'info', text1: 'Ação indisponível', position: 'bottom' });
 					}
 				}}
 			/>
