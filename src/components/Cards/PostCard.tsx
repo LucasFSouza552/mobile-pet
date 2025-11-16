@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Share, useWindowDimensions, Modal, Animated, TextInput, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, ScrollView, Share, useWindowDimensions, Modal, Animated, TextInput, FlatList, ActivityIndicator, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
 import { Images } from '../../../assets';
@@ -13,6 +13,7 @@ import { darkTheme, lightTheme } from '../../theme/Themes';
 import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -85,6 +86,7 @@ function PostCardComponent({
 	const styles = makeStyles(COLORS);
 	const { likePost: likePostFromContext } = usePost();
 	const { account } = useAccount();
+	const insets = useSafeAreaInsets();
 	const [animateLike, setAnimateLike] = useState(false);
 	const [showShareMessage, setShowShareMessage] = useState(false);
 	const { width, height } = useWindowDimensions();
@@ -399,7 +401,11 @@ function PostCardComponent({
 			</View>
 
 		<Modal visible={isCommentsOpen} transparent animationType="none" onRequestClose={closeComments} style={styles.modalOverlay}>
-			<View style={styles.modalOverlay}>
+			<KeyboardAvoidingView 
+				style={styles.modalOverlay}
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+			>
 				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={closeComments} />
 				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slideY }] }]}>
 					<View style={styles.sheetHandleContainer}>
@@ -452,8 +458,9 @@ function PostCardComponent({
 						ListEmptyComponent={!commentsLoading ? <Text style={styles.commentEmpty}>Sem comentários</Text> : null}
 						ListFooterComponent={commentsLoading ? <ActivityIndicator color={COLORS.primary} style={{ padding: 12 }} /> : null}
 						contentContainerStyle={styles.sheetContent}
+						keyboardShouldPersistTaps="handled"
 					/>
-					<View style={styles.commentBar}>
+					<View style={[styles.commentBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
 						<TextInput
 							value={commentText}
 							onChangeText={setCommentText}
@@ -485,11 +492,15 @@ function PostCardComponent({
 						</TouchableOpacity>
 					</View>
 				</Animated.View>
-			</View>
+			</KeyboardAvoidingView>
 		</Modal>
 
 		<Modal visible={isEditModalOpen} transparent animationType="none" onRequestClose={closeEditModal} style={styles.modalOverlay}>
-			<View style={styles.modalOverlay}>
+			<KeyboardAvoidingView 
+				style={styles.modalOverlay}
+				behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+				keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+			>
 				<TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => { if (!editSaving) closeEditModal(); }} />
 				<Animated.View style={[styles.bottomSheet, { transform: [{ translateY: editSlideY }] }]}>
 					<View style={styles.sheetHandleContainer}>
@@ -530,7 +541,7 @@ function PostCardComponent({
 						</View>
 					</View>
 				</Animated.View>
-			</View>
+			</KeyboardAvoidingView>
 		</Modal>
 
 			<Modal visible={isOptionsOpen} transparent animationType="none" onRequestClose={() => {

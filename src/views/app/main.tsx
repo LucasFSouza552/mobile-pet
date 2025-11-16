@@ -8,6 +8,7 @@ import Community from './community';
 import { useTheme } from '../../context/ThemeContext';
 import NewPost from './newPost';
 import { View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -22,6 +23,7 @@ const Icons = {
 export default function Main() {
 
   const { COLORS } = useTheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -33,7 +35,11 @@ export default function Main() {
         swipeEnabled: true,
         tabBarActiveTintColor: '#f2f2f2',
         tabBarInactiveTintColor: COLORS.primary,
-        tabBarStyle: { backgroundColor: COLORS.secondary },
+        tabBarStyle: { 
+          backgroundColor: COLORS.secondary,
+          paddingBottom: insets.bottom,
+          height: 40 + insets.bottom,
+        },
         tabBarItemStyle: { padding: 10 },
         tabBarIndicatorStyle: { backgroundColor: 'transparent' },
         tabBarIcon: ({ color }) => {
