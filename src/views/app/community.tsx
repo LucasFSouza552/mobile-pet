@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import PostList from '../../components/Cards/PostList';
 import { usePost } from '../../context/PostContext';
 import { useAccount } from '../../context/AccountContext';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
 interface CommunityPageProps {
@@ -14,8 +13,11 @@ interface CommunityPageProps {
 export default function Community({ navigation }: CommunityPageProps) {
 
   const { posts, fetchMore, refresh, loading: postsLoading } = usePost();
-  const { account, loading, logout, refreshAccount } = useAccount();
+  const { account, loading } = useAccount();
   const [showTopics, setShowTopics] = useState(false);
+  const [showAlertButton, setShowAlertButton] = useState(true);
+  const scrollOffset = useRef(0);
+  const isInstitution = account?.role === 'institution';
 
   const communities = [
     { name: 'Amicão', icon: 'paw' },
@@ -46,6 +48,24 @@ export default function Community({ navigation }: CommunityPageProps) {
   if (!account) {
     return null;
   }
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    const threshold = 10;
+    if (isInstitution) {
+      return;
+    }
+    if (offsetY > scrollOffset.current + threshold) {
+      if (showAlertButton) {
+        setShowAlertButton(false);
+      }
+    } else if (offsetY < scrollOffset.current - threshold) {
+      if (!showAlertButton) {
+        setShowAlertButton(true);
+      }
+    }
+    scrollOffset.current = offsetY;
+  };
 
   return (
     <View style={styles.container}>
@@ -78,8 +98,25 @@ export default function Community({ navigation }: CommunityPageProps) {
         </>
       )}
       <View style={styles.listContainer}>
-      <PostList title="Comunidade" posts={posts} account={account} onEndReached={fetchMore} onRefresh={refresh} refreshing={postsLoading} />
+        <PostList 
+          title="Comunidade" 
+          posts={posts} 
+          account={account} 
+          onEndReached={fetchMore} 
+          onRefresh={refresh} 
+          refreshing={postsLoading} 
+          onScroll={handleScroll}
+        />
       </View>
+      {!isInstitution && showAlertButton && (
+        <TouchableOpacity
+          style={styles.floatingButton}
+          onPress={() => navigation.getParent()?.navigate("CreateNotification")}
+          accessibilityLabel="Criar notificação"
+        >
+          <FontAwesome name="bell" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -88,6 +125,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 12,
     paddingTop: 12,
+    paddingBottom: 80,
   },
   container: {
     display: 'flex',
@@ -205,6 +243,22 @@ const styles = StyleSheet.create({
   communityText: {
     color: '#fff',
     marginLeft: 8,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#B648A0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 7,
   },
 });
 

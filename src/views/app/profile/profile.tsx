@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Button } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useAccount } from '../../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
@@ -72,6 +72,8 @@ export default function Profile({ navigation, route }: ProfileProps) {
 
   const styles = makeStyles(COLORS);
 
+  const isInstitution = account?.role === 'institution';
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -102,6 +104,15 @@ export default function Profile({ navigation, route }: ProfileProps) {
           </TouchableOpacity>
         ) : null}
       </View>
+
+      {isInstitution && isSelf && (
+        <TouchableOpacity
+          style={styles.notificationsButton}
+          onPress={() => navigation.getParent()?.navigate('InstitutionNotifications')}
+        >
+          <Text style={styles.notificationsButtonText}>Ver notificações de usuários</Text>
+        </TouchableOpacity>
+      )}
 
       <View style={styles.listContainer}>
         <PostList
@@ -215,6 +226,18 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingHorizontal: 12,
       paddingTop: 12,
     },
+  notificationsButton: {
+    marginTop: 12,
+    marginHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary,
+    alignItems: 'center',
+  },
+  notificationsButtonText: {
+    color: COLORS.bg,
+    fontWeight: '700',
+  },
     postContainer: {
       backgroundColor: COLORS.quarternary,
       marginTop: 20,

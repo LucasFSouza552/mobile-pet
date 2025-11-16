@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import PostCard from './PostCard';
 import type { IPost } from '../../models/IPost';
 import type { IAccount } from '../../models/IAccount';
@@ -11,9 +11,10 @@ interface PostListProps {
 	onEndReached?: () => void;
 	onRefresh?: () => void | Promise<void>;
 	refreshing?: boolean;
+	onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
-export default function PostList({ title, posts, account, onEndReached, onRefresh, refreshing }: PostListProps) {
+export default function PostList({ title, posts, account, onEndReached, onRefresh, refreshing, onScroll }: PostListProps) {
 	const [postOptions, setPostOptions] = React.useState<string>('');
 	const [postAbout, setPostAbout] = React.useState<string>('');
 
@@ -66,6 +67,8 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 				updateCellsBatchingPeriod={50}
 				windowSize={5}
 				removeClippedSubviews
+				onScroll={onScroll}
+				scrollEventThrottle={16}
 			/>
 		</View>
 	);
