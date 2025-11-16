@@ -58,9 +58,13 @@ export const accountRemoteRepository = {
             throw error;
         }
     },
-    async uploadAvatar(file: string) {
+    async uploadAvatar(formData: FormData) {
         try {
-            const response = await apiClient.post("/account/avatar", file);
+            const response = await apiClient.post("/account/avatar", formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
             return response.data;
         } catch (error) {
             throw error

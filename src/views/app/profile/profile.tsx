@@ -62,16 +62,25 @@ export default function Profile({ navigation }: ProfileProps) {
             <Text style={styles.posts}>{account.postCount} Publicações</Text>
           </View>
         </View>
-        <TouchableOpacity
-          accessibilityLabel="Sair da conta"
-          style={styles.logoutButton}
-          onPress={async () => {
-            await logout();
-            navigation.navigate('Welcome');
-          }}
-        >
-          <Text style={styles.logoutText}>Sair</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            accessibilityLabel="Editar perfil"
+            style={styles.editButton}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Text style={styles.editText}>Editar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityLabel="Sair da conta"
+            style={styles.logoutButton}
+            onPress={async () => {
+              await logout();
+              navigation.navigate('Welcome');
+            }}
+          >
+            <Text style={styles.logoutText}>Sair</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.listContainer}>
@@ -145,6 +154,20 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingVertical: 4,
       borderRadius: 12,
       marginRight: 6,
+    },
+    headerActions: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    editButton: {
+      backgroundColor: COLORS.tertiary,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+    },
+    editText: {
+      color: COLORS.text,
+      fontWeight: '600',
     },
     logoutButton: {
       backgroundColor: COLORS.tertiary,

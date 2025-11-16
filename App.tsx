@@ -11,6 +11,7 @@ import RegisterStep2Screen from './src/views/auth/register/step2';
 import RegisterStep3Screen from './src/views/auth/register/step3';
 import RegisterStep4Screen from './src/views/auth/register/step4';
 import Main from './src/views/app/main';
+import EditProfileScreen from './src/views/app/profile/editProfile';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
@@ -82,6 +83,7 @@ export default function App() {
                   <Stack.Screen name="RegisterStep3" component={RegisterStep3Screen} />
                   <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
                   <Stack.Screen name="Main" component={Main} />
+                  <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                 </Stack.Navigator>
 
 

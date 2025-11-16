@@ -27,6 +27,8 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
             }
         } catch (error) {
             console.error("Erro ao buscar conta:", error);
+        } finally {
+            setLoading(false);
         }
     };
 

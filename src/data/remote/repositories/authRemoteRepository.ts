@@ -44,9 +44,9 @@ export const authRemoteRepository = {
         }
     },
 
-    async changePassword(accountId: string, currentPassword: string) {
+    async changePassword(currentPassword: string, newPassword: string) {
         try {
-            const response = await apiClient.put("/auth/change-password", { accountId, currentPassword });
+            const response = await apiClient.put("/auth/change-password", { currentPassword, newPassword });
             return response.data;
         } catch (error) {
             throw error;
