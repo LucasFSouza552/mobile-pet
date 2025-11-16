@@ -6,6 +6,7 @@ export function welcomeStyles() {
   return StyleSheet.create({
     container: {
       flex: 1,
+      backgroundColor: COLORS.secondary,
       ...StyleSheet.absoluteFillObject
     },
     content: {
@@ -25,15 +26,6 @@ export function welcomeStyles() {
       color: COLORS.primary,
       textAlign: 'center',
       marginBottom: verticalScale(16),
-      textShadowColor: COLORS.textShadow,
-      textShadowOffset: { width: 1, height: 1 },
-      textShadowRadius: 3,
-      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-      paddingHorizontal: SPACING.md,
-      paddingVertical: verticalScale(6),
-      borderRadius: scale(10),
-      borderWidth: 1,
-      borderColor: COLORS.border,
     },
     subtitle: {
       fontSize: FONT_SIZE.regular,
@@ -41,12 +33,6 @@ export function welcomeStyles() {
       textAlign: 'center',
       lineHeight: verticalScale(22),
       marginBottom: verticalScale(56),
-      backgroundColor: 'rgba(255, 255, 255, 0.25)',
-      paddingHorizontal: SPACING.md,
-      paddingVertical: verticalScale(6),
-      borderRadius: scale(10),
-      borderWidth: 1,
-      borderColor: COLORS.border,
     },
     buttonContainer: {
       width: '100%',
