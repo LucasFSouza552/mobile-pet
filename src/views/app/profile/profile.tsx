@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity, Button } from 'react-native';
 import { useAccount } from '../../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,38 +8,65 @@ import { usePost } from '../../../context/PostContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useFocusEffect } from '@react-navigation/native';
+import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 
 const screenWidth = Dimensions.get('window').width;
 
 interface ProfileProps {
   navigation: any;
+  route?: { params?: { accountId?: string } };
 }
 
-export default function Profile({ navigation }: ProfileProps) {
+export default function Profile({ navigation, route }: ProfileProps) {
   const { account, loading, logout, refreshAccount } = useAccount();
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading } = usePost();
   const { COLORS } = useTheme();
+  const [viewAccount, setViewAccount] = useState<any | null>(null);
+
+  const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
+  const isSelf = !!account?.id && targetAccountId === account.id;
 
   useFocusEffect(
-    React.useCallback(() => {
-      if (account?.id) {
-        refreshUserPosts(account.id);
+    useCallback(() => {
+      if (targetAccountId) {
+        refreshUserPosts(targetAccountId);
       }
-    }, [account?.id])
+    }, [targetAccountId])
   );
 
-  // remove noisy logs in production
 
   useEffect(() => {
-    if (!loading && !account) {
+    if (!loading && !account && !route?.params?.accountId) {
       navigation.navigate('Welcome');
     }
-  }, [loading, account, navigation]);
+  }, [loading, account, navigation, route?.params?.accountId]);
 
-  // remove noisy logs in production
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!targetAccountId) {
+        setViewAccount(account || null);
+        return;
+      }
+      if (isSelf) {
+        setViewAccount(account || null);
+        return;
+      }
+      try {
+        const other = await accountRemoteRepository.getById(targetAccountId);
+        if (active) setViewAccount(other);
+      } catch {
+        if (active) setViewAccount(null);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [targetAccountId, account, isSelf]);
 
 
-  if (!account) {
+
+  if (!viewAccount) {
     return null;
   }
 
@@ -50,26 +77,19 @@ export default function Profile({ navigation }: ProfileProps) {
       <View style={styles.header}>
         <View style={styles.avatarWrapper}>
           <Image
-            source={pictureRepository.getSource(account?.avatar)}
+            source={pictureRepository.getSource(viewAccount?.avatar)}
             style={styles.avatar}
           />
         </View>
         <View style={styles.headerInfo}>
           <View style={styles.nameRow}>
-            <Text style={styles.name}>{account.name}</Text>
+            <Text style={styles.name}>{viewAccount?.name}</Text>
           </View>
           <View style={styles.postsRow}>
-            <Text style={styles.posts}>{account.postCount} Publicações</Text>
+            <Text style={styles.posts}>{viewAccount?.postCount} Publicações</Text>
           </View>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            accessibilityLabel="Editar perfil"
-            style={styles.editButton}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Text style={styles.editText}>Editar</Text>
-          </TouchableOpacity>
+        {isSelf ? (
           <TouchableOpacity
             accessibilityLabel="Sair da conta"
             style={styles.logoutButton}
@@ -80,16 +100,16 @@ export default function Profile({ navigation }: ProfileProps) {
           >
             <Text style={styles.logoutText}>Sair</Text>
           </TouchableOpacity>
-        </View>
+        ) : null}
       </View>
 
       <View style={styles.listContainer}>
         <PostList
-          title="Seus posts"
+          title={isSelf ? "Seus posts" : "Posts"}
           posts={userPosts}
-          account={account}
-          onEndReached={() => loadMoreUserPosts(account.id)}
-          onRefresh={() => refreshUserPosts(account.id)}
+          account={viewAccount}
+          onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
+          onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
           refreshing={postsLoading}
         />
       </View>
@@ -127,6 +147,9 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     },
     headerInfo: {
       flex: 1,
+      width: '100%',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
     },
     nameRow: {
       flexDirection: 'row',
@@ -188,6 +211,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     },
     listContainer: {
       flex: 1,
+      width: '100%',
       paddingHorizontal: 12,
       paddingTop: 12,
     },

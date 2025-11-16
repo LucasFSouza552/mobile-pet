@@ -1,6 +1,7 @@
 import { ReactNode, createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { IPost } from "../models/IPost";
 import { postRepository } from "../data/remote/repositories/postRemoteRepository";
+import { useNetInfo } from "@react-native-community/netinfo";
 
 type Order = "asc" | "desc";
 
@@ -30,6 +31,9 @@ function addPostsWithoutDuplicates(currentPosts: IPost[], newPosts: IPost[]): IP
 }
 
 export function PostProvider({ children }: { children: ReactNode }) {
+
+    const { isConnected } = useNetInfo();
+
     // feed geral
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -55,6 +59,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     async function load(pageToLoad: number, replace: boolean) {
         try {
+            // verifica se tem internet
+            if (!isConnected) {
+                throw new Error("Sem conexão com a internet");
+            }
             setLoading(true);
             setError(null);
             const response: IPost[] = await postRepository.fetchPostsWithAuthor({
@@ -86,6 +94,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     const loadUser = async (replace: boolean, accountId?: string, pageToLoad?: number) => {
+        if (!isConnected) {
+            setError("Sem conexão com a internet");
+            return;
+        }
         try {
             setLoading(true);
             setError(null);
@@ -141,6 +153,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
             setHasMoreSearchResults(true);
             return [];
         }
+        if (!isConnected) {
+            setSearchResults([]);
+            setHasMoreSearchResults(true);
+            return [];
+        }
         setLoadingSearchResults(true);
         setSearchQuery(query);
         setSearchPage(1);
@@ -153,10 +170,10 @@ export function PostProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoadingSearchResults(false);
         }
-    }, [limit]);
+    }, [limit, isConnected]);
 
     const loadMoreSearchPosts = useCallback(async () => {
-        if (loadingSearchResults || !hasMoreSearchResults || !searchQuery.trim()) return;
+        if (!isConnected || loadingSearchResults || !hasMoreSearchResults || !searchQuery.trim()) return;
         setLoadingSearchResults(true);
         try {
             const next = searchPage + 1;
@@ -168,11 +185,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
         } finally {
             setLoadingSearchResults(false);
         }
-    }, [limit, searchPage, hasMoreSearchResults, loadingSearchResults, searchQuery]);
+    }, [limit, searchPage, hasMoreSearchResults, loadingSearchResults, searchQuery, isConnected]);
 
     useEffect(() => {
-        refresh();
-    }, []);
+        if (isConnected) {
+            refresh();
+        }
+    }, [isConnected]);
 
     const value = useMemo<PostContextProps>(() => ({
         posts,

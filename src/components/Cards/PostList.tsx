@@ -73,11 +73,11 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 
 const styles = StyleSheet.create({
 	container: {
+		width: '100%',
 		display: 'flex',
 		flexDirection: 'column',
-		justifyContent: 'flex-start',
-		alignItems: 'flex-start',
-		width: '100%',
+		justifyContent: 'center',
+		alignItems: 'center',
 		flex: 1,
 	},
 	title: {
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
 	postWrapper: {
 		width: '100%',
 		display: 'flex',
-		alignItems: 'center',
+		alignItems: 'flex-start',
 		position: 'relative',
 		paddingHorizontal: 1,
 	},
