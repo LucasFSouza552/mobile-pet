@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions,  Share, useWindowDimensions,  Animated, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet,  Share, useWindowDimensions,  Animated, Alert } from 'react-native';
 import { IPost } from '../../models/IPost';
 import { IComment } from '../../models/IComment';
 import Toast from 'react-native-toast-message';
@@ -10,6 +9,7 @@ import { darkTheme, lightTheme } from '../../theme/Themes';
 import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
+import { formatDate } from '../../utils/date';
 
 interface PostCardProps {
 	post: IPost;
@@ -40,12 +40,9 @@ function PostCardComponent({
 	const styles = makeStyles(COLORS);
 	const { likePost: likePostFromContext } = usePost();
 	const { account } = useAccount();
-	const insets = useSafeAreaInsets();
-	const [animateLike, setAnimateLike] = useState(false);
 	const [showShareMessage, setShowShareMessage] = useState(false);
 	const { width, height } = useWindowDimensions();
 	const hideMetaText = width < 380;
-	const navigation = useNavigation<any>();
 	const [isCommentsOpen, setIsCommentsOpen] = useState(false);
 	const slideY = React.useRef(new Animated.Value(height)).current;
 	const [commentText, setCommentText] = useState('');
@@ -62,6 +59,7 @@ function PostCardComponent({
 	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [deleted, setDeleted] = useState(false);
 	const [editSaving, setEditSaving] = useState(false);
+	const likeScale = React.useRef(new Animated.Value(1)).current;
 
 	if (!post || deleted) return null;
 
@@ -70,33 +68,12 @@ function PostCardComponent({
 		[accountId, post?.likes]
 	);
 
-	const formatDate = (dateString?: string) => {
-		if (!dateString) return '';
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-		if (diffInSeconds < 60) return 'agora';
-		if (diffInSeconds < 3600) {
-			const minutes = Math.floor(diffInSeconds / 60);
-			return `há ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
-		}
-		if (diffInSeconds < 86400) {
-			const hours = Math.floor(diffInSeconds / 3600);
-			return `há ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-		}
-		if (diffInSeconds < 604800) {
-			const days = Math.floor(diffInSeconds / 86400);
-			return `há ${days} ${days === 1 ? 'dia' : 'dias'}`;
-		}
-		return date.toLocaleDateString('pt-BR', {
-			day: '2-digit',
-			month: 'short',
-			year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-		} as any);
-	};
 
 	const handleLikePress = async () => {
-		setAnimateLike(true);
+		Animated.sequence([
+			Animated.timing(likeScale, { toValue: 1.3, duration: 120, useNativeDriver: true }),
+			Animated.timing(likeScale, { toValue: 1.0, duration: 120, useNativeDriver: true }),
+		]).start();
 		try {
 			if (!post?.id) return;
 			if (onLike) {
@@ -112,7 +89,6 @@ function PostCardComponent({
 				position: 'bottom',
 			});
 		}
-		setTimeout(() => setAnimateLike(false), 400);
 	};
 
 	const openOptionsSheet = () => {
@@ -325,6 +301,7 @@ function PostCardComponent({
 					onPressComments={handleCommentsPress}
 					onPressShare={handleSharePress}
 					showShareMessage={showShareMessage}
+					likeScale={likeScale}
 				/>
 			</View>
 
@@ -425,9 +402,6 @@ function areEqual(prev: PostCardProps, next: PostCardProps) {
 		prev.postOptions === next.postOptions
 	);
 }
-
-const PostCard = React.memo(PostCardComponent, areEqual);
-export default PostCard;
 
 function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
 	return StyleSheet.create({
@@ -719,34 +693,6 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			color: COLORS.text,
 			fontWeight: '700',
 		},
-		optModalOverlay: {
-			flex: 1,
-			justifyContent: 'center',
-			alignItems: 'center',
-		},
-		optPanel: {
-			minWidth: 280,
-			maxWidth: 320,
-			backgroundColor: COLORS.quarternary,
-			borderRadius: 16,
-			borderWidth: 2,
-			borderColor: COLORS.primary,
-			padding: 12,
-			gap: 6,
-			elevation: 6,
-			shadowColor: '#000',
-			shadowOffset: { width: 0, height: 4 },
-			shadowOpacity: 0.3,
-			shadowRadius: 6,
-		},
-		optClose: {
-			position: 'absolute',
-			top: 10,
-			right: 10,
-			padding: 6,
-			borderRadius: 12,
-			backgroundColor: 'rgba(255,255,255,0.08)',
-		},
 		optItem: {
 			flexDirection: 'row',
 			alignItems: 'center',
@@ -766,17 +712,8 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			opacity: 0.2,
 			marginVertical: 4,
 		},
-		optCancel: {
-			marginTop: 6,
-			backgroundColor: COLORS.primary,
-			paddingVertical: 10,
-			borderRadius: 10,
-			alignItems: 'center',
-		},
-		optCancelText: {
-			color: COLORS.text,
-			fontWeight: '700',
-		},
 	});
 }
 
+const PostCard = React.memo(PostCardComponent, areEqual);
+export default PostCard;

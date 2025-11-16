@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { IPost } from '../../models/IPost';
 import { FontAwesome, Ionicons, Feather } from '@expo/vector-icons';
 
@@ -12,6 +12,7 @@ interface OptionsBarViewProps {
 	onPressComments: () => void;
 	onPressShare: () => void;
 	showShareMessage: boolean;
+	likeScale?: Animated.Value;
 }
 
 export default function OptionsBarView({
@@ -23,16 +24,19 @@ export default function OptionsBarView({
 	onPressComments,
 	onPressShare,
 	showShareMessage,
+	likeScale,
 }: OptionsBarViewProps) {
 	return (
 		<View style={styles.optionsContainer}>
 			<View style={styles.itemOptionsContainer}>
 				<TouchableOpacity style={styles.circleIcon} onPress={onPressLike} activeOpacity={0.8}>
-					<FontAwesome
-						name="heart"
-						size={18}
-						color={isLiked ? 'red' : 'white'}
-					/>
+					<Animated.View style={{ transform: [{ scale: likeScale ?? new Animated.Value(1) }] }}>
+						<FontAwesome
+							name="heart"
+							size={18}
+							color={isLiked ? 'red' : 'white'}
+						/>
+					</Animated.View>
 				</TouchableOpacity>
 				{!hideMetaText && (
 					<Text style={styles.metaText}>{post?.likes?.length || 0} Curtidas</Text>
