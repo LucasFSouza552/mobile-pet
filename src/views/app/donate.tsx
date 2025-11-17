@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, Animated, Dimensions } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 const slides = [
   {
@@ -26,6 +27,8 @@ export default function Donate({ navigation }: any) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef<FlatList>(null);
+  const { COLORS } = useTheme();
+  const width = Dimensions.get('window').width;
 
   const viewableItemsChanged = useRef(({ viewableItems }: any) => {
     setCurrentIndex(viewableItems[0].index);
@@ -37,19 +40,19 @@ export default function Donate({ navigation }: any) {
     if (currentIndex < slides.length - 1) {
       slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
-      navigation?.navigate('Main');
+      navigation?.getParent()?.navigate('DonationPage');
     }
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: COLORS.secondary }]}>
       <FlatList
         data={slides}
         renderItem={({ item }) => (
-          <View style={styles.slide}>
+          <View style={[styles.slide, { width }]}>
             <Image source={{ uri: item.image }} style={styles.image} />
-            <Text style={styles.title}>{item.title}</Text>
-            <Text style={styles.subtitle}>{item.subtitle}</Text>
+            <Text style={[styles.title, { color: COLORS.primary }]}>{item.title}</Text>
+            <Text style={[styles.subtitle, { color: COLORS.text }]}>{item.subtitle}</Text>
           </View>
         )}
         keyExtractor={(item) => item.id}
@@ -71,19 +74,19 @@ export default function Donate({ navigation }: any) {
           {slides.map((_, i) => {
             const opacity = scrollX.interpolate({
               inputRange: [
-                (i - 1) * 400,
-                i * 400,
-                (i + 1) * 400,
+                (i - 1) * width,
+                i * width,
+                (i + 1) * width,
               ],
               outputRange: [0.3, 1, 0.3],
               extrapolate: 'clamp',
             });
-            return <Animated.View key={i} style={[styles.dot, { opacity }]} />;
+            return <Animated.View key={i} style={[styles.dot, { opacity, backgroundColor: COLORS.primary }]} />;
           })}
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>
+        <TouchableOpacity style={[styles.button, { backgroundColor: COLORS.primary }]} onPress={handleNext}>
+          <Text style={[styles.buttonText, { color: COLORS.bg }]}>
             {currentIndex === slides.length - 1 ? 'Começar' : 'Próximo'}
           </Text>
         </TouchableOpacity>
@@ -98,7 +101,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff'
   },
   slide: {
-    width: 400,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 30,
@@ -111,13 +113,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#B648A0',
     marginBottom: 10,
     textAlign: 'center'
   },
   subtitle: {
     fontSize: 16,
-    color: '#555',
     textAlign: 'center',
     marginBottom: 40
   },
@@ -133,17 +133,14 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#B648A0',
     marginHorizontal: 5
   },
   button: {
-    backgroundColor: '#B648A0',
     padding: 15,
     borderRadius: 30,
     width: 200
   },
   buttonText: {
-    color: '#fff',
     fontSize: 18,
     textAlign: 'center'
   },

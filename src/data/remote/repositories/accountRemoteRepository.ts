@@ -125,6 +125,14 @@ export const accountRemoteRepository = {
         } catch (error) {
             throw error;
         }
-    }
+    },
+    async sponsorInstitution(institutionId: string, amount: number) {
+        const response = await apiClient.post(`/account/sponsor/${institutionId}`, { amount });
+        return response.data;
+    },
+    async donate(amount: number) {
+        const response = await apiClient.post(`/account/donate`, { amount });
+        return response.data;
+    },
 }
 

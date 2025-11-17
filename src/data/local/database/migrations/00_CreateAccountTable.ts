@@ -5,7 +5,7 @@ export default async function createAccountTable() {
     
     await db.execAsync(`
     CREATE TABLE IF NOT EXISTS accounts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       avatar TEXT,

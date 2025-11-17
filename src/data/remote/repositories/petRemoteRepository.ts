@@ -41,14 +41,7 @@ export const petRemoteRepository = {
         const response = await apiClient.post(`/pet/${petId}/reject`, accountId ? { account: accountId } : {});
         return response.data;
     },
-    async sponsorPet(petId: string, amount: number) {
-        const response = await apiClient.post(`/pet/${petId}/sponsor`, { amount });
-        return response.data;
-    },
-    async donate (petId: string, amount: number) {
-        const response = await apiClient.post(`/pet/${petId}/donate`, { amount });
-        return response.data;
-    },
+    
     async updateImages(petId: string, formData: FormData) {
         const response = await apiClient.post(`/pet/${petId}/avatar`, formData, {
             headers: {

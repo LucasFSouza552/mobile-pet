@@ -9,6 +9,8 @@ import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
+import Toast from 'react-native-toast-message';
+import ProfileHeaderMenu from './ProfileHeaderMenu';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -19,7 +21,7 @@ interface ProfileProps {
 
 export default function Profile({ navigation, route }: ProfileProps) {
   const { account, loading, logout, refreshAccount } = useAccount();
-  const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading } = usePost();
+  const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
 
@@ -64,7 +66,11 @@ export default function Profile({ navigation, route }: ProfileProps) {
     };
   }, [targetAccountId, account, isSelf]);
 
-
+  useEffect(() => {
+    if (postsError) {
+      Toast.show({ type: "error",  text1: postsError, position: "bottom" });
+    }
+  }, [postsError]);
 
   if (!viewAccount) {
     return null;
@@ -92,16 +98,14 @@ export default function Profile({ navigation, route }: ProfileProps) {
           </View>
         </View>
         {isSelf ? (
-          <TouchableOpacity
-            accessibilityLabel="Sair da conta"
-            style={styles.logoutButton}
-            onPress={async () => {
+          <ProfileHeaderMenu
+            COLORS={COLORS}
+            onEdit={() => navigation.getParent()?.navigate('EditProfile')}
+            onLogout={async () => {
               await logout();
               navigation.navigate('Welcome');
             }}
-          >
-            <Text style={styles.logoutText}>Sair</Text>
-          </TouchableOpacity>
+          />
         ) : null}
       </View>
 
@@ -226,18 +230,18 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingHorizontal: 12,
       paddingTop: 12,
     },
-  notificationsButton: {
-    marginTop: 12,
-    marginHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 12,
-    backgroundColor: COLORS.primary,
-    alignItems: 'center',
-  },
-  notificationsButtonText: {
-    color: COLORS.bg,
-    fontWeight: '700',
-  },
+    notificationsButton: {
+      marginTop: 12,
+      marginHorizontal: 12,
+      paddingVertical: 10,
+      borderRadius: 12,
+      backgroundColor: COLORS.primary,
+      alignItems: 'center',
+    },
+    notificationsButtonText: {
+      color: COLORS.bg,
+      fontWeight: '700',
+    },
     postContainer: {
       backgroundColor: COLORS.quarternary,
       marginTop: 20,

@@ -19,13 +19,11 @@ export default function FindPets() {
   const isFocused = useIsFocused();
   const [petFeed, setPetFeed] = useState<IPet | null>(null);
   const [loading, setLoading] = useState(false);
-  // owner vem em petFeed.account quando o backend inclui relacionamento
 
   const loadNextPet = async () => {
     try {
       setLoading(true);
       const data = await accountRemoteRepository.fetchFeed();
-      console.log(data);
       setPetFeed(data || null);
     } catch (e: any) {
       Toast.show({ type: 'error', text1: 'Erro ao carregar feed', text2: e?.message, position: 'bottom' });
@@ -82,7 +80,7 @@ export default function FindPets() {
               </View>
               {!!petFeed.gender && (
                 <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{petFeed.gender === 'M' ? 'Macho' : 'Fêmea'}</Text>
+                  <Text style={styles.badgeText}>{petFeed.gender === 'Male' ? 'Macho' : 'Fêmea'}</Text>
                 </View>
               )}
               {typeof petFeed.age === 'number' && (
