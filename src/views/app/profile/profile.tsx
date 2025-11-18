@@ -35,6 +35,10 @@ export default function Profile({ navigation, route }: ProfileProps) {
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
 
+  const styles = makeStyles(COLORS);
+
+  const isInstitution = account?.role === 'institution';
+
   useFocusEffect(
     useCallback(() => {
       if (targetAccountId) {
@@ -42,8 +46,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
       }
     }, [targetAccountId])
   );
-
-  // Lists are loaded inside their own components now
 
   useEffect(() => {
     if (!loading && !account && !route?.params?.accountId) {
@@ -76,7 +78,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
 
   useEffect(() => {
     if (postsError) {
-      Toast.show({ type: "error",  text1: postsError, position: "bottom" });
+      Toast.show({ type: "error", text1: postsError, position: "bottom" });
     }
   }, [postsError]);
 
@@ -84,9 +86,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
     return null;
   }
 
-  const styles = makeStyles(COLORS);
-
-  const isInstitution = account?.role === 'institution';
 
   return (
     <SafeAreaView style={styles.container}>

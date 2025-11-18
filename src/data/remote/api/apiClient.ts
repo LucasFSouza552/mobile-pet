@@ -1,13 +1,12 @@
 import axios, { AxiosHeaders } from "axios";
 import { getStorage } from "../../../utils/storange";
 import { API_URL } from '@env';
-
+console.log(API_URL)
 const BASE_URL = (API_URL && API_URL.trim().length > 0)
   ? API_URL
   : "http://10.0.2.2:3000/api";
 
 
-console.log("BASE_URL", BASE_URL);
 export const apiClient = axios.create({
     baseURL: BASE_URL,
     timeout: 8000,

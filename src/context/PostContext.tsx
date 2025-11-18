@@ -114,6 +114,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
             const fetched = Array.isArray(response) ? response : [];
             setHasMoreUser(fetched.length >= limit);
+            
             setUserPosts(prev => replace ? fetched : addPostsWithoutDuplicates(prev, fetched));
         } catch (err: any) {
             setError(typeof err === "string" ? err : "Falha ao carregar posts");

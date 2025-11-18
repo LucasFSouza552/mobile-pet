@@ -18,8 +18,10 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
 
   const load = async () => {
     try {
+      console.log('loading');
       setLoading(true);
       const data = await petRemoteRepository.getAdoptedPetsByAccount(accountId);
+      console.log(data);
       setItems(Array.isArray(data) ? data : []);
     } catch {
       setItems([]);

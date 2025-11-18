@@ -22,6 +22,7 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
     try {
       setLoading(true);
       const interactions = await accountPetInteractionSync.getByAccount(accountId);
+      console.log(interactions);
       const likedPetIds = Array.from(
         new Set(interactions.filter(i => i.status === 'liked').map(i => i.pet))
       );
