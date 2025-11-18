@@ -9,6 +9,12 @@ import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
+import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
+import ProfileTopTabs from './components/ProfileTopTabs';
+import AdoptedPetsList from './components/AdoptedPetsList';
+import WishlistPetsList from './components/WishlistPetsList';
+import InstitutionPetsList from './components/InstitutionPetsList';
+import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
 import Toast from 'react-native-toast-message';
 import ProfileHeaderMenu from './ProfileHeaderMenu';
 
@@ -24,6 +30,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist'>('posts');
 
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
@@ -36,6 +43,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
     }, [targetAccountId])
   );
 
+  // Lists are loaded inside their own components now
 
   useEffect(() => {
     if (!loading && !account && !route?.params?.accountId) {
@@ -119,14 +127,26 @@ export default function Profile({ navigation, route }: ProfileProps) {
       )}
 
       <View style={styles.listContainer}>
-        <PostList
-          title={isSelf ? "Seus posts" : "Posts"}
-          posts={userPosts}
-          account={viewAccount}
-          onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
-          onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
-          refreshing={postsLoading}
-        />
+        <ProfileTopTabs activeTab={activeTab} onChange={setActiveTab} isInstitution={viewAccount?.role === 'institution'} COLORS={COLORS} />
+
+        {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
+          targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} /> : null
+        ) : activeTab === 'posts' ? (
+          <PostList
+            title={isSelf ? "Seus posts" : "Posts"}
+            posts={userPosts}
+            account={viewAccount}
+            onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
+            onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
+            refreshing={postsLoading}
+          />
+        ) : activeTab === 'adopted' ? (
+          targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
+        ) : (
+          viewAccount?.role === 'institution'
+            ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
+            : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.getParent()?.navigate('FindPets')} /> : null)
+        )}
       </View>
     </SafeAreaView>
   );
@@ -144,15 +164,15 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       backgroundColor: COLORS.primary,
-      justifyContent: 'space-between',
       paddingHorizontal: 12,
       paddingVertical: 10,
-      gap: 10,
+      width: '100%',
     },
     avatarWrapper: {
       borderWidth: 2,
       borderColor: COLORS.bg,
       borderRadius: 44,
+      marginRight: 10,
     },
     avatar: {
       width: 70,
@@ -229,6 +249,56 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: '100%',
       paddingHorizontal: 12,
       paddingTop: 12,
+    },
+    petCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: COLORS.tertiary,
+      padding: 10,
+      borderRadius: 12,
+      marginBottom: 10,
+      gap: 10,
+    },
+    petImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 10,
+      backgroundColor: COLORS.bg,
+    },
+    petInfo: {
+      flex: 1,
+    },
+    petName: {
+      fontWeight: '700',
+      color: COLORS.text,
+      marginBottom: 2,
+    },
+    petSub: {
+      color: COLORS.text,
+      opacity: 0.8,
+      fontSize: 12,
+    },
+    emptyText: {
+      textAlign: 'center',
+      color: COLORS.text,
+      opacity: 0.8,
+      marginVertical: 12,
+    },
+    wishlistBox: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    findButton: {
+      marginTop: 10,
+      backgroundColor: COLORS.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 12,
+    },
+    findButtonText: {
+      color: COLORS.bg,
+      fontWeight: '700',
     },
     notificationsButton: {
       marginTop: 12,

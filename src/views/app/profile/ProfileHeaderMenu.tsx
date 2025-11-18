@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
   },
   menu: {
     position: 'absolute',
-    top: 70, // below the header
+    top: 70, 
     right: 12,
     borderRadius: 12,
     paddingVertical: 6,

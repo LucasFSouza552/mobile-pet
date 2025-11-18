@@ -27,8 +27,12 @@ export const petRemoteRepository = {
         const response = await apiClient.get("/pet/avaliable");
         return response.data;
     },
-    async requestPetAdoption(petId: string) {
-        const response = await apiClient.post(`/pet/${petId}/request`);
+    async likePet(petId: string) {
+        const response = await apiClient.post(`/pet/${petId}/like`);
+        return response.data;
+    },
+    async dislikePet(petId: string) {
+        const response = await apiClient.post(`/pet/${petId}/dislike`);
         return response.data;
     },
     async acceptPetAdoption(petId: string, accountId: string) {

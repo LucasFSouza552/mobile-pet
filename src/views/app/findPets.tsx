@@ -44,13 +44,13 @@ export default function FindPets() {
 
   const onNope = async () => {
     if (!petFeed) return;
-    await petRemoteRepository.rejectPetAdoption(petFeed.id);
+    await petRemoteRepository.dislikePet(petFeed.id);
     await loadNextPet();
   };
 
   const onLike = async () => {
     if (!petFeed) return;
-    await petRemoteRepository.requestPetAdoption(petFeed.id);
+    await petRemoteRepository.likePet(petFeed.id);
     await loadNextPet();
   };
 
