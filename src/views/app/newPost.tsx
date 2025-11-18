@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccount } from '../../context/AccountContext';
@@ -150,58 +150,121 @@ export default function NewPost({ navigation }: any) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.header}>Novo Post</Text>
+      <View style={styles.headerContainer}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+        </TouchableOpacity>
+        <Text style={styles.header}>Criar Post</Text>
+        <View style={styles.placeholder} />
+      </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Conteúdo</Text>
-        <TextInput
-          style={[styles.input, styles.textarea]}
-          placeholder="Escreva algo..."
-          placeholderTextColor={COLORS.text}
-          value={content}
-          onChangeText={setContent}
-          multiline
-          numberOfLines={6}
-          textAlignVertical="top"
-        />
-
-        <View style={styles.imagesHeader}>
-          <Text style={styles.label}>Imagens</Text>
-          <View style={styles.actionsRow}>
-            <TouchableOpacity style={styles.addImageBtn} onPress={pickImages}>
-              <Text style={styles.addImageText}>Galeria</Text>
-            </TouchableOpacity>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.form}>
+          <View style={styles.contentSection}>
+            <Text style={styles.label}>O que você está pensando?</Text>
+            <TextInput
+              style={[styles.input, styles.textarea]}
+              placeholder="Compartilhe algo com a comunidade..."
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              value={content}
+              onChangeText={setContent}
+              multiline
+              numberOfLines={8}
+              textAlignVertical="top"
+            />
+            <Text style={styles.charCount}>{content.length} caracteres</Text>
           </View>
-        </View>
 
-        <View style={styles.imagesContainer}>
+          <View style={styles.imagesSection}>
+            <View style={styles.imagesHeader}>
+              <View style={styles.imagesHeaderLeft}>
+                <Ionicons name="images" size={20} color={COLORS.primary} />
+                <Text style={styles.label}>Imagens ({images.length})</Text>
+              </View>
+              <TouchableOpacity 
+                style={styles.addImageBtn} 
+                onPress={pickImages}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add-circle-outline" size={20} color="#fff" />
+                <Text style={styles.addImageText}>Adicionar</Text>
+              </TouchableOpacity>
+            </View>
 
-          {images.length > 0 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imagesRow}>
-              {images.map((img, idx) => (
-                <View key={`${img.uri}-${idx}`} style={styles.imageItem}>
-                  <Image source={{ uri: img.uri }} style={styles.preview} />
-                  <TouchableOpacity style={styles.removeImgBtn} onPress={() => removeImage(idx)}>
-                    <Text style={styles.removeImgText}>X</Text>
+            <View style={styles.imagesContainer}>
+              {images.length > 0 && (
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false} 
+                  contentContainerStyle={styles.imagesRow}
+                >
+                  {images.map((img, idx) => (
+                    <View key={`${img.uri}-${idx}`} style={styles.imageItem}>
+                      <Image source={{ uri: img.uri }} style={styles.preview} />
+                      <TouchableOpacity 
+                        style={styles.removeImgBtn} 
+                        onPress={() => removeImage(idx)}
+                        activeOpacity={0.8}
+                      >
+                        <Ionicons name="close-circle" size={24} color="#fff" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
+
+              <View style={styles.imageActions}>
+                <TouchableOpacity 
+                  style={styles.cameraTile} 
+                  onPress={openCamera} 
+                  accessibilityLabel="Abrir câmera"
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="camera" size={28} color={COLORS.primary} />
+                  <Text style={styles.cameraText}>Câmera</Text>
+                </TouchableOpacity>
+                
+                {images.length === 0 && (
+                  <TouchableOpacity 
+                    style={styles.galleryTile} 
+                    onPress={pickImages}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="images-outline" size={28} color={COLORS.primary} />
+                    <Text style={styles.cameraText}>Galeria</Text>
                   </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          )}
+                )}
+              </View>
+            </View>
+          </View>
 
-          <TouchableOpacity style={styles.cameraTile} onPress={openCamera} accessibilityLabel="Abrir câmera">
-            <Ionicons name="camera" size={36} color={COLORS.text} />
+          <TouchableOpacity
+            style={[
+              styles.button, 
+              (submitting || (!content.trim() && images.length === 0)) && styles.buttonDisabled
+            ]}
+            disabled={submitting || (!content.trim() && images.length === 0)}
+            onPress={handleSubmit}
+            activeOpacity={0.8}
+          >
+            {submitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Ionicons name="send" size={20} color="#fff" style={styles.buttonIcon} />
+                <Text style={styles.buttonText}>Publicar</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={[styles.button, submitting && { opacity: 0.7 }]}
-          disabled={submitting}
-          onPress={handleSubmit}
-        >
-          <Text style={styles.buttonText}>{submitting ? 'Publicando...' : 'Publicar'}</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
 
       {isCameraOpen && (
         <View style={styles.cameraOverlay}>
@@ -265,7 +328,32 @@ function makeStyles(COLORS: any) {
     container: {
       flex: 1,
       backgroundColor: COLORS.secondary,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
       padding: 16,
+      paddingBottom: 100,
+    },
+    headerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: COLORS.quarternary,
+      backgroundColor: COLORS.secondary,
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: COLORS.quarternary,
+    },
+    placeholder: {
+      width: 40,
     },
     cameraOverlay: {
       position: 'absolute',
@@ -323,102 +411,167 @@ function makeStyles(COLORS: any) {
     },
     header: {
       color: COLORS.text,
-      fontSize: 20,
+      fontSize: 22,
       fontWeight: 'bold',
-      marginBottom: 12,
+      flex: 1,
+      textAlign: 'center',
     },
     form: {
-      gap: 8,
+      gap: 20,
+    },
+    contentSection: {
+      marginBottom: 8,
+    },
+    imagesSection: {
+      marginTop: 8,
     },
     label: {
       color: COLORS.text,
       fontWeight: '600',
+      fontSize: 16,
+      marginBottom: 8,
+    },
+    imagesHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
     input: {
       backgroundColor: COLORS.quarternary,
       color: COLORS.text,
-      borderRadius: 10,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontSize: 16,
+      borderWidth: 1,
+      borderColor: COLORS.quarternary,
     },
     textarea: {
-      minHeight: 120,
+      minHeight: 150,
+      maxHeight: 300,
+    },
+    charCount: {
+      color: COLORS.text,
+      opacity: 0.5,
+      fontSize: 12,
+      marginTop: 4,
+      textAlign: 'right',
     },
     imagesHeader: {
-      marginTop: 8,
-      marginBottom: 4,
+      marginBottom: 12,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-    },
-    actionsRow: {
-      flexDirection: 'row',
-      gap: 8,
     },
     addImageBtn: {
       backgroundColor: COLORS.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
     },
     addImageText: {
-      color: COLORS.text,
+      color: '#fff',
       fontWeight: '700',
+      fontSize: 14,
     },
     imagesRow: {
-      gap: 8,
-      paddingVertical: 6,
+      gap: 12,
+      paddingVertical: 8,
     },
     imageItem: {
       position: 'relative',
+      marginRight: 4,
     },
     preview: {
-      width: 100,
-      height: 100,
-      borderRadius: 10,
+      width: 120,
+      height: 120,
+      borderRadius: 12,
       backgroundColor: COLORS.quarternary,
     },
     imagesContainer: {
+      marginTop: 8,
+    },
+    imageActions: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 8,
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginTop: 6,
+      gap: 12,
+      marginTop: 8,
     },
     cameraTile: {
-      width: 100,
+      flex: 1,
       height: 100,
-      borderRadius: 10,
+      borderRadius: 12,
       backgroundColor: COLORS.quarternary,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderStyle: 'dashed',
+    },
+    galleryTile: {
+      flex: 1,
+      height: 100,
+      borderRadius: 12,
+      backgroundColor: COLORS.quarternary,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderStyle: 'dashed',
+    },
+    cameraText: {
+      color: COLORS.text,
+      fontSize: 12,
       marginTop: 6,
+      fontWeight: '600',
     },
     removeImgBtn: {
       position: 'absolute',
-      top: 4,
-      right: 4,
-      backgroundColor: COLORS.primary,
-      borderRadius: 10,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-    },
-    removeImgText: {
-      color: COLORS.text,
-      fontWeight: '700',
-      fontSize: 12,
+      top: -8,
+      right: -8,
+      backgroundColor: '#E74C3C',
+      borderRadius: 15,
+      width: 30,
+      height: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
     },
     button: {
-      marginTop: 16,
+      marginTop: 24,
       backgroundColor: COLORS.primary,
-      paddingVertical: 12,
-      borderRadius: 10,
+      paddingVertical: 16,
+      borderRadius: 12,
       alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    buttonDisabled: {
+      opacity: 0.5,
+    },
+    buttonIcon: {
+      marginRight: 8,
     },
     buttonText: {
-      color: COLORS.text,
+      color: '#fff',
       fontWeight: '700',
+      fontSize: 16,
     },
   });
 }

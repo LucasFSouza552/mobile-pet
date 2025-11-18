@@ -42,8 +42,9 @@ export default function PostPictureContainer({
 					<View key={imageId} style={[styles.postPicture, { width: containerWidth }]}>
 						<Image
 							source={pictureRepository.getSource(imageId)}
-							style={styles.postPictureImage}
+							style={[styles.postPictureImage, { width: containerWidth }]}
 							defaultSource={Images.avatarDefault as unknown as number}
+							resizeMode="contain"
 						/>
 					</View>
 				))}

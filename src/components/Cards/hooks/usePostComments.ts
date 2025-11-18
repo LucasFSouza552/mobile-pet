@@ -40,7 +40,17 @@ export function usePostComments(postId?: string) {
 	}, []);
 
 	const update = React.useCallback((updated: IComment) => {
-		setComments(prev => prev.map(c => c.id === updated.id ? updated : c));
+		setComments(prev => {
+			const index = prev.findIndex(c => c.id === updated.id);
+			if (index === -1) {
+				// Se não encontrar, adiciona no início
+				return [updated, ...prev];
+			}
+			// Atualiza o comentário mantendo a ordem
+			const newComments = [...prev];
+			newComments[index] = updated;
+			return newComments;
+		});
 	}, []);
 
 	return { comments, loading, page, hasMore, load, add, remove, update, setComments };

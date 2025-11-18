@@ -14,6 +14,7 @@ import Main from './src/views/app/main';
 import EditProfileScreen from './src/views/app/profile/editProfile';
 import NewNotificationScreen from './src/views/app/newNotification';
 import InstitutionNotificationsScreen from './src/views/app/institutionNotifications';
+import DonatePayScreen from './src/views/app/donatePay';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
@@ -88,6 +89,7 @@ export default function App() {
                   <Stack.Screen name="EditProfile" component={EditProfileScreen} />
                   <Stack.Screen name="CreateNotification" component={NewNotificationScreen} />
                   <Stack.Screen name="InstitutionNotifications" component={InstitutionNotificationsScreen} />
+                  <Stack.Screen name="DonatePay" component={DonatePayScreen} />
                 </Stack.Navigator>
 
 

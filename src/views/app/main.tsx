@@ -59,8 +59,11 @@ export default function Main() {
         name="NewPost"
         component={NewPost}
         options={{
-          tabBarStyle: { display: 'none' },
-          tabBarIndicatorStyle: { height: 0, backgroundColor: 'transparent' },
+          tabBarStyle: { 
+            backgroundColor: COLORS.secondary,
+            paddingBottom: insets.bottom,
+            height: 40 + insets.bottom,
+          },
         }}
       />
       <Tab.Screen name="Community" component={Community} />

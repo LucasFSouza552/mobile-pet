@@ -125,6 +125,19 @@ export const accountRemoteRepository = {
         } catch (error) {
             throw error;
         }
+    },
+    async donate(amount: string): Promise<{ id: string; url: string }> {
+        try {
+            console.log('[ACCOUNT REPO] Enviando doação com valor:', amount);
+            const response = await apiClient.post("/account/donate", { amount });
+            console.log('[ACCOUNT REPO] Resposta da API:', response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error('[ACCOUNT REPO] Erro na requisição:', error);
+            console.error('[ACCOUNT REPO] Status:', error?.response?.status);
+            console.error('[ACCOUNT REPO] Data:', error?.response?.data);
+            throw error;
+        }
     }
 }
 

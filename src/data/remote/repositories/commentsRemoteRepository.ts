@@ -60,7 +60,7 @@ export const commentRepository = {
         }
     },
 
-    async updateComment(commentId: string, content: string) {
+    async updateComment(commentId: string, content: string): Promise<IComment> {
         try {
             const response = await apiClient.patch(`/comment/${commentId}`, { content });
             return response.data;

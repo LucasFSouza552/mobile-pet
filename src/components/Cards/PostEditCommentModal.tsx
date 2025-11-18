@@ -44,11 +44,21 @@ export default function PostEditCommentModal({
 							value={editCommentText}
 							onChangeText={setEditCommentText}
 							placeholder="Edite seu comentário..."
-							placeholderTextColor={COLORS.text}
-							style={styles.commentInput}
+							placeholderTextColor={COLORS.text + '80'}
+							style={[
+								styles.commentInput, 
+								{ 
+									color: COLORS.text,
+									minHeight: 120,
+									paddingTop: 12,
+									paddingBottom: 12,
+								}
+							]}
 							multiline
 							autoFocus
 							editable={!editSaving}
+							textAlignVertical="top"
+							selectionColor={COLORS.primary}
 						/>
 						<View style={styles.editActions}>
 							<TouchableOpacity

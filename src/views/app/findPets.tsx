@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,8 +9,9 @@ import { pictureRepository } from '../../data/remote/repositories/pictureRemoteR
 import { useIsFocused } from '@react-navigation/native';
 import { IPet } from '../../models/IPet';
 import { IAccount } from '../../models/IAccount';
-import { accountPetInteractionLocalRepository } from '../../data';
 import { petRemoteRepository } from '../../data/remote/repositories/petRemoteRepository';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function FindPets() {
   const { COLORS } = useTheme();
@@ -45,30 +46,77 @@ export default function FindPets() {
     : null;
 
   const onNope = async () => {
-    if (!petFeed) return;
-    await petRemoteRepository.rejectPetAdoption(petFeed.id);
-    await loadNextPet();
+    if (!petFeed || loading) return;
+    try {
+      setLoading(true);
+      await petRemoteRepository.rejectPetAdoption(petFeed.id);
+      Toast.show({
+        type: 'info',
+        text1: 'Pet rejeitado',
+        text2: 'Carregando próximo pet...',
+        position: 'bottom',
+      });
+      await loadNextPet();
+    } catch (e: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao rejeitar pet',
+        text2: e?.message || 'Tente novamente',
+        position: 'bottom',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onLike = async () => {
-    if (!petFeed) return;
-    await petRemoteRepository.requestPetAdoption(petFeed.id);
-    await loadNextPet();
+    if (!petFeed || loading) return;
+    try {
+      setLoading(true);
+      await petRemoteRepository.requestPetAdoption(petFeed.id);
+      Toast.show({
+        type: 'success',
+        text1: 'Solicitação enviada!',
+        text2: 'A instituição será notificada sobre seu interesse',
+        position: 'bottom',
+      });
+      await loadNextPet();
+    } catch (e: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro ao solicitar adoção',
+        text2: e?.message || 'Tente novamente',
+        position: 'bottom',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.header}>Encontre seu novo amigo</Text>
-      {loading ? (
+      {loading && !petFeed ? (
         <View style={styles.emptyBox}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.emptyText}>Carregando...</Text>
         </View>
       ) : petFeed ? (
         <View style={styles.card}>
           {petFeed.images && petFeed.images.length > 1 ? (
-            <ScrollView horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={{ flex: 1 }}>
+            <ScrollView 
+              horizontal 
+              pagingEnabled 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.scrollView}
+              contentContainerStyle={styles.scrollContent}
+            >
               {petFeed.images.map((imgId, i) => (
-                <Image key={`${imgId}-${i}`} source={pictureRepository.getSource(imgId)} style={styles.photo} />
+                <Image 
+                  key={`${imgId}-${i}`} 
+                  source={pictureRepository.getSource(imgId)} 
+                  style={[styles.photo, styles.photoMulti]} 
+                />
               ))}
             </ScrollView>
           ) : (
@@ -118,11 +166,37 @@ export default function FindPets() {
       )}
 
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.circleBtn, { backgroundColor: '#E74C3C' }]} onPress={onNope} accessibilityLabel="Não curtir">
-          <Ionicons name="close" size={26} color="#fff" />
+        <TouchableOpacity 
+          style={[
+            styles.circleBtn, 
+            { backgroundColor: '#E74C3C' },
+            (loading || !petFeed) && styles.buttonDisabled
+          ]} 
+          onPress={onNope} 
+          disabled={loading || !petFeed}
+          accessibilityLabel="Não curtir"
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="close" size={26} color="#fff" />
+          )}
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.circleBtn, { backgroundColor: COLORS.primary }]} onPress={onLike} accessibilityLabel="Curtir">
-          <Ionicons name="heart" size={26} color="#fff" />
+        <TouchableOpacity 
+          style={[
+            styles.circleBtn, 
+            { backgroundColor: COLORS.primary },
+            (loading || !petFeed) && styles.buttonDisabled
+          ]} 
+          onPress={onLike} 
+          disabled={loading || !petFeed}
+          accessibilityLabel="Curtir"
+        >
+          {loading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Ionicons name="heart" size={26} color="#fff" />
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -148,10 +222,20 @@ function makeStyles(COLORS: any) {
       overflow: 'hidden',
       backgroundColor: COLORS.quarternary,
     },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      alignItems: 'center',
+    },
     photo: {
       width: '100%',
       flex: 1,
       resizeMode: 'cover',
+    },
+    photoMulti: {
+      width: SCREEN_WIDTH - 32,
+      minHeight: 400,
     },
     cardInfo: {
       padding: 12,
@@ -220,6 +304,9 @@ function makeStyles(COLORS: any) {
       borderRadius: 32,
       alignItems: 'center',
       justifyContent: 'center',
+    },
+    buttonDisabled: {
+      opacity: 0.5,
     },
     emptyBox: {
       flex: 1,

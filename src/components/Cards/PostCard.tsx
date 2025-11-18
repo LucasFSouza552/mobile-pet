@@ -8,6 +8,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { usePost } from '../../context/PostContext';
 import { darkTheme, lightTheme } from '../../theme/Themes';
 import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
+import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
 import { formatDate } from '../../utils/date';
 import { usePostComments } from './hooks/usePostComments';
@@ -156,20 +157,37 @@ function PostCardComponent({
 
 	const saveEditedComment = async () => {
 		if (!editingComment || !editCommentText.trim() || editSaving) return;
+		if (!post?.id) return;
+		
 		try {
 			setEditSaving(true);
-			const updated = { ...(editingComment as IComment), content: editCommentText.trim() } as IComment;
-			updateComment(updated);
+			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
+			
+			const updatedComment: IComment = {
+				...editingComment,
+				...updated,
+				content: editCommentText.trim(),
+				updatedAt: updated.updatedAt || new Date().toISOString(),
+			};
+			
+			updateComment(updatedComment);
+			
 			closeEditModal();
-			Toast.show({
-				type: 'success',
-				text1: 'Comentário editado com sucesso',
-				position: 'bottom',
-			});
-		} catch (e) {
+			
+			setTimeout(() => {
+				Toast.show({
+					type: 'success',
+					text1: 'Comentário editado com sucesso',
+					position: 'bottom',
+				});
+			}, 300);
+		} catch (e: any) {
+			console.error('Erro ao editar comentário:', e);
+			const errorMessage = e?.response?.data?.message || e?.message || 'Tente novamente';
 			Toast.show({
 				type: 'error',
 				text1: 'Erro ao editar comentário',
+				text2: errorMessage,
 				position: 'bottom',
 			});
 		} finally {
@@ -524,11 +542,11 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		},
 		postPictureImage: {
 			width: '100%',
+			minHeight: 200,
+			maxHeight: 500,
 			borderRadius: 12,
-			aspectRatio: 1,
-			resizeMode: 'cover',
+			resizeMode: 'contain',
 		},
-		// Bottom sheet modal
 		modalOverlay: {
 			flex: 1,
 			justifyContent: 'flex-end',
