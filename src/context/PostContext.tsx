@@ -34,6 +34,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const { isConnected } = useNetInfo();
 
+
     // feed geral
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
@@ -94,6 +95,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
     };
 
     const loadUser = async (replace: boolean, accountId?: string, pageToLoad?: number) => {
+        
         if (!isConnected) {
             setError("Sem conexão com a internet");
             return;
@@ -108,9 +110,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
                 orderBy,
                 order,
             } as any);
+            
 
             const fetched = Array.isArray(response) ? response : [];
             setHasMoreUser(fetched.length >= limit);
+            
             setUserPosts(prev => replace ? fetched : addPostsWithoutDuplicates(prev, fetched));
         } catch (err: any) {
             setError(typeof err === "string" ? err : "Falha ao carregar posts");

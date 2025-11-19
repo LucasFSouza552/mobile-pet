@@ -34,7 +34,7 @@ export default function NewPost({ navigation }: any) {
       setCameraType('back');
       setFlash('off');
       cameraRef.current = null;
-    } 
+    }
   }, [isFocused]);
 
 
@@ -46,7 +46,7 @@ export default function NewPost({ navigation }: any) {
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsMultipleSelection: true,
         quality: 0.8,
       });
@@ -151,7 +151,7 @@ export default function NewPost({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
@@ -161,7 +161,7 @@ export default function NewPost({ navigation }: any) {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -188,28 +188,20 @@ export default function NewPost({ navigation }: any) {
                 <Ionicons name="images" size={20} color={COLORS.primary} />
                 <Text style={styles.label}>Imagens ({images.length})</Text>
               </View>
-              <TouchableOpacity 
-                style={styles.addImageBtn} 
-                onPress={pickImages}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="add-circle-outline" size={20} color="#fff" />
-                <Text style={styles.addImageText}>Adicionar</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.imagesContainer}>
               {images.length > 0 && (
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false} 
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.imagesRow}
                 >
                   {images.map((img, idx) => (
                     <View key={`${img.uri}-${idx}`} style={styles.imageItem}>
                       <Image source={{ uri: img.uri }} style={styles.preview} />
-                      <TouchableOpacity 
-                        style={styles.removeImgBtn} 
+                      <TouchableOpacity
+                        style={styles.removeImgBtn}
                         onPress={() => removeImage(idx)}
                         activeOpacity={0.8}
                       >
@@ -221,33 +213,33 @@ export default function NewPost({ navigation }: any) {
               )}
 
               <View style={styles.imageActions}>
-                <TouchableOpacity 
-                  style={styles.cameraTile} 
-                  onPress={openCamera} 
+                <TouchableOpacity
+                  style={styles.cameraTile}
+                  onPress={openCamera}
                   accessibilityLabel="Abrir câmera"
                   activeOpacity={0.7}
                 >
                   <Ionicons name="camera" size={28} color={COLORS.primary} />
                   <Text style={styles.cameraText}>Câmera</Text>
                 </TouchableOpacity>
-                
-                {images.length === 0 && (
-                  <TouchableOpacity 
-                    style={styles.galleryTile} 
-                    onPress={pickImages}
-                    activeOpacity={0.7}
-                  >
-                    <Ionicons name="images-outline" size={28} color={COLORS.primary} />
-                    <Text style={styles.cameraText}>Galeria</Text>
-                  </TouchableOpacity>
-                )}
+
+
+                <TouchableOpacity
+                  style={styles.galleryTile}
+                  onPress={pickImages}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="images-outline" size={28} color={COLORS.primary} />
+                  <Text style={styles.cameraText}>Galeria</Text>
+                </TouchableOpacity>
+
               </View>
             </View>
           </View>
 
           <TouchableOpacity
             style={[
-              styles.button, 
+              styles.button,
               (submitting || (!content.trim() && images.length === 0)) && styles.buttonDisabled
             ]}
             disabled={submitting || (!content.trim() && images.length === 0)}

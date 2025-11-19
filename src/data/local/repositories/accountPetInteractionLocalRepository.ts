@@ -43,6 +43,7 @@ export const accountPetInteractionLocalRepository = {
 
     create: async (interaction: IAccountPetInteraction): Promise<void> => {
         const db = await getLocalDb();
+        console.log("ON CREATE", interaction);
         await db.runAsync(
             `
             INSERT INTO account_pet_interactions (

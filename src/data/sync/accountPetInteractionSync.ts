@@ -1,6 +1,7 @@
 import NetInfo from "@react-native-community/netinfo";
 import { accountPetInteractionLocalRepository } from "../local/repositories/accountPetInteractionLocalRepository";
 import { IAccountPetInteraction } from "../../models/IAccountPetInteraction";
+import { petInteractionRemoteRepository } from "../remote/repositories/petInteractionRemoteRepository";
 
 export const accountPetInteractionSync = {
     async getByAccount(accountId: string): Promise<IAccountPetInteraction[]> {
@@ -9,10 +10,23 @@ export const accountPetInteractionSync = {
         const local = await accountPetInteractionLocalRepository.getByAccount(accountId);
 
         if (!netState.isConnected) {
-            return local;
+            return [...local].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         }
 
-        return local;
+        try {
+            const remote = await petInteractionRemoteRepository.getInteractionByAccount(accountId);
+            const list: IAccountPetInteraction[] = Array.isArray(remote) ? remote : [];
+
+            for (const item of list) {
+                await accountPetInteractionLocalRepository.create(item);
+            }
+
+            return (list.length > 0
+                ? [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                : [...local].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+        } catch {
+            return [...local].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
     },
 
     async getByPet(petId: string): Promise<IAccountPetInteraction[]> {

@@ -25,7 +25,6 @@ export default function Main() {
 
   const { COLORS } = useTheme();
   const insets = useSafeAreaInsets();
-  const { account, loading } = useAccount();
   
   return (
     <Tab.Navigator
@@ -40,9 +39,8 @@ export default function Main() {
         tabBarStyle: { 
           backgroundColor: COLORS.secondary,
           paddingBottom: insets.bottom,
-          height: 40 + insets.bottom,
         },
-        tabBarItemStyle: { padding: 10 },
+        tabBarItemStyle: { paddingVertical: 20 },
         tabBarIndicatorStyle: { backgroundColor: 'transparent' },
         tabBarIcon: ({ color }) => {
 

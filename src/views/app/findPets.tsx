@@ -20,13 +20,11 @@ export default function FindPets() {
   const isFocused = useIsFocused();
   const [petFeed, setPetFeed] = useState<IPet | null>(null);
   const [loading, setLoading] = useState(false);
-  // owner vem em petFeed.account quando o backend inclui relacionamento
 
   const loadNextPet = async () => {
     try {
       setLoading(true);
       const data = await accountRemoteRepository.fetchFeed();
-      console.log(data);
       setPetFeed(data || null);
     } catch (e: any) {
       Toast.show({ type: 'error', text1: 'Erro ao carregar feed', text2: e?.message, position: 'bottom' });
@@ -46,51 +44,15 @@ export default function FindPets() {
     : null;
 
   const onNope = async () => {
-    if (!petFeed || loading) return;
-    try {
-      setLoading(true);
-      await petRemoteRepository.rejectPetAdoption(petFeed.id);
-      Toast.show({
-        type: 'info',
-        text1: 'Pet rejeitado',
-        text2: 'Carregando próximo pet...',
-        position: 'bottom',
-      });
-      await loadNextPet();
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao rejeitar pet',
-        text2: e?.message || 'Tente novamente',
-        position: 'bottom',
-      });
-    } finally {
-      setLoading(false);
-    }
+    if (!petFeed) return;
+    await petRemoteRepository.dislikePet(petFeed.id);
+    await loadNextPet();
   };
 
   const onLike = async () => {
-    if (!petFeed || loading) return;
-    try {
-      setLoading(true);
-      await petRemoteRepository.requestPetAdoption(petFeed.id);
-      Toast.show({
-        type: 'success',
-        text1: 'Solicitação enviada!',
-        text2: 'A instituição será notificada sobre seu interesse',
-        position: 'bottom',
-      });
-      await loadNextPet();
-    } catch (e: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao solicitar adoção',
-        text2: e?.message || 'Tente novamente',
-        position: 'bottom',
-      });
-    } finally {
-      setLoading(false);
-    }
+    if (!petFeed) return;
+    await petRemoteRepository.likePet(petFeed.id);
+    await loadNextPet();
   };
 
   return (
@@ -130,7 +92,7 @@ export default function FindPets() {
               </View>
               {!!petFeed.gender && (
                 <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{petFeed.gender === 'M' ? 'Macho' : 'Fêmea'}</Text>
+                  <Text style={styles.badgeText}>{petFeed.gender === 'Male' ? 'Macho' : 'Fêmea'}</Text>
                 </View>
               )}
               {typeof petFeed.age === 'number' && (
