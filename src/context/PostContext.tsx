@@ -20,6 +20,7 @@ interface PostContextProps {
     loadMoreSearchPosts: () => Promise<IPost[] | void>;
     searchResults: IPost[];
     loadingSearchResults: boolean;
+    deletePost: (postId: string) => Promise<void>;
 }
 
 const PostContext = createContext<PostContextProps | undefined>(undefined);
@@ -191,6 +192,18 @@ export function PostProvider({ children }: { children: ReactNode }) {
         }
     }, [limit, searchPage, hasMoreSearchResults, loadingSearchResults, searchQuery, isConnected]);
 
+    const deletePost = useCallback(async (postId: string) => {
+        if (!postId) return;
+        if (!isConnected) {
+            throw new Error("Sem conexão com a internet");
+        }
+
+        await postRepository.softDeletePostById(postId);
+        setPosts(prev => prev.filter(post => post.id !== postId));
+        setUserPosts(prev => prev.filter(post => post.id !== postId));
+        setSearchResults(prev => prev.filter(post => post.id !== postId));
+    }, [isConnected]);
+
     useEffect(() => {
         if (isConnected) {
             refresh();
@@ -211,10 +224,15 @@ export function PostProvider({ children }: { children: ReactNode }) {
         loadMoreSearchPosts,
         searchResults,
         loadingSearchResults,
+        deletePost,
     }), [
-        posts, loading, error,
+        posts,
+        loading,
+        error,
         userPosts,
-        searchResults, loadingSearchResults
+        searchResults,
+        loadingSearchResults,
+        deletePost,
     ]);
 
     return (

@@ -7,7 +7,6 @@ import Toast from 'react-native-toast-message';
 import { useTheme } from '../../context/ThemeContext';
 import { usePost } from '../../context/PostContext';
 import { darkTheme, lightTheme } from '../../theme/Themes';
-import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
 import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
 import { formatDate } from '../../utils/date';
@@ -41,7 +40,7 @@ function PostCardComponent({
 }: PostCardProps) {
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
-	const { likePost: likePostFromContext } = usePost();
+	const { likePost: likePostFromContext, deletePost } = usePost();
 	const { account } = useAccount();
 	const { width, height } = useWindowDimensions();
 	const navigation = useNavigation<any>();
@@ -255,7 +254,7 @@ function PostCardComponent({
 	const handleDeletePost = async () => {
 		if (!post?.id) return;
 		try {
-			await postRepository.softDeletePostById(post.id);
+			await deletePost(post.id);
 			setDeleted(true);
 			Toast.show({ type: 'success', text1: 'Post excluído', position: 'bottom' });
 		} catch (e) {
