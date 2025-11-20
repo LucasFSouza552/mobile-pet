@@ -10,9 +10,10 @@ export default async function createAccountPetInteractionsTable() {
             pet TEXT NOT NULL,
             status TEXT NOT NULL,
             createdAt TEXT DEFAULT (datetime('now')),
-            updatedAt TEXT DEFAULT (datetime('now'))
+            updatedAt TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (pet) REFERENCES pets(id) ON DELETE CASCADE ON UPDATE CASCADE
         );
-    `);
+    `)
 }
 
 

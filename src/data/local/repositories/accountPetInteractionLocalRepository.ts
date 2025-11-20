@@ -43,28 +43,40 @@ export const accountPetInteractionLocalRepository = {
 
     create: async (interaction: IAccountPetInteraction): Promise<void> => {
         const db = await getLocalDb();
-        console.log("ON CREATE", interaction);
-        await db.runAsync(
-            `
-            INSERT INTO account_pet_interactions (
-                id, account, pet, status, createdAt, updatedAt
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                account = excluded.account,
-                pet = excluded.pet,
-                status = excluded.status,
-                updatedAt = excluded.updatedAt
-            `,
-            [
-                interaction.id,
-                interaction.account,
-                interaction.pet,
-                interaction.status,
-                interaction.createdAt,
-                interaction.updatedAt
-            ]
+        const existing = await db.getFirstAsync(
+            "SELECT id FROM account_pet_interactions WHERE id = ?",
+            [interaction.id]
         );
+
+        if (existing) {
+            await db.runAsync(
+                `UPDATE account_pet_interactions
+                 SET account = ?, pet = ?, status = ?, updatedAt = ?
+                 WHERE id = ?`,
+                [
+                    interaction.account,
+                    typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
+                    interaction.status,
+                    interaction.updatedAt,
+                    interaction.id
+                ]
+            );
+        } else {
+            await db.runAsync(
+                `INSERT INTO account_pet_interactions (
+                    id, account, pet, status, createdAt, updatedAt
+                )
+                VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    interaction.id,
+                    interaction.account,
+                    typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
+                    interaction.status,
+                    interaction.createdAt,
+                    interaction.updatedAt
+                ]
+            );
+        }
     },
 
     update: async (id: string, interaction: Partial<IAccountPetInteraction>): Promise<void> => {

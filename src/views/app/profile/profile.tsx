@@ -2,21 +2,19 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { useAccount } from '../../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import PostList from '../../../components/Cards/PostList';
 import { usePost } from '../../../context/PostContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
-import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
 import ProfileTopTabs from './components/ProfileTopTabs';
 import AdoptedPetsList from './components/AdoptedPetsList';
 import WishlistPetsList from './components/WishlistPetsList';
 import InstitutionPetsList from './components/InstitutionPetsList';
 import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
 import Toast from 'react-native-toast-message';
-import ProfileHeaderMenu from './ProfileHeaderMenu';
+import ProfileHeader from './components/ProfileHeader';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -89,32 +87,16 @@ export default function Profile({ navigation, route }: ProfileProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatarWrapper}>
-          <Image
-            source={pictureRepository.getSource(viewAccount?.avatar)}
-            style={styles.avatar}
-          />
-        </View>
-        <View style={styles.headerInfo}>
-          <View style={styles.nameRow}>
-            <Text style={styles.name}>{viewAccount?.name}</Text>
-          </View>
-          <View style={styles.postsRow}>
-            <Text style={styles.posts}>{viewAccount?.postCount} Publicações</Text>
-          </View>
-        </View>
-        {isSelf ? (
-          <ProfileHeaderMenu
-            COLORS={COLORS}
-            onEdit={() => navigation.getParent()?.navigate('EditProfile')}
-            onLogout={async () => {
-              await logout();
-              navigation.navigate('Welcome');
-            }}
-          />
-        ) : null}
-      </View>
+      <ProfileHeader
+        account={viewAccount}
+        COLORS={COLORS}
+        isSelf={isSelf}
+        onEdit={() => navigation.getParent()?.navigate('EditProfile')}
+        onLogout={async () => {
+          await logout();
+          navigation.navigate('Welcome');
+        }}
+      />
 
       {isInstitution && isSelf && (
         <TouchableOpacity
@@ -127,7 +109,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
 
       <View style={styles.listContainer}>
         <ProfileTopTabs activeTab={activeTab} onChange={setActiveTab} isInstitution={viewAccount?.role === 'institution'} COLORS={COLORS} />
-
+        
         {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
           targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} /> : null
         ) : activeTab === 'posts' ? (
@@ -156,61 +138,6 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     container: {
       flex: 1,
       backgroundColor: COLORS.secondary
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      backgroundColor: COLORS.primary,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      width: '100%',
-    },
-    avatarWrapper: {
-      borderWidth: 2,
-      borderColor: COLORS.bg,
-      borderRadius: 44,
-      marginRight: 10,
-    },
-    avatar: {
-      width: 70,
-      height: 70,
-      borderRadius: 100,
-      backgroundColor: COLORS.bg,
-    },
-    headerInfo: {
-      flex: 1,
-      width: '100%',
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-    },
-    nameRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    name: {
-      fontSize: 22,
-      fontWeight: 'bold',
-      color: COLORS.text,
-      marginRight: 8,
-    },
-    badge: {
-      fontSize: 18,
-      marginRight: 4,
-    },
-    postsRow: {
-      flexDirection: 'row',
-      marginTop: 4,
-    },
-    posts: {
-      fontSize: 14,
-      color: COLORS.bg,
-      backgroundColor: COLORS.tertiary,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      marginRight: 6,
     },
     headerActions: {
       flexDirection: 'row',

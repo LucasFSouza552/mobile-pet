@@ -2,7 +2,6 @@ import React, { useCallback, useState } from 'react';
 import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountPetInteractionSync } from '../../../../data/sync/accountPetInteractionSync';
-import { petRemoteRepository } from '../../../../data/remote/repositories/petRemoteRepository';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { useTheme } from '../../../../context/ThemeContext';
@@ -22,20 +21,7 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
     try {
       setLoading(true);
       const interactions = await accountPetInteractionSync.getByAccount(accountId);
-      console.log(interactions);
-      const likedPetIds = Array.from(
-        new Set(interactions.filter(i => i.status === 'liked').map(i => i.pet))
-      );
-      const fetched = await Promise.all(
-        likedPetIds.map(async (petId) => {
-          try {
-            return await petRemoteRepository.fetchPetById(petId);
-          } catch {
-            return null;
-          }
-        })
-      );
-      setItems(fetched.filter(Boolean));
+      setItems(interactions.map(i => i.pet));
     } catch {
       setItems([]);
     } finally {
@@ -48,6 +34,8 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
       load();
     }, [accountId])
   );
+
+
 
   return (
     <FlatList
@@ -70,7 +58,36 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
           <Image source={pictureRepository.getSource(item?.avatar ?? item?.images?.[0])} style={styles.petImage} />
           <View style={styles.petInfo}>
             <Text style={styles.petName}>{item?.name ?? 'Pet'}</Text>
-            {!!item?.type ? <Text style={styles.petSub}>{item.type}</Text> : null}
+            <View style={styles.badgesRow}>
+              {!!item?.type && (
+                <View style={[styles.badge, { backgroundColor: COLORS.primary }]}>
+                  <Text style={styles.badgeText}>{String(item.type)}</Text>
+                </View>
+              )}
+              {!!item?.gender && (
+                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
+                  <Text style={styles.badgeText}>
+                    {String(item.gender).toLowerCase() === 'female' ? 'Fêmea' :
+                     String(item.gender).toLowerCase() === 'male' ? 'Macho' : String(item.gender)}
+                  </Text>
+                </View>
+              )}
+              {typeof item?.age === 'number' && (
+                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
+                  <Text style={styles.badgeText}>{item.age} ano{item.age === 1 ? '' : 's'}</Text>
+                </View>
+              )}
+              {!!item?.weight && (
+                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
+                  <Text style={styles.badgeText}>{item.weight} kg</Text>
+                </View>
+              )}
+            </View>
+            {!!item?.description && (
+              <Text style={styles.description} numberOfLines={2}>
+                {item.description}
+              </Text>
+            )}
           </View>
         </View>
       )}
@@ -90,6 +107,23 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       marginBottom: 10,
       gap: 10,
     },
+    badgesRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginTop: 4,
+      marginBottom: 4,
+    },
+    badge: {
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    badgeText: {
+      color: COLORS.bg,
+      fontWeight: '700',
+      fontSize: 12,
+    },
     petImage: {
       width: 60,
       height: 60,
@@ -103,6 +137,11 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontWeight: '700',
       color: COLORS.text,
       marginBottom: 2,
+    },
+    description: {
+      color: COLORS.text,
+      opacity: 0.9,
+      fontSize: 12,
     },
     petSub: {
       color: COLORS.text,
