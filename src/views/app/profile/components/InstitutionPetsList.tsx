@@ -47,6 +47,13 @@ export default function InstitutionPetsList({ institutionId, canManage = false }
       keyExtractor={(item: any, index) => String(item?.id ?? index)}
       refreshing={loading}
       onRefresh={load}
+      ListHeaderComponent={
+        canManage ? (
+          <TouchableOpacity style={styles.addButton} onPress={() => navigation.getParent()?.navigate('NewPet')}>
+            <Text style={styles.addButtonText}>Cadastrar novo pet</Text>
+          </TouchableOpacity>
+        ) : null
+      }
       ListEmptyComponent={!loading ? <Text style={styles.emptyText}>Nenhum pet cadastrado pela instituição.</Text> : null}
       renderItem={({ item }) => (
         <View style={styles.petCard}>
@@ -100,6 +107,19 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 8,
+    },
+    addButton: {
+      marginBottom: 12,
+      paddingVertical: 10,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: COLORS.primary,
+      alignItems: 'center',
+      backgroundColor: 'transparent',
+    },
+    addButtonText: {
+      color: COLORS.primary,
+      fontWeight: '700',
     },
     petName: {
       fontWeight: '700',

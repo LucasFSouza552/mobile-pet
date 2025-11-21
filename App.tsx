@@ -17,6 +17,7 @@ import NewNotificationScreen from './src/views/app/newNotification';
 import InstitutionNotificationsScreen from './src/views/app/institutionNotifications';
 import DonationPage from './src/views/app/donatePay';
 import DonationWebView from './src/views/app/DonationWebView';
+import NewPetScreen from './src/views/app/pets/newPet';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
@@ -94,6 +95,7 @@ export default function App() {
                   <Stack.Screen name="InstitutionNotifications" component={InstitutionNotificationsScreen} />
                   <Stack.Screen name="DonationPage" component={DonationPage} />
                   <Stack.Screen name="DonationWebView" component={DonationWebView} />
+                  <Stack.Screen name="NewPet" component={NewPetScreen} />
                 </Stack.Navigator>
 
 
