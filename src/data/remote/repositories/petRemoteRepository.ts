@@ -19,6 +19,10 @@ export const petRemoteRepository = {
         const response = await apiClient.patch(`/pet/${petId}`, data);
         return response.data;
     },
+    async updatePetDetails(petId: string, data: Record<string, any>) {
+        const response = await apiClient.patch(`/pet/${petId}/update`, data);
+        return response.data;
+    },
     async deletePet(petId: string) {
         const response = await apiClient.delete(`/pet/${petId}`);
         return response.data;

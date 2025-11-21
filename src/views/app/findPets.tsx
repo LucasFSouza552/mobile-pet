@@ -92,7 +92,9 @@ export default function FindPets() {
               </View>
               {!!petFeed.gender && (
                 <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{petFeed.gender === 'Male' ? 'Macho' : 'Fêmea'}</Text>
+                  <Text style={styles.badgeText}>
+                    {String(petFeed.gender).toLowerCase() === 'male' ? 'Macho' : 'Fêmea'}
+                  </Text>
                 </View>
               )}
               {typeof petFeed.age === 'number' && (

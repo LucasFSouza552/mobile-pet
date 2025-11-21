@@ -111,7 +111,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
         <ProfileTopTabs activeTab={activeTab} onChange={setActiveTab} isInstitution={viewAccount?.role === 'institution'} COLORS={COLORS} />
         
         {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
-          targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} /> : null
+          targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
         ) : activeTab === 'posts' ? (
           <PostList
             title={isSelf ? "Seus posts" : "Posts"}

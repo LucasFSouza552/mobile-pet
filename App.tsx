@@ -12,6 +12,7 @@ import RegisterStep3Screen from './src/views/auth/register/step3';
 import RegisterStep4Screen from './src/views/auth/register/step4';
 import Main from './src/views/app/main';
 import EditProfileScreen from './src/views/app/profile/editProfile';
+import EditPetScreen from './src/views/app/pets/editPet';
 import NewNotificationScreen from './src/views/app/newNotification';
 import InstitutionNotificationsScreen from './src/views/app/institutionNotifications';
 import DonationPage from './src/views/app/donatePay';
@@ -88,6 +89,7 @@ export default function App() {
                   <Stack.Screen name="RegisterStep4" component={RegisterStep4Screen} />
                   <Stack.Screen name="Main" component={Main} />
                   <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+                  <Stack.Screen name="EditPet" component={EditPetScreen} />
                   <Stack.Screen name="CreateNotification" component={NewNotificationScreen} />
                   <Stack.Screen name="InstitutionNotifications" component={InstitutionNotificationsScreen} />
                   <Stack.Screen name="DonationPage" component={DonationPage} />
