@@ -21,6 +21,7 @@ interface PostContextProps {
     searchResults: IPost[];
     loadingSearchResults: boolean;
     deletePost: (postId: string) => Promise<void>;
+    editPost: (postId: string, payload: Partial<IPost>) => Promise<IPost | void>;
 }
 
 const PostContext = createContext<PostContextProps | undefined>(undefined);
@@ -204,6 +205,51 @@ export function PostProvider({ children }: { children: ReactNode }) {
         setSearchResults(prev => prev.filter(post => post.id !== postId));
     }, [isConnected]);
 
+    const editPost = useCallback(async (postId: string, payload: Partial<IPost>) => {
+        if (!postId) return;
+        if (!isConnected) {
+            throw new Error("Sem conexão com a internet");
+        }
+
+        const updated = await postRepository.updatePost(postId, payload);
+
+        const cached =
+            posts.find(post => post.id === postId) ||
+            userPosts.find(post => post.id === postId) ||
+            searchResults.find(post => post.id === postId);
+
+        const normalized: IPost = cached
+            ? {
+                ...cached,
+                ...updated,
+                account:
+                    typeof updated.account === "object" && updated.account !== null
+                        ? updated.account
+                        : cached.account,
+            }
+            : (updated as IPost);
+
+        const mergeList = (list: IPost[]) =>
+            list.map(post =>
+                post.id === postId
+                    ? {
+                        ...post,
+                        ...normalized,
+                        account:
+                            typeof normalized.account === "object" && normalized.account !== null
+                                ? normalized.account
+                                : post.account,
+                    }
+                    : post
+            );
+
+        setPosts(prev => mergeList(prev));
+        setUserPosts(prev => mergeList(prev));
+        setSearchResults(prev => mergeList(prev));
+
+        return normalized;
+    }, [isConnected, posts, userPosts, searchResults]);
+
     useEffect(() => {
         if (isConnected) {
             refresh();
@@ -225,6 +271,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         searchResults,
         loadingSearchResults,
         deletePost,
+        editPost,
     }), [
         posts,
         loading,
@@ -233,6 +280,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         searchResults,
         loadingSearchResults,
         deletePost,
+        editPost,
     ]);
 
     return (

@@ -23,6 +23,7 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState<string | null>(null);
+  const [selectedPet, setSelectedPet] = useState<any | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
 
   const load = async () => {
@@ -72,6 +73,7 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
       await petRemoteRepository.acceptPetAdoption(petId, adopterId);
       await load();
       setSelectedPetId(null);
+      setSelectedPet(null);
     } finally {
       setProcessing(null);
     }
@@ -83,6 +85,7 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
       await petRemoteRepository.rejectPetAdoption(petId, adopterId);
       await load();
       setSelectedPetId(null);
+      setSelectedPet(null);
     } finally {
       setProcessing(null);
     }
@@ -106,7 +109,13 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
             <View style={styles.requestsBadge}>
               <Text style={styles.requestsBadgeText}>{item.reqs.length}</Text>
             </View>
-            <TouchableOpacity style={styles.manageBtn} onPress={() => setSelectedPetId(item?.pet?.id)}>
+            <TouchableOpacity
+              style={styles.manageBtn}
+              onPress={() => {
+                setSelectedPetId(item?.pet?.id ?? null);
+                setSelectedPet(item?.pet ?? null);
+              }}
+            >
               <Text style={styles.manageBtnText}>Gerenciar</Text>
             </TouchableOpacity>
           </View>
@@ -114,49 +123,131 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
         contentContainerStyle={grouped.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
       />
 
-      <Modal visible={!!selectedPetId} transparent animationType="fade" onRequestClose={() => setSelectedPetId(null)}>
+      <Modal
+        visible={!!selectedPetId}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          setSelectedPetId(null);
+          setSelectedPet(null);
+        }}
+      >
         <View style={styles.modalRoot}>
-          <View style={[styles.modalCard, { backgroundColor: COLORS.bg }]}>
+          <View style={[styles.modalCard, { backgroundColor: COLORS.quinary }]}>
             <Text style={[styles.modalTitle, { color: COLORS.text }]}>Solicitações de Adoção</Text>
-            <FlatList
-              data={currentRequests}
-              keyExtractor={(r, i) => String(r.id || i)}
-              renderItem={({ item }) => {
-                const acc = item?.account;
-                const reqId = `${selectedPetId}-${acc?.id || ''}`;
-                const isProc = processing === reqId;
-                return (
-                  <View style={styles.requestRow}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.reqName, { color: COLORS.text }]}>{acc?.name || 'Usuário'}</Text>
-                      {!!acc?.email && <Text style={[styles.reqMeta, { color: COLORS.text }]}>{acc.email}</Text>}
-                      {!!item?.createdAt && (
-                        <Text style={[styles.reqMeta, { color: COLORS.text }]}>
-                          Solicitado em: {new Date(item.createdAt as any).toLocaleDateString('pt-BR')}
+
+            {selectedPet ? (
+              <View style={styles.modalPetHeader}>
+                <Image
+                  source={pictureRepository.getSource(selectedPet?.avatar ?? selectedPet?.images?.[0])}
+                  style={styles.modalPetImage}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.modalPetName, { color: COLORS.text }]}>{selectedPet?.name ?? 'Pet'}</Text>
+                  <View style={styles.modalPetBadges}>
+                    {!!selectedPet?.type && (
+                      <View style={[styles.petBadge, { backgroundColor: COLORS.primary + '33' }]}>
+                        <Text style={[styles.petBadgeText, { color: COLORS.primary }]}>{selectedPet.type}</Text>
+                      </View>
+                    )}
+                    {!!selectedPet?.gender && (
+                      <View style={[styles.petBadge, { backgroundColor: COLORS.tertiary }]}>
+                        <Text style={[styles.petBadgeText, { color: COLORS.text }]}>
+                          {String(selectedPet.gender).toLowerCase() === 'female' ? 'Fêmea' : 'Macho'}
                         </Text>
-                      )}
-                    </View>
-                    <View style={styles.reqActions}>
-                      <TouchableOpacity
-                        onPress={() => handleAccept(selectedPetId!, acc?.id)}
-                        disabled={isProc}
-                        style={[styles.reqBtn, { backgroundColor: '#10b981', opacity: isProc ? 0.6 : 1 }]}
-                      >
-                        <Text style={styles.reqBtnText}>Aceitar</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        onPress={() => handleReject(selectedPetId!, acc?.id)}
-                        disabled={isProc}
-                        style={[styles.reqBtn, { backgroundColor: '#ef4444', opacity: isProc ? 0.6 : 1 }]}
-                      >
-                        <Text style={styles.reqBtnText}>Negar</Text>
-                      </TouchableOpacity>
-                    </View>
+                      </View>
+                    )}
+                    {typeof selectedPet?.age === 'number' && (
+                      <View style={[styles.petBadge, { backgroundColor: COLORS.tertiary }]}>
+                        <Text style={[styles.petBadgeText, { color: COLORS.text }]}>
+                          {selectedPet.age} ano{selectedPet.age === 1 ? '' : 's'}
+                        </Text>
+                      </View>
+                    )}
                   </View>
-                );
+                  {!!selectedPet?.description && (
+                    <Text style={[styles.modalPetDescription, { color: COLORS.text }]}>
+                      {selectedPet.description}
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ) : null}
+
+            <Text style={[styles.modalSubtitle, { color: COLORS.text }]}>
+              Escolha uma solicitação para aprovar ou negar a adoção.
+            </Text>
+            <View style={[styles.requestsWrapper]}>
+              <FlatList
+                data={currentRequests}
+                keyExtractor={(r, i) => String(r.id || i)}
+                contentContainerStyle={currentRequests.length === 0 ? styles.requestsEmptyContainer : undefined}
+                ListEmptyComponent={
+                  <View style={styles.modalEmptyBox}>
+                    <Text style={[styles.modalEmptyTitle, { color: COLORS.text }]}>Sem pedidos pendentes</Text>
+                    <Text style={[styles.modalEmptyText, { color: COLORS.text }]}>
+                      Assim que alguém solicitar este pet você verá os dados aqui.    
+                    </Text>
+                  </View>
+                }
+                renderItem={({ item }) => {
+                  const acc = item?.account;
+                  const reqId = `${selectedPetId}-${acc?.id || ''}`;
+                  const isProc = processing === reqId;
+                  const firstLetter = (acc?.name || acc?.email || '?').charAt(0).toUpperCase();
+                  return (
+                    <View style={[styles.requestRow, { borderColor: COLORS.tertiary }]}>
+                      <View style={styles.reqHeader}>
+                        <View style={[styles.reqAvatar, { backgroundColor: COLORS.primary + '33' }]}>
+                          <Text style={[styles.reqAvatarText, { color: COLORS.primary }]}>{firstLetter}</Text>
+                        </View>
+                        <View style={{ flex: 1 }}>
+                          <Text style={[styles.reqName, { color: COLORS.text }]}>{acc?.name || 'Usuário'}</Text>
+                          {!!acc?.email && <Text style={[styles.reqMeta, { color: COLORS.text }]}>{acc.email}</Text>}
+                          {!!item?.createdAt && (
+                            <Text style={[styles.reqMeta, { color: COLORS.text }]}>
+                              Solicitado em {new Date(item.createdAt as any).toLocaleDateString('pt-BR')}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+
+                      <View style={styles.reqActions}>
+                        <TouchableOpacity
+                          onPress={() => handleAccept(selectedPetId!, acc?.id)}
+                          disabled={isProc}
+                          style={[
+                            styles.reqBtn,
+                            styles.reqBtnApprove,
+                            { opacity: isProc ? 0.5 : 1, backgroundColor: '#10b981' },
+                          ]}
+                        >
+                          <Text style={styles.reqBtnText}>Aprovar</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => handleReject(selectedPetId!, acc?.id)}
+                          disabled={isProc}
+                          style={[
+                            styles.reqBtn,
+                            styles.reqBtnReject,
+                            { opacity: isProc ? 0.5 : 1, backgroundColor: '#ef4444' },
+                          ]}
+                        >
+                          <Text style={styles.reqBtnText}>Negar</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                }}
+              />
+            </View>
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedPetId(null);
+                setSelectedPet(null);
               }}
-            />
-            <TouchableOpacity onPress={() => setSelectedPetId(null)} style={styles.closeBtn}>
+              style={styles.closeBtn}
+            >
               <Text style={styles.closeBtnText}>Fechar</Text>
             </TouchableOpacity>
           </View>
@@ -234,22 +325,77 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     },
     modalCard: {
       width: '100%',
-      maxHeight: '80%',
-      borderRadius: 12,
-      padding: 16,
+      maxHeight: '85%',
+      borderRadius: 18,
+      padding: 18,
+      borderWidth: 1,
+      borderColor: COLORS.primary + '33',
+      shadowColor: '#000',
+      shadowOpacity: 0.25,
+      shadowRadius: 15,
+      shadowOffset: { width: 0, height: 8 },
     },
     modalTitle: {
       fontSize: 18,
       fontWeight: '700',
       marginBottom: 12,
     },
-    requestRow: {
+    modalPetHeader: {
       flexDirection: 'row',
+      gap: 12,
+      marginBottom: 12,
+      alignItems: 'flex-start',
+    },
+    modalPetImage: {
+      width: 64,
+      height: 64,
+      borderRadius: 12,
+      backgroundColor: COLORS.bg,
+    },
+    modalPetName: {
+      fontSize: 18,
+      fontWeight: '700',
+      marginBottom: 4,
+    },
+    modalPetBadges: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: 6,
+    },
+    petBadge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
+    },
+    petBadgeText: {
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    modalPetDescription: {
+      fontSize: 12,
+      opacity: 0.8,
+    },
+    modalSubtitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      marginBottom: 12,
+    },
+    requestsWrapper: {
+      borderRadius: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      marginBottom: 12,
+    },
+    requestsEmptyContainer: {
+      flexGrow: 1,
+      justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: 8,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: COLORS.tertiary,
-      gap: 10,
+      paddingVertical: 32,
+    },
+    modalEmptyBox: {
+      alignItems: 'center',
+      gap: 4,
     },
     reqName: {
       fontWeight: '700',
@@ -259,19 +405,65 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       opacity: 0.8,
       fontSize: 12,
     },
+    requestRow: {
+      padding: 12,
+      borderWidth: 1,
+      borderRadius: 12,
+      marginBottom: 10,
+      gap: 12,
+      backgroundColor: COLORS.quarternary,
+    },
+    reqHeader: {
+      flexDirection: 'row',
+      gap: 12,
+      alignItems: 'center',
+    },
+    reqAvatar: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reqAvatarText: {
+      fontSize: 16,
+      fontWeight: '700',
+    },
     reqActions: {
       flexDirection: 'row',
-      gap: 8,
+      gap: 10,
     },
     reqBtn: {
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: 8,
+      flex: 1,
+      paddingVertical: 10,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    reqBtnApprove: {
+      shadowColor: '#10b981',
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 4 },
+    },
+    reqBtnReject: {
+      shadowColor: '#ef4444',
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      shadowOffset: { width: 0, height: 4 },
     },
     reqBtnText: {
       color: '#fff',
       fontWeight: '700',
       fontSize: 12,
+    },
+    modalEmptyTitle: {
+      fontWeight: '700',
+      fontSize: 16,
+    },
+    modalEmptyText: {
+      textAlign: 'center',
+      opacity: 0.7,
     },
     closeBtn: {
       marginTop: 12,

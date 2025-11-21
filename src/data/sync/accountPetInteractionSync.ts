@@ -53,6 +53,7 @@ export const accountPetInteractionSync = {
                     try {
                         await petLocalRepository.create((item as any).pet as any);
                     } catch (error) {
+                        console.log(error);
                         console.error("Error creating pet:");
                     }
                 }

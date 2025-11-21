@@ -13,6 +13,8 @@ interface PostOptionsModalProps {
 	onOpenAbout: () => void;
 	allowDelete: boolean;
 	onDelete: () => Promise<void> | void;
+	allowEdit: boolean;
+	onEdit: () => void;
 }
 
 export default function PostOptionsModal({
@@ -26,6 +28,8 @@ export default function PostOptionsModal({
 	onOpenAbout,
 	allowDelete,
 	onDelete,
+	allowEdit,
+	onEdit,
 }: PostOptionsModalProps) {
 	return (
 		<Modal visible={visible} transparent animationType="none" onRequestClose={() => {
@@ -86,6 +90,27 @@ export default function PostOptionsModal({
 						</TouchableOpacity>
 
 						<View style={styles.optSeparator} />
+
+						{allowEdit && (
+							<>
+								<TouchableOpacity
+									style={styles.optItem}
+									onPress={() => {
+										Animated.timing(slideY, { toValue: containerHeight, duration: 220, useNativeDriver: true }).start(({ finished }) => {
+											if (finished) {
+												onRequestClose();
+												onEdit();
+											}
+										});
+									}}
+								>
+									<Feather name="edit-2" size={18} color={COLORS.primary} />
+									<Text style={styles.optText}>Editar post</Text>
+								</TouchableOpacity>
+								<View style={styles.optSeparator} />
+							</>
+						)}
+
 						{allowDelete && (
 							<TouchableOpacity
 								style={styles.optItem}

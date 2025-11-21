@@ -13,7 +13,10 @@ function normalizePet(pet: IPet) {
     description: pet.description ?? null,
     images: JSON.stringify(Array.isArray(pet.images) ? pet.images : []),
     adopted: toIntBool((pet as any).adopted),
-    account: (pet as any).account?.id ?? (pet as any).account ?? null,
+    account:
+      (pet as any).account?.id ??
+      (pet as any).account?._id ??
+      (typeof (pet as any).account === "string" ? (pet as any).account : null),
     adoptedAt: (pet as any).adoptedAt ?? null,
     createdAt: (pet as any).createdAt ?? now,
     updatedAt: (pet as any).updatedAt ?? now,

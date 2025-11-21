@@ -78,7 +78,7 @@ export const postRepository = {
             throw error;
         }
     },
-    async updatePost(id: string, data: IPost) {
+    async updatePost(id: string, data: Partial<IPost>) {
         try {
             const response = await apiClient.patch(`/post/${id}`, data);
             return response.data;

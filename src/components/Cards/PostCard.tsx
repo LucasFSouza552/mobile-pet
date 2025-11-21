@@ -29,6 +29,7 @@ import PostCommentsModal from './PostCommentsModal';
 import PostEditCommentModal from './PostEditCommentModal';
 import PostOptionsModal from './PostOptionsModal';
 import PostAboutModal from './PostAboutModal';
+import PostEditModal from './PostEditModal';
 
 function PostCardComponent({
 	post,
@@ -40,7 +41,7 @@ function PostCardComponent({
 }: PostCardProps) {
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
-	const { likePost: likePostFromContext, deletePost } = usePost();
+	const { likePost: likePostFromContext, deletePost, editPost } = usePost();
 	const { account } = useAccount();
 	const { width, height } = useWindowDimensions();
 	const navigation = useNavigation<any>();
@@ -60,6 +61,14 @@ function PostCardComponent({
 	const [deleted, setDeleted] = useState(false);
 	const [editSaving, setEditSaving] = useState(false);
 	const likeScale = React.useRef(new Animated.Value(1)).current;
+	const [isPostEditModalOpen, setIsPostEditModalOpen] = useState(false);
+	const postEditSlideY = React.useRef(new Animated.Value(height)).current;
+	const [postEditText, setPostEditText] = useState(post?.content ?? '');
+	const [postEditSaving, setPostEditSaving] = useState(false);
+
+	React.useEffect(() => {
+		setPostEditText(post?.content ?? '');
+	}, [post?.content]);
 
 	if (!post || deleted) return null;
 
@@ -67,6 +76,7 @@ function PostCardComponent({
 		() => !!(accountId && post?.likes?.includes(accountId)),
 		[accountId, post?.likes]
 	);
+	const isOwner = accountId === post?.account?.id;
 
 
 	const handleLikePress = async () => {
@@ -191,6 +201,52 @@ function PostCardComponent({
 			});
 		} finally {
 			setEditSaving(false);
+		}
+	};
+
+	const handleOpenEditPost = () => {
+		if (!post) return;
+		setPostEditText(post.content ?? '');
+		postEditSlideY.setValue(height);
+		setIsPostEditModalOpen(true);
+		Animated.timing(postEditSlideY, {
+			toValue: 0,
+			duration: 250,
+			useNativeDriver: true,
+		}).start();
+	};
+
+	const closePostEditModal = () => {
+		Animated.timing(postEditSlideY, {
+			toValue: height,
+			duration: 220,
+			useNativeDriver: true,
+		}).start(({ finished }) => {
+			if (finished) setIsPostEditModalOpen(false);
+		});
+	};
+
+	const savePostEdit = async () => {
+		if (!post?.id || !postEditText.trim() || postEditSaving) return;
+		try {
+			setPostEditSaving(true);
+			await editPost(post.id, { content: postEditText.trim() });
+			Toast.show({
+				type: 'success',
+				text1: 'Post atualizado com sucesso',
+				position: 'bottom',
+			});
+			closePostEditModal();
+		} catch (e: any) {
+			const message = e?.message || 'Erro ao salvar post';
+			Toast.show({
+				type: 'error',
+				text1: 'Não foi possível atualizar',
+				text2: message,
+				position: 'bottom',
+			});
+		} finally {
+			setPostEditSaving(false);
 		}
 	};
 
@@ -336,6 +392,19 @@ function PostCardComponent({
 				onSave={saveEditedComment}
 			/>
 
+			<PostEditModal
+				visible={isPostEditModalOpen}
+				onRequestClose={closePostEditModal}
+				slideY={postEditSlideY}
+				containerHeight={height}
+				styles={styles}
+				COLORS={COLORS}
+				value={postEditText}
+				onChangeText={setPostEditText}
+				onSave={savePostEdit}
+				saving={postEditSaving}
+			/>
+
 			<PostOptionsModal
 				visible={isOptionsOpen}
 				onRequestClose={() => setIsOptionsOpen(false)}
@@ -350,8 +419,10 @@ function PostCardComponent({
 					setIsAboutOpen(true);
 					Animated.timing(aboutSlideY, { toValue: 0, duration: 250, useNativeDriver: true }).start();
 				}}
-				allowDelete={accountId === post?.account?.id}
+				allowDelete={isOwner}
 				onDelete={handleDeletePost}
+				allowEdit={isOwner}
+				onEdit={handleOpenEditPost}
 			/>
 
 			<PostAboutModal
@@ -696,6 +767,58 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			backgroundColor: COLORS.primary,
 			opacity: 0.2,
 			marginVertical: 4,
+		},
+		editPostLabel: {
+			color: COLORS.text,
+			fontWeight: '600',
+			marginBottom: 6,
+		},
+		editPostInput: {
+			backgroundColor: COLORS.quarternary,
+			borderRadius: 12,
+			color: COLORS.text,
+			paddingHorizontal: 12,
+			paddingVertical: 12,
+			minHeight: 120,
+			borderWidth: 1,
+			borderColor: COLORS.primary + '22',
+		},
+		editPostCounter: {
+			alignSelf: 'flex-end',
+			color: COLORS.text,
+			opacity: 0.6,
+			fontSize: 12,
+			marginTop: 4,
+		},
+		editPostActions: {
+			flexDirection: 'row',
+			gap: 10,
+			marginTop: 16,
+		},
+		modalSecondaryButton: {
+			flex: 1,
+			paddingVertical: 12,
+			borderRadius: 10,
+			backgroundColor: COLORS.tertiary,
+			alignItems: 'center',
+		},
+		modalSecondaryButtonText: {
+			color: COLORS.text,
+			fontWeight: '600',
+		},
+		modalPrimaryButton: {
+			flex: 1,
+			paddingVertical: 12,
+			borderRadius: 10,
+			backgroundColor: COLORS.primary,
+			alignItems: 'center',
+		},
+		modalPrimaryButtonDisabled: {
+			opacity: 0.6,
+		},
+		modalPrimaryButtonText: {
+			color: COLORS.bg,
+			fontWeight: '700',
 		},
 	});
 }
