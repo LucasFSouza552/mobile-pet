@@ -15,6 +15,7 @@ type AdoptionRequest = {
   account?: { id?: string; name?: string; email?: string };
   pet?: any;
   createdAt?: string;
+  status?: string;
 };
 
 export default function InstitutionDesiredPetsList({ institutionId }: InstitutionDesiredPetsListProps) {
@@ -47,6 +48,8 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
   const grouped = useMemo(() => {
     const map = new Map<string, { pet: any; reqs: AdoptionRequest[] }>();
     for (const req of requests) {
+      const status = (req as any)?.status ?? (req as any)?.history?.status;
+      if (status && status !== 'pending') continue;
       const pet = (req as any)?.pet;
       const petId: string | undefined = pet?.id;
       if (!petId) continue;
@@ -63,7 +66,10 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
   const currentRequests = useMemo(() => {
     if (!selectedPetId) return [];
     const found = grouped.find(g => g.pet?.id === selectedPetId);
-    return found?.reqs ?? [];
+    return (found?.reqs ?? []).filter(req => {
+      const status = (req as any)?.status ?? (req as any)?.history?.status;
+      return !status || status === 'pending';
+    });
   }, [grouped, selectedPetId]);
 
   const handleAccept = async (petId: string, adopterId?: string) => {

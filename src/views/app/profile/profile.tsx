@@ -13,6 +13,7 @@ import AdoptedPetsList from './components/AdoptedPetsList';
 import WishlistPetsList from './components/WishlistPetsList';
 import InstitutionPetsList from './components/InstitutionPetsList';
 import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
+import UserHistoryList from './components/UserHistoryList';
 import Toast from 'react-native-toast-message';
 import ProfileHeader from './components/ProfileHeader';
 
@@ -28,7 +29,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist'>('posts');
+  const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist' | 'history'>('posts');
 
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
@@ -108,7 +109,13 @@ export default function Profile({ navigation, route }: ProfileProps) {
       )}
 
       <View style={styles.listContainer}>
-        <ProfileTopTabs activeTab={activeTab} onChange={setActiveTab} isInstitution={viewAccount?.role === 'institution'} COLORS={COLORS} />
+        <ProfileTopTabs
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          isInstitution={viewAccount?.role === 'institution'}
+          COLORS={COLORS}
+          showHistory={isSelf}
+        />
         
         {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
           targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
@@ -123,6 +130,14 @@ export default function Profile({ navigation, route }: ProfileProps) {
           />
         ) : activeTab === 'adopted' ? (
           targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
+        ) : activeTab === 'history' ? (
+          isSelf && targetAccountId ? (
+            <UserHistoryList accountId={targetAccountId} />
+          ) : (
+            <View style={styles.emptyHistoryBox}>
+              <Text style={styles.emptyHistoryText}>O histórico completo só está disponível para o dono da conta.</Text>
+            </View>
+          )
         ) : (
           viewAccount?.role === 'institution'
             ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
@@ -237,6 +252,18 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     notificationsButtonText: {
       color: COLORS.bg,
       fontWeight: '700',
+    },
+    emptyHistoryBox: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+    },
+    emptyHistoryText: {
+      color: COLORS.text,
+      opacity: 0.8,
+      textAlign: 'center',
+      fontSize: 14,
     },
     postContainer: {
       backgroundColor: COLORS.quarternary,

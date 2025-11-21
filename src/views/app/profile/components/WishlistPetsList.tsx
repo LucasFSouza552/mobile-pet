@@ -21,7 +21,20 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
     try {
       setLoading(true);
       const interactions = await accountPetInteractionSync.getByAccount(accountId);
-      setItems(interactions.map(i => i.pet));
+      const filtered = interactions.filter((interaction: any) => {
+        const status = String(interaction?.status ?? "").toLowerCase();
+        const allowed = status === "" || status === "liked" || status === "pending" || status === "requested";
+        if (!allowed) return false;
+        const petData = interaction?.pet;
+        if (petData && typeof petData === "object") {
+          return !petData?.adopted;
+        }
+        return true;
+      });
+      const pets = filtered
+        .map(interaction => (typeof interaction?.pet === "object" ? interaction.pet : null))
+        .filter(Boolean);
+      setItems(pets as any[]);
     } catch {
       setItems([]);
     } finally {

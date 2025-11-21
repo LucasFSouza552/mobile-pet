@@ -2,16 +2,17 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 
-type TabKey = 'posts' | 'pets' | 'adopted' | 'wishlist';
+type TabKey = 'posts' | 'pets' | 'adopted' | 'wishlist' | 'history';
 
 interface ProfileTopTabsProps {
   activeTab: TabKey;
   onChange: (tab: TabKey) => void;
   isInstitution: boolean;
   COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  showHistory: boolean;
 }
 
-export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COLORS }: ProfileTopTabsProps) {
+export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COLORS, showHistory }: ProfileTopTabsProps) {
   const styles = makeStyles(COLORS);
   return (
     <View style={styles.topTabs}>
@@ -47,6 +48,15 @@ export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COL
           {isInstitution ? 'Desejados' : 'Desejo adotar'}
         </Text>
       </TouchableOpacity>
+      {showHistory ? (
+        <TouchableOpacity
+          onPress={() => onChange('history')}
+          style={[styles.tabItem, activeTab === 'history' && styles.tabItemActive]}
+          accessibilityState={{ selected: activeTab === 'history' }}
+        >
+          <Text style={[styles.tabText, activeTab === 'history' && styles.tabTextActive]}>Histórico</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

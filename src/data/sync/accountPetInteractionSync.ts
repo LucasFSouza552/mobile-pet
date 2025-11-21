@@ -4,6 +4,21 @@ import { IAccountPetInteraction } from "../../models/IAccountPetInteraction";
 import { petInteractionRemoteRepository } from "../remote/repositories/petInteractionRemoteRepository";
 import { petLocalRepository } from "../local/repositories/petLocalRepository";
 
+const allowedStatuses = new Set(["", "liked", "pending", "requested"]);
+
+const filterPendingInteractions = (list: IAccountPetInteraction[]) =>
+    list.filter(item => {
+        const status = String(item?.status ?? "").toLowerCase();
+        if (!allowedStatuses.has(status)) {
+            return false;
+        }
+        const petData = (item as any)?.pet;
+        if (petData && typeof petData === "object") {
+            return !petData.adopted;
+        }
+        return true;
+    });
+
 export const accountPetInteractionSync = {
     async getByAccount(accountId: string): Promise<IAccountPetInteraction[]> {
 
@@ -59,13 +74,15 @@ export const accountPetInteractionSync = {
                 }
             }
 
-            if (normalizedList.length > 0) {
-                return sortByDateDesc(normalizedList);
+            const pendingList = filterPendingInteractions(normalizedList);
+
+            if (pendingList.length > 0) {
+                return sortByDateDesc(pendingList);
             }
 
-            return sortByDateDesc(local);
+            return sortByDateDesc(filterPendingInteractions(local));
         } catch {
-            return sortByDateDesc(local);
+            return sortByDateDesc(filterPendingInteractions(local));
         }
     },
 

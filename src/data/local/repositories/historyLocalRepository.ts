@@ -3,16 +3,59 @@ import { IHistory } from "../../../models/IHistory";
 import { SQLiteBindValue } from "expo-sqlite";
 
 function buildSqlValues<T>(values: Partial<T>) {
-    const Interrogations = Object.keys(values).map((key) => `?`).join(', ');
+    const Interrogations = Object.keys(values).map(() => `?`).join(', ');
     const sqlValues = Object.values(values) as SQLiteBindValue[];
     if (Object.keys(values).length === 0) {
-        return {};
+        return { interrogations: "", values: [] };
     }
     return {
-        interrogations: `(${Interrogations})`,
+        interrogations: Interrogations
+            .split(', ')
+            .map((q, index) => `${Object.keys(values)[index]} = ${q}`)
+            .join(', '),
         values: sqlValues
     }
 }
+
+const normalizeRef = (value: any): string | null => {
+    if (!value) return null;
+    if (typeof value === "string") return value;
+    if (typeof value === "object") {
+        return value.id ?? value._id ?? null;
+    }
+    return null;
+};
+
+const normalizeAccountRef = (value: any): string | undefined => {
+    if (value === undefined || value === null) return undefined;
+    if (typeof value === "string") return value;
+    return normalizeRef(value) ?? undefined;
+};
+
+const normalizeOptionalStringRef = (value: any): string | undefined => {
+    if (value === undefined) return undefined;
+    return normalizeRef(value) ?? undefined;
+};
+
+const normalizeOptionalNullableRef = (value: any): string | null | undefined => {
+    if (value === undefined) return undefined;
+    return normalizeRef(value);
+};
+
+const normalizeHistory = (history: IHistory) => {
+    const now = new Date().toISOString();
+    return {
+        ...history,
+        account: normalizeAccountRef((history as any).account) ?? history.account,
+        institution: normalizeOptionalStringRef((history as any).institution),
+        pet: normalizeOptionalNullableRef((history as any).pet) ?? null,
+        amount: history.amount ?? null,
+        externalReference: history.externalReference ?? null,
+        createdAt: history.createdAt ?? now,
+        updatedAt: history.updatedAt ?? now,
+        lastSyncedAt: history.lastSyncedAt ?? now,
+    };
+};
 
 export const historyLocalRepository = {
     getAll: async (): Promise<IHistory[]> => {
@@ -35,6 +78,7 @@ export const historyLocalRepository = {
 
     create: async (history: IHistory): Promise<void> => {
         const db = await getLocalDb();
+        const clean = normalizeHistory(history);
         await db.runAsync(
             `
             INSERT INTO history (
@@ -54,17 +98,17 @@ export const historyLocalRepository = {
                 lastSyncedAt = excluded.lastSyncedAt
             `,
             [
-                history.id,
-                history.type,
-                history.status ?? 'pending',
-                history.pet ?? null,
-                history.institution ?? null,
-                history.account,
-                history.amount ?? null,
-                history.externalReference ?? null,
-                history.createdAt,
-                history.updatedAt,
-                history.lastSyncedAt ?? null
+                clean.id,
+                clean.type,
+                clean.status ?? 'pending',
+                clean.pet ?? null,
+                clean.institution ?? null,
+                clean.account,
+                clean.amount ?? null,
+                clean.externalReference ?? null,
+                clean.createdAt,
+                clean.updatedAt,
+                clean.lastSyncedAt ?? null
             ]
         );
     },
@@ -105,11 +149,21 @@ export const historyLocalRepository = {
         //     values.push(history.lastSyncedAt);
         // }
 
-        const { interrogations, values: sqlValues } = buildSqlValues(history);
+        const normalized: Partial<IHistory> = {
+            ...history,
+            account: normalizeAccountRef(history.account),
+            institution: normalizeOptionalStringRef(history.institution),
+            pet: normalizeOptionalNullableRef(history.pet),
+        };
+
+        const { interrogations, values: sqlValues } = buildSqlValues(normalized);
+        if (!interrogations || !sqlValues.length) {
+            return;
+        }
 
         await db.runAsync(
             `UPDATE history SET ${interrogations} WHERE id = ?`,
-            sqlValues ?? []
+            [...sqlValues, id]
         );
     },
 
