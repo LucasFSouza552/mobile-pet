@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect, createContext, useContext } from "react
 import { IAccount } from "../models/IAccount";
 import { accountLocalRepository } from "../data/local/repositories/accountLocalRepository";
 import { accountSync } from "../data/sync/accountSync";
-
+import { useToast } from "../hooks/useToast";
 interface AccountContextProps {
     account: IAccount | null;
     setAccount: (account: IAccount | null) => void;
@@ -16,7 +16,7 @@ const AccountContext = createContext<AccountContextProps | undefined>(undefined)
 export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const [account, setAccount] = useState<IAccount | null>(null);
     const [loading, setLoading] = useState(true);
-
+    const toast = useToast();
 
     const loadAccount = async () => {
         try {
@@ -26,7 +26,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
                 setAccount(localAccount);
             }
         } catch (error) {
-            console.error("Erro ao buscar conta:", error);
+            toast.handleApiError(error, error?.data?.message || 'Erro ao carregar conta');
         } finally {
             setLoading(false);
         }
@@ -42,6 +42,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
 
     const logout = async () => {
         await accountLocalRepository.logout();
+        setAccount(null);
     }
 
     return (

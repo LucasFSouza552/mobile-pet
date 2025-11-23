@@ -104,7 +104,7 @@ export default function NewNotification({ navigation }: any) {
       setIsCameraOpen(false);
     }
   }, [isFocused]);
-  
+
 
   const handleCameraCapture = useCallback((photo: { uri: string; name: string; type: string }) => {
     setImage(photo);
@@ -144,7 +144,7 @@ export default function NewNotification({ navigation }: any) {
       toast.success("Sucesso", "Notificação enviada");
       navigation.goBack();
     } catch (error: any) {
-      toast.handleApiError(error, "Erro ao criar notificação");
+      toast.handleApiError(error, error?.data?.message || "Erro ao criar notificação");
     } finally {
       setSubmitting(false);
     }
@@ -161,8 +161,8 @@ export default function NewNotification({ navigation }: any) {
         <Text style={styles.headerTitle}>Nova Notificação</Text>
         <View style={styles.headerPlaceholder} />
       </View>
-      
-      <ScrollView 
+
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -197,15 +197,15 @@ export default function NewNotification({ navigation }: any) {
               <Ionicons name="camera" size={20} color={COLORS.primary} />
               <Text style={styles.label}>Foto do animal</Text>
             </View>
-            
+
             {image ? (
               <View style={styles.imagePreviewWrapper}>
-                <Image 
+                <Image
                   source={{ uri: image.uri }}
                   style={styles.imagePreview}
                   resizeMode="cover"
                 />
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.removeImage}
                   onPress={() => setImage(null)}
                   activeOpacity={0.8}
@@ -222,8 +222,8 @@ export default function NewNotification({ navigation }: any) {
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity 
-                style={styles.cameraButton} 
+              <TouchableOpacity
+                style={styles.cameraButton}
                 onPress={openCamera}
                 activeOpacity={0.8}
               >

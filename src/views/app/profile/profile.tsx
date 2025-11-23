@@ -92,11 +92,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
         account={viewAccount}
         COLORS={COLORS}
         isSelf={isSelf}
-        onEdit={() => navigation.getParent()?.navigate('EditProfile')}
-        onLogout={async () => {
-          await logout();
-          navigation.navigate('Welcome');
-        }}
       />
 
       {isInstitution && isSelf && (
@@ -116,33 +111,34 @@ export default function Profile({ navigation, route }: ProfileProps) {
           COLORS={COLORS}
           showHistory={isSelf}
         />
-        
-        {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
-          targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
-        ) : activeTab === 'posts' ? (
-          <PostList
-            title={isSelf ? "Seus posts" : "Posts"}
-            posts={userPosts}
-            account={viewAccount}
-            onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
-            onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
-            refreshing={postsLoading}
-          />
-        ) : activeTab === 'adopted' ? (
-          targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
-        ) : activeTab === 'history' ? (
-          isSelf && targetAccountId ? (
-            <UserHistoryList accountId={targetAccountId} />
+
+          {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
+            targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
+          ) : activeTab === 'posts' ? (
+            <PostList
+              title={isSelf ? "Seus posts" : "Posts"}
+              posts={userPosts}
+              account={viewAccount}
+              onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
+              onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
+              refreshing={postsLoading}
+            />
+          ) : activeTab === 'adopted' ? (
+            targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
+          ) : activeTab === 'history' ? (
+            isSelf && targetAccountId ? (
+              <UserHistoryList accountId={targetAccountId} />
+            ) : (
+              <View style={styles.emptyHistoryBox}>
+                <Text style={styles.emptyHistoryText}>O histórico completo só está disponível para o dono da conta.</Text>
+              </View>
+            )
           ) : (
-            <View style={styles.emptyHistoryBox}>
-              <Text style={styles.emptyHistoryText}>O histórico completo só está disponível para o dono da conta.</Text>
-            </View>
-          )
-        ) : (
-          viewAccount?.role === 'institution'
-            ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
-            : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('FindPets')} /> : null)
-        )}
+            viewAccount?.role === 'institution'
+              ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
+              : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('FindPets')} /> : null)
+          )}
+
       </View>
     </SafeAreaView>
   );

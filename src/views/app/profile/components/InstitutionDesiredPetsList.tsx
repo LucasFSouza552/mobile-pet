@@ -5,6 +5,7 @@ import { petRemoteRepository } from '../../../../data/remote/repositories/petRem
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { useTheme } from '../../../../context/ThemeContext';
+import { formatDateOnly } from '../../../../utils/date';
 
 interface InstitutionDesiredPetsListProps {
   institutionId: string;
@@ -212,7 +213,7 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
                           {!!acc?.email && <Text style={[styles.reqMeta, { color: COLORS.text }]}>{acc.email}</Text>}
                           {!!item?.createdAt && (
                             <Text style={[styles.reqMeta, { color: COLORS.text }]}>
-                              Solicitado em {new Date(item.createdAt as any).toLocaleDateString('pt-BR')}
+                              Solicitado em {formatDateOnly(item.createdAt as any)}
                             </Text>
                           )}
                         </View>

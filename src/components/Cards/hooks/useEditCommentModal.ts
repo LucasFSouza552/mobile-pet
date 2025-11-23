@@ -5,7 +5,7 @@ import Toast from 'react-native-toast-message';
 import { IComment } from '../../../models/IComment';
 import { commentRepository } from '../../../data/remote/repositories/commentsRemoteRepository';
 import { usePostComments } from './usePostComments';
-
+import { useToast } from '../../../hooks/useToast';
 interface UseEditCommentModalProps {
 	postId?: string;
 }
@@ -18,7 +18,7 @@ export function useEditCommentModal({ postId }: UseEditCommentModalProps) {
 	const [saving, setSaving] = useState(false);
 	const editSlideY = useRef(new Animated.Value(height)).current;
 	const { update } = usePostComments(postId);
-
+	const toast = useToast();
 	const openEditModal = (comment: IComment) => {
 		setEditingComment(comment);
 		setEditCommentText(comment.content);
@@ -69,15 +69,8 @@ export function useEditCommentModal({ postId }: UseEditCommentModalProps) {
 					position: 'bottom',
 				});
 			}, 300);
-		} catch (e: any) {
-			console.error('Erro ao editar comentário:', e);
-			const errorMessage = e?.response?.data?.message || e?.message || 'Tente novamente';
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao editar comentário',
-				text2: errorMessage,
-				position: 'bottom',
-			});
+		} catch (error: any) {
+			toast.handleApiError(error, error?.data?.message || 'Erro ao editar comentário');
 		} finally {
 			setSaving(false);
 		}

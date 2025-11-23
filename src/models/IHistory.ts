@@ -11,6 +11,7 @@ export interface IHistory {
     account: string;
     amount?: string;
     externalReference?: string | null;
+    urlPayment?: string | null;
     createdAt: string;
     updatedAt: string;
     lastSyncedAt?: string;

@@ -37,10 +37,9 @@ export default function Community({ navigation }: CommunityPageProps) {
     try {
       setLoadingTopPosts(true);
       const data = await postRepository.fetchTopPosts();
-      console.log(data);
       setTopPosts(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast.handleApiError(error, 'Erro ao carregar posts populares');
+      toast.handleApiError(error, error?.data?.message || 'Erro ao carregar posts populares');
     } finally {
       setLoadingTopPosts(false);
     }

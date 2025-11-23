@@ -1,19 +1,24 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
-import ProfileHeaderMenu from '../ProfileHeaderMenu';
 
 interface ProfileHeaderProps {
   account: any;
   COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
   isSelf: boolean;
-  onEdit: () => void;
-  onLogout: () => Promise<void> | void;
 }
 
-export default function ProfileHeader({ account, COLORS, isSelf, onEdit, onLogout }: ProfileHeaderProps) {
+export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeaderProps) {
   const styles = makeStyles(COLORS);
+  const navigation = useNavigation();
+
+  const handleSettingsPress = () => {
+    (navigation as any).getParent()?.navigate('ProfileSettings');
+  };
+
   return (
     <View style={styles.header}>
       <View style={styles.avatarWrapper}>
@@ -31,11 +36,13 @@ export default function ProfileHeader({ account, COLORS, isSelf, onEdit, onLogou
         </View>
       </View>
       {isSelf ? (
-        <ProfileHeaderMenu
-          COLORS={COLORS}
-          onEdit={onEdit}
-          onLogout={onLogout}
-        />
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={handleSettingsPress}
+          activeOpacity={0.7}
+        >
+          <FontAwesome5 name="cog" size={20} color={COLORS.text} />
+        </TouchableOpacity>
       ) : null}
     </View>
   );
@@ -92,6 +99,11 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingVertical: 4,
       borderRadius: 12,
       marginRight: 6,
+    },
+    settingsButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: COLORS.tertiary + '40',
     },
   });
 }

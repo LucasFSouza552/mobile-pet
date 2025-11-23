@@ -110,7 +110,7 @@ export default function NewPost({ navigation }: any) {
       toast.success('Sucesso', 'Post criado!');
       navigation.navigate('Community');
     } catch (error: any) {
-      toast.handleApiError(error, 'Erro ao criar post');
+      toast.handleApiError(error, error?.data?.message || 'Erro ao criar post');
     } finally {
       setSubmitting(false);
     }

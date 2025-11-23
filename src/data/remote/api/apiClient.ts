@@ -1,10 +1,11 @@
 import axios, { AxiosHeaders } from "axios";
 import { getStorage } from "../../../utils/storange";
 import { API_URL } from '@env';
+import Constants from 'expo-constants';
 
 const BASE_URL = (API_URL && API_URL.trim().length > 0)
   ? API_URL
-  : "http://10.0.2.2:3000/api";
+  : (Constants.expoConfig?.extra?.API_URL || "http://10.0.2.2:3000/api");
 
 
 export const apiClient = axios.create({
@@ -20,6 +21,8 @@ apiClient.interceptors.request.use(
     async config => {
         const token = await getStorage("@token");
         const headers = new AxiosHeaders(config.headers as any);
+
+
         if (token) {
             headers.set("Authorization", `Bearer ${token}`);
         }

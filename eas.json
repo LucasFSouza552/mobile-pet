@@ -8,19 +8,19 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-pet-beta.vercel.app/api"
+        "API_URL": "https://backend-pet-beta.vercel.app/api"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-pet-beta.vercel.app/api"
+        "API_URL": "https://backend-pet-beta.vercel.app/api"
       }
     },
     "production": {
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://backend-pet-beta.vercel.app/api"
+        "API_URL": "https://backend-pet-beta.vercel.app/api"
       }
     }
   },

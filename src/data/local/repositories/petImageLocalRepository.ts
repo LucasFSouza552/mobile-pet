@@ -21,7 +21,6 @@ function normalizeUrls(urls: string[]): string[] {
 async function downloadImage(url: string, petId: string, index: number): Promise<string | null> {
   try {
     if (!FileSystem || !FileSystem.documentDirectory) {
-      console.warn('expo-file-system não está disponível. Instale com: npx expo install expo-file-system');
       return null;
     }
 
@@ -79,7 +78,6 @@ async function getLocalPath(url: string, petId: string): Promise<string | null> 
     
     return null;
   } catch (error) {
-    console.error(`Erro ao buscar caminho local para ${url}:`, error);
     return null;
   }
 }
@@ -205,7 +203,6 @@ export const petImageLocalRepository = {
   async deleteAllLocalImages(): Promise<void> {
     try {
       if (!FileSystem || !FileSystem.documentDirectory) {
-        console.error('expo-file-system não está disponível. Instale com: npx expo install expo-file-system');
         return;
       }
 

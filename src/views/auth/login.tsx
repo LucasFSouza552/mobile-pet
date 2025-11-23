@@ -110,6 +110,7 @@ export default function Login({ navigation }: any) {
                       keyboardType="email-address"
                       autoCapitalize="none"
                       returnKeyType="next"
+                      autoComplete="email"
                     />
 
                     <View style={loginStepStyles.passwordContainer}>

@@ -12,15 +12,20 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as ExpoCamera from 'expo-camera';
 import Toast from 'react-native-toast-message';
+import { Alert } from 'react-native';
 
 import { useTheme } from '../../../context/ThemeContext';
 import { useAccount } from '../../../context/AccountContext';
+import { useCamera } from '../../../context/CameraContext';
 import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
+import CameraView from '../../../components/CameraView';
 import { IPet } from '../../../models/IPet';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 
@@ -47,6 +52,7 @@ interface EditPetProps {
 export default function EditPet({ navigation, route }: EditPetProps) {
   const { COLORS } = useTheme();
   const { account } = useAccount();
+  const { setIsCameraOpen } = useCamera();
   const styles = makeStyles(COLORS);
 
   const petId = route?.params?.petId;
@@ -61,6 +67,9 @@ export default function EditPet({ navigation, route }: EditPetProps) {
   });
   const [pet, setPet] = useState<IPet | null>(null);
   const [petImages, setPetImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<Array<{ uri: string; name: string; type: string }>>([]);
+  const [removedImageIndices, setRemovedImageIndices] = useState<Set<number>>(new Set());
+  const [isCameraOpen, setIsCameraOpenLocal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -79,6 +88,8 @@ export default function EditPet({ navigation, route }: EditPetProps) {
         weight: typeof data?.weight === 'number' ? String(data.weight) : '',
       });
       setPetImages(Array.isArray(data?.images) ? data.images : []);
+      setNewImages([]);
+      setRemovedImageIndices(new Set());
     } catch (error: any) {
       Toast.show({
         type: 'error',
@@ -120,6 +131,117 @@ export default function EditPet({ navigation, route }: EditPetProps) {
 
   const updateForm = (key: keyof PetFormState, value: string) => {
     setForm(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setRemovedImageIndices(prev => {
+      const newSet = new Set(prev);
+      newSet.add(index);
+      return newSet;
+    });
+  };
+
+  const handleRestoreImage = (index: number) => {
+    setRemovedImageIndices(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(index);
+      return newSet;
+    });
+  };
+
+  const pickImages = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Toast.show({
+          type: 'info',
+          text1: 'Permissão necessária',
+          text2: 'Precisamos de acesso à galeria para adicionar fotos.',
+          position: 'bottom',
+        });
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 0.8,
+      });
+      if (result.canceled || !result.assets?.length) return;
+      
+      const picked = result.assets.map((asset, idx) => {
+        const uri = asset.uri;
+        const ext = (asset.fileName?.split('.').pop() || 'jpg').toLowerCase();
+        const name = asset.fileName || `pet-image-${Date.now()}-${idx}.${ext}`;
+        const type = asset.mimeType || `image/${ext}`;
+        return { uri, name, type };
+      });
+      
+      const totalImages = petImages.length - removedImageIndices.size + newImages.length + picked.length;
+      if (totalImages > 6) {
+        Toast.show({
+          type: 'info',
+          text1: 'Limite de imagens',
+          text2: 'Você pode adicionar no máximo 6 imagens.',
+          position: 'bottom',
+        });
+        return;
+      }
+      
+      setNewImages(prev => [...prev, ...picked]);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível abrir a galeria.',
+        position: 'bottom',
+      });
+    }
+  };
+
+  const openCamera = async () => {
+    try {
+      const request =
+        (ExpoCamera as any).requestCameraPermissionsAsync ||
+        (ExpoCamera as any).Camera?.requestCameraPermissionsAsync;
+      const { status } = await (request ? request() : Promise.resolve({ status: 'denied' }));
+      if (status !== 'granted') {
+        Toast.show({
+          type: 'info',
+          text1: 'Permissão necessária',
+          text2: 'Precisamos de acesso à câmera para tirar fotos.',
+          position: 'bottom',
+        });
+        return;
+      }
+      setIsCameraOpen(true);
+      setIsCameraOpenLocal(true);
+    } catch (error: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Erro',
+        text2: 'Não foi possível acessar a câmera.',
+        position: 'bottom',
+      });
+    }
+  };
+
+  const handleCameraCapture = (photo: { uri: string; name: string; type: string }) => {
+    const totalImages = petImages.length - removedImageIndices.size + newImages.length + 1;
+    if (totalImages > 6) {
+      Toast.show({
+        type: 'info',
+        text1: 'Limite de imagens',
+        text2: 'Você pode adicionar no máximo 6 imagens.',
+        position: 'bottom',
+      });
+      return;
+    }
+    setNewImages(prev => [...prev, photo]);
+    setIsCameraOpenLocal(false);
+  };
+
+  const removeNewImage = (index: number) => {
+    setNewImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -166,6 +288,34 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     setSaving(true);
     try {
       await petRemoteRepository.updatePetDetails(petId, payload);
+
+      if (removedImageIndices.size > 0 || newImages.length > 0) {
+        const remainingImages = petImages.filter((_, index) => !removedImageIndices.has(index));
+        const formData = new FormData();
+        
+        const allImages = [...remainingImages.map(url => {
+          const imageSource = pictureRepository.getSource(url);
+          const uri = typeof imageSource === 'object' && 'uri' in imageSource 
+            ? imageSource.uri 
+            : String(url);
+          const filename = url.split('/').pop() || `image-${Date.now()}.jpg`;
+          return { uri, name: filename, type: 'image/jpeg' };
+        }), ...newImages];
+        
+        if (allImages.length === 0) {
+          await petRemoteRepository.updateImages(petId, formData);
+        } else {
+          for (const image of allImages) {
+            formData.append('images', {
+              uri: image.uri,
+              name: image.name,
+              type: image.type,
+            } as any);
+          }
+          await petRemoteRepository.updateImages(petId, formData);
+        }
+      }
+
       Toast.show({
         type: 'success',
         text1: 'Pet atualizado com sucesso!',
@@ -185,7 +335,23 @@ export default function EditPet({ navigation, route }: EditPetProps) {
   };
 
   const renderImages = () => {
-    if (!petImages.length) {
+    const existingImages = petImages.map((img, index) => ({
+      type: 'existing' as const,
+      id: `existing-${index}`,
+      data: img,
+      index,
+    }));
+    
+    const newImageItems = newImages.map((img, index) => ({
+      type: 'new' as const,
+      id: `new-${index}`,
+      data: img,
+      index,
+    }));
+    
+    const allImages = [...existingImages, ...newImageItems];
+    
+    if (allImages.length === 0) {
       return (
         <View style={styles.imagePlaceholder}>
           <Text style={styles.imagePlaceholderText}>Nenhuma imagem cadastrada</Text>
@@ -194,19 +360,87 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     }
 
     return (
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.imagesRow}
-      >
-        {petImages.map((img, index) => (
-          <Image
-            key={`${img}-${index}`}
-            source={pictureRepository.getSource(img)}
-            style={styles.petImage}
-          />
-        ))}
-      </ScrollView>
+      <View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.imagesRow}
+        >
+          {existingImages.map((item) => {
+            const isRemoved = removedImageIndices.has(item.index);
+            return (
+              <View key={item.id} style={styles.imageWrapper}>
+                <Image
+                  source={pictureRepository.getSource(item.data)}
+                  style={[styles.petImage, isRemoved && styles.removedImage]}
+                />
+                {canEdit && (
+                  <TouchableOpacity
+                    style={isRemoved ? styles.restoreImageButton : styles.removeImageButton}
+                    onPress={() => isRemoved ? handleRestoreImage(item.index) : handleRemoveImage(item.index)}
+                    activeOpacity={0.7}
+                  >
+                    <FontAwesome5
+                      name={isRemoved ? 'undo' : 'times'}
+                      size={14}
+                      color={COLORS.bg}
+                    />
+                  </TouchableOpacity>
+                )}
+                {isRemoved && (
+                  <View style={styles.removedOverlay}>
+                    <Text style={styles.removedText}>Removida</Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+          {newImageItems.map((item) => (
+            <View key={item.id} style={styles.imageWrapper}>
+              <Image
+                source={{ uri: item.data.uri }}
+                style={styles.petImage}
+              />
+              {canEdit && (
+                <TouchableOpacity
+                  style={styles.removeImageButton}
+                  onPress={() => removeNewImage(item.index)}
+                  activeOpacity={0.7}
+                >
+                  <FontAwesome5
+                    name="times"
+                    size={14}
+                    color={COLORS.bg}
+                  />
+                </TouchableOpacity>
+              )}
+              <View style={styles.newImageBadge}>
+                <Text style={styles.newImageText}>Nova</Text>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+        {canEdit && (
+          <View style={styles.addImageButtons}>
+            <TouchableOpacity
+              style={styles.addImageButton}
+              onPress={pickImages}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="images" size={18} color={COLORS.primary} />
+              <Text style={styles.addImageButtonText}>Galeria</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.addImageButton}
+              onPress={openCamera}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="camera" size={18} color={COLORS.primary} />
+              <Text style={styles.addImageButtonText}>Câmera</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     );
   };
 
@@ -378,6 +612,14 @@ export default function EditPet({ navigation, route }: EditPetProps) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <CameraView
+        visible={isCameraOpen}
+        onClose={() => {
+          setIsCameraOpenLocal(false);
+          setIsCameraOpen(false);
+        }}
+        onCapture={handleCameraCapture}
+      />
     </SafeAreaView>
   );
 }
@@ -485,11 +727,72 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     imagesRow: {
       gap: 12,
     },
+    imageWrapper: {
+      position: 'relative',
+    },
     petImage: {
       width: 110,
       height: 110,
       borderRadius: 14,
       backgroundColor: COLORS.tertiary,
+    },
+    removedImage: {
+      opacity: 0.5,
+    },
+    removeImageButton: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: '#ef4444',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    restoreImageButton: {
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: '#10b981',
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
+    },
+    removedOverlay: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      borderBottomLeftRadius: 14,
+      borderBottomRightRadius: 14,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+    },
+    removedText: {
+      color: COLORS.bg,
+      fontSize: 10,
+      fontWeight: '700',
+      textAlign: 'center',
     },
     imagePlaceholder: {
       height: 120,
@@ -529,6 +832,45 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       color: COLORS.text,
       fontWeight: '600',
       textAlign: 'center',
+    },
+    newImageBadge: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: '#10b981',
+      borderBottomLeftRadius: 14,
+      borderBottomRightRadius: 14,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+    },
+    newImageText: {
+      color: COLORS.bg,
+      fontSize: 10,
+      fontWeight: '700',
+      textAlign: 'center',
+    },
+    addImageButtons: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 12,
+    },
+    addImageButton: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 12,
+      borderRadius: 12,
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      backgroundColor: COLORS.primary + '10',
+    },
+    addImageButtonText: {
+      color: COLORS.primary,
+      fontWeight: '700',
+      fontSize: 14,
     },
   });
 }

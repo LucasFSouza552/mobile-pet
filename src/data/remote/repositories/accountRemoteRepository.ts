@@ -60,7 +60,7 @@ export const accountRemoteRepository = {
     },
     async uploadAvatar(formData: FormData) {
         try {
-            const response = await apiClient.post("/account/avatar", formData, {
+            const response = await apiClient.put("/account/avatar", formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

@@ -22,19 +22,19 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
   const toast = useToast();
-  
+
   const institution = route?.params?.institution;
-  
+
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
   const formatCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (!numbers) return '';
-    
+
     const cents = parseInt(numbers, 10);
     const reais = (cents / 100).toFixed(2);
-    
+
     return reais.replace('.', ',');
   };
 
@@ -57,16 +57,22 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
     try {
       setLoading(true);
-      
+
       const amountString = value.toFixed(2);
-      
-      const response = await accountRemoteRepository.donate(amountString);
-      
-      if (!response || !response.url) {
-        throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
+      if (institution) {
+        const response = await accountRemoteRepository.sponsorInstitution(institution.id, amountString);
+        if (!response || !response.url) {
+          throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
+        }
+        navigation.navigate('DonationWebView', { url: response.url });
+      } else {
+        const response = await accountRemoteRepository.donate(amountString);
+        if (!response || !response.url) {
+          throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
+        }
+        navigation.navigate('DonationWebView', { url: response.url });
       }
 
-      navigation.navigate('DonationWebView', { url: response.url });
       setAmount('');
     } catch (error: any) {
       toast.error('Erro ao realizar doação', error.data.message);
@@ -89,9 +95,9 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
         {institution && (
           <View style={styles.institutionCard}>
-            <Image 
+            <Image
               source={pictureRepository.getSource(institution.avatar)}
-              style={styles.institutionAvatar} 
+              style={styles.institutionAvatar}
             />
             <Text style={styles.institutionName}>{institution.name}</Text>
             {institution.address?.city && (
@@ -120,15 +126,15 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
                 placeholderTextColor="#999"
                 keyboardType="numeric"
                 value={amount}
-                onChangeText={handleAmountChange} 
+                onChangeText={handleAmountChange}
                 editable={!loading}
               />
             </View>
             <Text style={styles.minValue}>Valor mínimo: R$10,00</Text>
           </View>
 
-          <TouchableOpacity 
-            style={[styles.button, loading && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleDonate}
             disabled={loading}
           >

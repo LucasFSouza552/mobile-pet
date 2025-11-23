@@ -65,8 +65,8 @@ export const accountLocalRepository = {
                     account.postCount ?? 0
                 ]
             );
-        } catch (error) {
-            console.error(error);
+        } catch (error: any) {
+            toast.handleApiError(error, error?.data?.message || 'Erro ao criar conta');
             throw error;
         }
 
@@ -83,54 +83,75 @@ export const accountLocalRepository = {
     logout: async (): Promise<void> => {
         const db = await getLocalDb();
         
-        try {
-            await db.execAsync("BEGIN");
-            
+        let retries = 5;
+        let lastError: any = null;
+        
+        while (retries > 0) {
             try {
-                await db.runAsync("DELETE FROM account_pet_interactions");
-            } catch (error) {
-                console.error("Erro ao deletar account_pet_interactions:", error);
+                await db.execAsync("BEGIN");
+                
+                try {
+                    await db.runAsync("DELETE FROM account_pet_interactions");
+                } catch (error) {
+                    console.error("Erro ao deletar account_pet_interactions:", error);
+                }
+                
+                try {
+                    await db.runAsync("DELETE FROM pet_images");
+                } catch (error) {
+                    console.error("Erro ao deletar pet_images:", error);
+                }
+                
+                try {
+                    await db.runAsync("DELETE FROM pets");
+                } catch (error) {
+                    console.error("Erro ao deletar pets:", error);
+                }
+                
+                try {
+                    await db.runAsync("DELETE FROM history");
+                } catch (error) {
+                    console.error("Erro ao deletar history:", error);
+                }
+                
+                try {
+                    await db.runAsync("DELETE FROM achievements");
+                } catch (error) {
+                    console.error("Erro ao deletar achievements:", error);
+                }
+                
+                try {
+                    await db.runAsync("DELETE FROM accounts");
+                } catch (error) {
+                    console.error("Erro ao deletar accounts:", error);
+                }
+                
+                await db.execAsync("COMMIT");
+                
+                break;
+            } catch (error: any) {
+                lastError = error;
+                
+                try {
+                    await db.execAsync("ROLLBACK");
+                } catch (rollbackError) {
+                    console.error("Erro ao fazer rollback:", rollbackError);
+                }
+                
+                if (!error?.message?.includes('database is locked') && !error?.message?.includes('locked')) {
+                    throw error;
+                }
+                
+                if (retries > 1) {
+                    retries--;
+                    const delay = 100 * (6 - retries); 
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    continue;
+                }
+                
+                console.error("Erro ao limpar dados do banco após múltiplas tentativas:", error);
+                throw error;
             }
-            
-            try {
-                await db.runAsync("DELETE FROM pet_images");
-            } catch (error) {
-                console.error("Erro ao deletar pet_images:", error);
-            }
-            
-            try {
-                await db.runAsync("DELETE FROM pets");
-            } catch (error) {
-                console.error("Erro ao deletar pets:", error);
-            }
-            
-            try {
-                await db.runAsync("DELETE FROM history");
-            } catch (error) {
-                console.error("Erro ao deletar history:", error);
-            }
-            
-            try {
-                await db.runAsync("DELETE FROM achievements");
-            } catch (error) {
-                console.error("Erro ao deletar achievements:", error);
-            }
-            
-            try {
-                await db.runAsync("DELETE FROM accounts");
-            } catch (error) {
-                console.error("Erro ao deletar accounts:", error);
-            }
-            
-            await db.execAsync("COMMIT");
-        } catch (error) {
-            try {
-                await db.execAsync("ROLLBACK");
-            } catch (rollbackError) {
-                console.error("Erro ao fazer rollback:", rollbackError);
-            }
-            console.error("Erro ao limpar dados do banco:", error);
-            throw error;
         }
 
         try {

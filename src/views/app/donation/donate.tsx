@@ -52,8 +52,8 @@ export default function Donate({ navigation }: any) {
       if (institutionsList.length === 0 && !loading) {
         toast.info('Nenhuma instituição encontrada', 'Tente atualizar a lista');
       }
-    } catch (e: any) {
-      toast.handleApiError(e, 'Erro ao carregar instituições');
+    } catch (error: any) {
+      toast.handleApiError(error, error?.data?.message || 'Erro ao carregar instituições');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -71,8 +71,12 @@ export default function Donate({ navigation }: any) {
     loadInstitutions();
   };
 
-  const handleDonate = (institution: IAccount) => {
-    navigation?.navigate('DonationPage', { institution });
+  const handleDonate = (institution: IAccount | null) => {
+    navigation?.navigate('DonationPage', { institution: institution || null });
+  };
+
+  const handleDonateToUs = () => {
+    navigation?.navigate('DonationPage', { institution: null });
   };
 
   const renderInstitution = ({ item }: { item: IAccount }) => (
@@ -107,7 +111,7 @@ export default function Donate({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Doe para Instituições</Text>
+        <Text style={styles.title}>Faça uma Doação</Text>
         <Text style={styles.subtitle}>Sua ajuda faz a diferença na vida de muitos animais</Text>
       </View>
 
@@ -116,19 +120,42 @@ export default function Donate({ navigation }: any) {
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>Carregando instituições...</Text>
         </View>
-      ) : institutions.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhuma instituição encontrada</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
-            <Text style={styles.refreshButtonText}>Tentar novamente</Text>
-          </TouchableOpacity>
-        </View>
       ) : (
         <FlatList
           data={institutions}
           renderItem={renderInstitution}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
+          ListHeaderComponent={
+            <TouchableOpacity 
+              style={styles.ourCard} 
+              onPress={handleDonateToUs}
+              activeOpacity={0.7}
+            >
+              <View style={styles.ourCardContent}>
+                <View style={styles.ourCardIcon}>
+                  <Text style={styles.ourCardIconText}>❤️</Text>
+                </View>
+                <View style={styles.ourCardInfo}>
+                  <Text style={styles.ourCardTitle}>Doe para nós</Text>
+                  <Text style={styles.ourCardSubtitle}>
+                    Ajude a manter o PetAmigo funcionando
+                  </Text>
+                </View>
+                <View style={styles.arrowContainer}>
+                  <Text style={[styles.arrow, { color: '#fff', opacity: 0.9 }]}>›</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma instituição encontrada</Text>
+              <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+                <Text style={styles.refreshButtonText}>Tentar novamente</Text>
+              </TouchableOpacity>
+            </View>
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -256,6 +283,47 @@ function makeStyles(COLORS: any) {
       color: '#fff',
       fontSize: 16,
       fontWeight: '600',
+    },
+    ourCard: {
+      backgroundColor: COLORS.primary,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 4,
+    },
+    ourCardContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    ourCardIcon: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 12,
+    },
+    ourCardIconText: {
+      fontSize: 32,
+    },
+    ourCardInfo: {
+      flex: 1,
+    },
+    ourCardTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: '#fff',
+      marginBottom: 4,
+    },
+    ourCardSubtitle: {
+      fontSize: 14,
+      color: '#fff',
+      opacity: 0.9,
     },
   });
 }

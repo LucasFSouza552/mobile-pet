@@ -139,7 +139,8 @@ export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COL
   return (
     <ScrollView horizontal style={styles.scrollView} showsHorizontalScrollIndicator={false}>
       <View style={styles.topTabs}>
-        {visibleTabs.map((tabConfig) => (
+        {visibleTabs.map((tabConfig) => {
+          return (
           <TabItem
             key={tabConfig.key}
             tabKey={tabConfig.key}
@@ -148,7 +149,7 @@ export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COL
             onPress={() => onChange(tabConfig.key)}
             styles={styles}
           />
-        ))}
+        )})}
       </View>
     </ScrollView>
   );
@@ -161,6 +162,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       backgroundColor: COLORS.secondary,
       height: 60,
       maxHeight: 60,
+      minHeight: 60,
     },
     topTabs: {
       flexDirection: 'row',

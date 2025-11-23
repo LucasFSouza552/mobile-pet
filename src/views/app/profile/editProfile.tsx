@@ -9,7 +9,6 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,10 +18,9 @@ import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
-import { Images } from '../../../../assets';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import Toast from 'react-native-toast-message';
+import { useToast } from '../../../hooks/useToast';
 import { IAccount } from '../../../models/IAccount';
 import IAddress from '../../../models/IAddress';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
@@ -35,6 +33,7 @@ interface EditProfileProps {
 export default function EditProfile({ navigation }: EditProfileProps) {
   const { account, loading: accountLoading, refreshAccount } = useAccount();
   const { COLORS } = useTheme();
+  const toast = useToast();
 
   const [formData, setFormData] = useState<IAccount | null>(null);
   const [address, setAddress] = useState<IAddress>({
@@ -103,7 +102,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== 'granted') {
-      Alert.alert(
+      toast.error(
         'Permissão necessária',
         'Precisamos de acesso à sua galeria de fotos.'
       );
@@ -129,63 +128,82 @@ export default function EditProfile({ navigation }: EditProfileProps) {
     setLoading(true);
 
     try {
+      // Validações de campos obrigatórios
+      if (!displayFormData.name || displayFormData.name.trim().length === 0) {
+        toast.error('Nome obrigatório', 'Por favor, preencha o campo nome');
+        return;
+      }
+
       // Validar senha se fornecida
       if (password.new || password.current || password.confirm) {
         if (!password.current) {
-          throw new Error('Digite sua senha atual para alterar a senha');
+          toast.error('Senha atual obrigatória', 'Digite sua senha atual para alterar a senha');
+          return;
         }
-        if (password.new !== password.confirm) {
-          throw new Error('As senhas não coincidem');
+        if (!password.new) {
+          toast.error('Nova senha obrigatória', 'Digite sua nova senha');
+          return;
         }
         if (password.new.length < 6) {
-          throw new Error('A nova senha deve ter pelo menos 6 caracteres');
+          toast.error('Senha muito curta', 'A nova senha deve ter pelo menos 6 caracteres');
+          return;
+        }
+        if (password.new !== password.confirm) {
+          toast.error('Senhas não coincidem', 'A confirmação de senha deve ser igual à nova senha');
+          return;
         }
 
-        await authRemoteRepository.changePassword(
-          password.current,
-          password.new
-        );
+        try {
+          await authRemoteRepository.changePassword(
+            password.current,
+            password.new
+          );
+        } catch (error: any) {
+          toast.handleApiError(error, error?.data?.message || 'Erro ao alterar senha');
+          return;
+        }
       }
 
       // Upload de avatar se houver
       if (avatarFile) {
-        const formDataAvatar = new FormData();
-        formDataAvatar.append('avatar', {
-          uri: Platform.OS === 'ios' ? avatarFile.uri.replace('file://', '') : avatarFile.uri,
-          type: avatarFile.type || 'image/jpeg',
-          name: 'avatar.jpg',
-        } as any);
-        await accountRemoteRepository.uploadAvatar(formDataAvatar);
+        try {
+          const formDataAvatar = new FormData();
+          formDataAvatar.append('avatar', {
+            uri: avatarFile.uri,
+            type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
+            name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
+          } as any);
+          
+          await accountRemoteRepository.uploadAvatar(formDataAvatar);
+        } catch (error: any) {
+          
+          toast.handleApiError(error, error?.data?.message || 'Erro ao fazer upload da foto');
+          return;
+        }
       }
 
-      // Atualizar dados da conta
-      const updateData: Partial<IAccount> = {
-        name: displayFormData.name,
-        email: displayFormData.email,
-        phone_number: displayFormData.phone_number,
-        address: address,
-      };
+      try {
+        const updateData: Partial<IAccount> = {
+          name: displayFormData.name,
+          phone_number: displayFormData.phone_number,
+          address: address,
+        };
 
-      await accountRemoteRepository.updateAccount(updateData as IAccount);
+        await accountRemoteRepository.updateAccount(updateData as IAccount);
+      } catch (error: any) {
+        toast.handleApiError(error, error?.data?.message || 'Erro ao atualizar dados do perfil');
+        return;
+      }
 
       await refreshAccount();
 
-      Toast.show({
-        type: 'success',
-        text1: 'Perfil atualizado com sucesso!',
-        position: 'bottom',
-      });
+      toast.success('Perfil atualizado com sucesso!');
 
       setTimeout(() => {
         navigation.goBack();
       }, 1500);
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao atualizar perfil',
-        text2: error.message || 'Tente novamente mais tarde',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Erro ao atualizar perfil');
     } finally {
       setLoading(false);
     }
@@ -287,14 +305,15 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>E-mail</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.inputDisabled]}
                 placeholder="seu@email.com"
                 placeholderTextColor={COLORS.text + '80'}
                 value={displayFormData.email || ''}
-                onChangeText={(value) => handleInputChange('email', value)}
+                editable={false}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
+              <Text style={styles.disabledHint}>O e-mail não pode ser alterado</Text>
             </View>
 
             <View style={styles.inputWrapper}>
@@ -623,6 +642,16 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontSize: 16,
       borderWidth: 1,
       borderColor: COLORS.primary + '20',
+    },
+    inputDisabled: {
+      backgroundColor: COLORS.tertiary + '80',
+      opacity: 0.6,
+    },
+    disabledHint: {
+      fontSize: 12,
+      color: COLORS.text,
+      marginTop: 4,
+      fontStyle: 'italic',
     },
     row: {
       flexDirection: 'row',

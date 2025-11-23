@@ -5,6 +5,7 @@ import { petRemoteRepository } from '../../../../data/remote/repositories/petRem
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { useTheme } from '../../../../context/ThemeContext';
+import { formatDateOnly } from '../../../../utils/date';
 
 interface AdoptedPetsListProps {
   accountId: string;
@@ -47,7 +48,7 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
           <Image source={pictureRepository.getSource(item?.avatar ?? item?.images?.[0])} style={styles.petImage} />
           <View style={styles.petInfo}>
             <Text style={styles.petName}>{item?.name ?? 'Pet'}</Text>
-            {item?.adoptedAt ? <Text style={styles.petSub}>{new Date(item.adoptedAt).toLocaleDateString()}</Text> : null}
+            {item?.adoptedAt ? <Text style={styles.petSub}>{formatDateOnly(item.adoptedAt)}</Text> : null}
           </View>
         </View>
       )}}

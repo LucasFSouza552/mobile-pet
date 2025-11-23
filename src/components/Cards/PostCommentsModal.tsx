@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Modal, Animated, FlatList, ActivityIndicator, TextInput } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { IComment } from '../../models/IComment';
+import { formatDateTime } from '../../utils/date';
 
 interface PostCommentsModalProps {
 	visible: boolean;
@@ -62,7 +63,7 @@ export default function PostCommentsModal({
 									<View style={styles.commentContent}>
 										<Text style={styles.commentText}>{item.content}</Text>
 										<Text style={styles.commentMeta}>
-											{new Date(item.createdAt).toLocaleString()}
+											{formatDateTime(item.createdAt)}
 										</Text>
 									</View>
 									{isOwner && (

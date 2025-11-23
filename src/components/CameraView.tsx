@@ -4,6 +4,7 @@ import * as ExpoCamera from 'expo-camera';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
 import { useCamera } from '../context/CameraContext';
+import { useToast } from '../hooks/useToast';
 
 interface CameraViewProps {
   visible: boolean;
@@ -18,7 +19,7 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
   const [cameraType, setCameraType] = useState<'back' | 'front'>('back');
   const [flash, setFlash] = useState<'off' | 'on'>('off');
   const cameraRef = useRef<any>(null);
-  
+  const toast = useToast();
   const CameraViewImpl: any = (ExpoCamera as any).CameraView;
   const CameraImpl: any = CameraViewImpl || (ExpoCamera as any).Camera;
 
@@ -50,7 +51,7 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
       onCapture({ uri, name, type });
       onClose();
     } catch (error) {
-      console.error('Erro ao capturar foto:', error);
+      toast.handleApiError(error, error?.data?.message || 'Erro ao capturar foto');
     }
   };
 
@@ -83,10 +84,10 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
           onPress={() => setFlash(prev => (prev === 'off' ? 'on' : 'off'))}
           accessibilityLabel="Alternar flash"
         >
-          <Ionicons 
-            name={flash === 'off' ? 'flash-off' : 'flash'} 
+          <Ionicons
+            name={flash === 'off' ? 'flash-off' : 'flash'}
             size={24} 
-            color={COLORS.text} 
+            color={COLORS.text}
           />
         </TouchableOpacity>
       </View>
@@ -102,7 +103,7 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
 
         <TouchableOpacity 
           onPress={capturePhoto} 
-          accessibilityLabel="Capturar foto" 
+          accessibilityLabel="Capturar foto"
           accessibilityRole="button"
         >
           <View style={styles.captureOuter}>
