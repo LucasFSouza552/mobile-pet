@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Image, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccount } from '../../context/AccountContext';
@@ -7,33 +7,27 @@ import { postRepository } from '../../data/remote/repositories/postRemoteReposit
 import * as ImagePicker from 'expo-image-picker';
 import * as ExpoCamera from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import Toast from 'react-native-toast-message';
+import { Ionicons } from '@expo/vector-icons';
+import { useToast } from '../../hooks/useToast';
+import CameraView from '../../components/CameraView';
 
 export default function NewPost({ navigation }: any) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
   const { account } = useAccount();
   const isFocused = useIsFocused();
+  const toast = useToast();
 
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [images, setImages] = useState<Array<{ uri: string; name: string; type: string }>>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const [cameraType, setCameraType] = useState<'back' | 'front'>('back');
-  const [flash, setFlash] = useState<'off' | 'on'>('off');
-  const cameraRef = useRef<any>(null);
-  const CameraViewImpl: any = (ExpoCamera as any).CameraView;
-  const CameraImpl: any = CameraViewImpl || (ExpoCamera as any).Camera;
 
   useEffect(() => {
     if (isFocused) {
       setImages([]);
       setContent('');
       setSubmitting(false);
-      setCameraType('back');
-      setFlash('off');
-      cameraRef.current = null;
     }
   }, [isFocused]);
 
@@ -42,7 +36,7 @@ export default function NewPost({ navigation }: any) {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permissão', 'Precisamos de acesso às suas fotos para anexar imagens.');
+        toast.info('Permissão necessária', 'Precisamos de acesso às suas fotos para anexar imagens.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -60,7 +54,7 @@ export default function NewPost({ navigation }: any) {
       });
       setImages(prev => [...prev, ...picked]);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível abrir a galeria.');
+      toast.handleError(e, 'Não foi possível abrir a galeria');
     }
   };
 
@@ -71,31 +65,17 @@ export default function NewPost({ navigation }: any) {
         (ExpoCamera as any).Camera?.requestCameraPermissionsAsync;
       const { status } = await (request ? request() : Promise.resolve({ status: 'denied' }));
       if (status !== 'granted') {
-        Alert.alert('Permissão', 'Precisamos de acesso à câmera para tirar fotos.');
+        toast.info('Permissão necessária', 'Precisamos de acesso à câmera para tirar fotos.');
         return;
       }
       setIsCameraOpen(true);
     } catch (e) {
-      Alert.alert('Erro', 'Não foi possível acessar a câmera.');
+      toast.handleError(e, 'Não foi possível acessar a câmera');
     }
   };
 
-
-
-  const capturePhoto = async () => {
-    try {
-      if (!cameraRef.current) return;
-      const photo = await cameraRef.current.takePictureAsync({ quality: 0.8, skipProcessing: false });
-      if (!photo?.uri) return;
-      const uri = photo.uri;
-      const ext = 'jpg';
-      const name = `photo_${Date.now()}.${ext}`;
-      const type = `image/${ext}`;
-      setImages(prev => [...prev, { uri, name, type }]);
-      setIsCameraOpen(false);
-    } catch (e) {
-      Alert.alert('Erro', 'Falha ao capturar a foto.');
-    }
+  const handleCameraCapture = (photo: { uri: string; name: string; type: string }) => {
+    setImages(prev => [...prev, photo]);
   };
 
   const removeImage = (index: number) => {
@@ -104,18 +84,16 @@ export default function NewPost({ navigation }: any) {
 
   const handleSubmit = async () => {
     if (!account) {
-      Alert.alert('Sessão', 'Você precisa estar logado para postar.');
+      toast.error('Sessão expirada', 'Você precisa estar logado para postar.');
       return;
     }
     if (!content.trim() && images.length === 0) {
-      Alert.alert('Validação', 'Adicione conteúdo ou ao menos uma imagem.');
+      toast.error('Validação', 'Adicione conteúdo ou ao menos uma imagem.');
       return;
     }
     try {
       setSubmitting(true);
       const form = new FormData();
-      const derivedTitle = content.trim().slice(0, 50) || 'Post';
-      form.append('title', derivedTitle);
       form.append('content', content.trim());
       images.forEach((img) => {
 
@@ -129,20 +107,10 @@ export default function NewPost({ navigation }: any) {
       await postRepository.createPost(form);
       setContent('');
       setImages([]);
-      Toast.show({
-        type: 'success',
-        text1: 'Sucesso',
-        text2: 'Post criado!',
-        position: 'bottom',
-      });
+      toast.success('Sucesso', 'Post criado!');
       navigation.navigate('Community');
     } catch (error: any) {
-      const message = error?.message || 'Erro desconhecido';
-      Toast.show({
-        type: 'info',
-        text1: message,
-        position: 'bottom',
-      });
+      toast.handleApiError(error, 'Erro ao criar post');
     } finally {
       setSubmitting(false);
     }
@@ -197,18 +165,26 @@ export default function NewPost({ navigation }: any) {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.imagesRow}
                 >
-                  {images.map((img, idx) => (
-                    <View key={`${img.uri}-${idx}`} style={styles.imageItem}>
-                      <Image source={{ uri: img.uri }} style={styles.preview} />
-                      <TouchableOpacity
-                        style={styles.removeImgBtn}
-                        onPress={() => removeImage(idx)}
-                        activeOpacity={0.8}
-                      >
-                        <Ionicons name="close-circle" size={24} color="#fff" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
+                  {images.map((img, idx) => {
+                    const imageUri = img.uri;
+
+                    return (
+                      <View key={`${imageUri}-${idx}`} style={styles.imageItem}>
+                        <Image 
+                          source={{ uri: imageUri }} 
+                          style={styles.preview}
+                          resizeMode="cover"
+                        />
+                        <TouchableOpacity
+                          style={styles.removeImgBtn}
+                          onPress={() => removeImage(idx)}
+                          activeOpacity={0.8}
+                        >
+                          <Ionicons name="close-circle" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
                 </ScrollView>
               )}
 
@@ -258,59 +234,11 @@ export default function NewPost({ navigation }: any) {
         </View>
       </ScrollView>
 
-      {isCameraOpen && (
-        <View style={styles.cameraOverlay}>
-          {CameraImpl ? (
-            <CameraImpl
-              ref={(r: any) => (cameraRef.current = r)}
-              style={styles.cameraPreview}
-              {...(CameraViewImpl
-                ? { facing: cameraType, enableTorch: flash === 'on' }
-                : { type: cameraType })}
-            />
-          ) : (
-            <View style={[styles.cameraPreview, { alignItems: 'center', justifyContent: 'center' }]}>
-              <Text style={styles.roundBtnText}>Câmera indisponível</Text>
-            </View>
-          )}
-
-          <View style={styles.cameraTopBar}>
-            <TouchableOpacity
-              style={styles.roundBtn}
-              onPress={() => {
-                setIsCameraOpen(false);
-              }}
-              accessibilityLabel="Fechar câmera"
-            >
-              <Ionicons name="close" size={24} color={COLORS.text} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.roundBtn}
-              onPress={() => setFlash(prev => (prev === 'off' ? 'on' : 'off'))}
-              accessibilityLabel="Alternar flash"
-            >
-              <Ionicons name={flash === 'off' ? 'flash-off' : 'flash'} size={24} color={COLORS.text} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.cameraBottomBar}>
-            <TouchableOpacity
-              style={styles.roundBtn}
-              onPress={() => setCameraType(prev => (prev === 'back' ? 'front' : 'back'))}
-            >
-              <MaterialIcons name="flip-camera-android" size={50} color={COLORS.text} />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={capturePhoto} accessibilityLabel="Capturar foto" accessibilityRole="button">
-              <View style={styles.captureOuter}>
-                <View style={styles.captureInner} />
-              </View>
-            </TouchableOpacity>
-
-            <View style={{ width: 74 }} />
-          </View>
-        </View>
-      )}
+      <CameraView
+        visible={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={handleCameraCapture}
+      />
     </SafeAreaView>
   );
 }
@@ -346,60 +274,6 @@ function makeStyles(COLORS: any) {
     },
     placeholder: {
       width: 40,
-    },
-    cameraOverlay: {
-      position: 'absolute',
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
-      backgroundColor: 'black',
-      zIndex: 1000,
-    },
-    cameraPreview: {
-      ...StyleSheet.absoluteFillObject,
-    },
-    cameraTopBar: {
-      position: 'absolute',
-      top: 24,
-      left: 16,
-      right: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    cameraBottomBar: {
-      position: 'absolute',
-      bottom: 32,
-      left: 16,
-      right: 16,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-    },
-    roundBtn: {
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 20,
-    },
-    roundBtnText: {
-      color: COLORS.text,
-      fontWeight: '700',
-    },
-    captureOuter: {
-      width: 74,
-      height: 74,
-      borderRadius: 37,
-      borderWidth: 4,
-      borderColor: COLORS.text,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    captureInner: {
-      width: 58,
-      height: 58,
-      borderRadius: 29,
-      backgroundColor: COLORS.text,
     },
     header: {
       color: COLORS.text,
@@ -487,6 +361,7 @@ function makeStyles(COLORS: any) {
       height: 120,
       borderRadius: 12,
       backgroundColor: COLORS.quarternary,
+      resizeMode: 'cover',
     },
     imagesContainer: {
       marginTop: 8,

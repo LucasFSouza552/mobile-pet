@@ -18,10 +18,8 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
 
   const load = async () => {
     try {
-      console.log('loading');
       setLoading(true);
       const data = await petRemoteRepository.getAdoptedPetsByAccount(accountId);
-      console.log(data);
       setItems(Array.isArray(data) ? data : []);
     } catch {
       setItems([]);
@@ -43,7 +41,8 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
       refreshing={loading}
       onRefresh={load}
       ListEmptyComponent={!loading ? <Text style={styles.emptyText}>Nenhum pet adotado ainda.</Text> : null}
-      renderItem={({ item }) => (
+      renderItem={({ item }) => {
+        return (
         <View style={styles.petCard}>
           <Image source={pictureRepository.getSource(item?.avatar ?? item?.images?.[0])} style={styles.petImage} />
           <View style={styles.petInfo}>
@@ -51,7 +50,7 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
             {item?.adoptedAt ? <Text style={styles.petSub}>{new Date(item.adoptedAt).toLocaleDateString()}</Text> : null}
           </View>
         </View>
-      )}
+      )}}
       contentContainerStyle={items.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
     />
   );

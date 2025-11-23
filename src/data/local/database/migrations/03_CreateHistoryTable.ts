@@ -8,7 +8,7 @@ export default async function createHistoryTable() {
             id TEXT PRIMARY KEY,
             type TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT 'pending',
-            pet TEXT,
+            pet TEXT REFERENCES pets(id),
             institution TEXT,
             account TEXT NOT NULL,
             amount TEXT,

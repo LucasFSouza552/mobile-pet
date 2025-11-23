@@ -2,7 +2,7 @@ import * as React from 'react';
 import { createMaterialTopTabNavigator, } from '@react-navigation/material-top-tabs';
 import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import Profile from './profile/profile';
-import Donate from './donate';
+import Donate from './donation/donate';
 import FindPets from './findPets';
 import Community from './community';
 import { useTheme } from '../../context/ThemeContext';
@@ -10,6 +10,7 @@ import NewPost from './newPost';
 import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccount } from '../../context/AccountContext';
+import { useCamera } from '../../context/CameraContext';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -25,7 +26,8 @@ export default function Main() {
 
   const { COLORS } = useTheme();
   const insets = useSafeAreaInsets();
-  
+  const { isCameraOpen } = useCamera();
+
   return (
     <Tab.Navigator
       initialRouteName='Profile'
@@ -36,7 +38,11 @@ export default function Main() {
         swipeEnabled: true,
         tabBarActiveTintColor: '#f2f2f2',
         tabBarInactiveTintColor: COLORS.primary,
-        tabBarStyle: { 
+        tabBarStyle: isCameraOpen ? { 
+          display: 'none',
+          height: 0,
+          opacity: 0,
+        } : { 
           backgroundColor: COLORS.secondary,
           paddingBottom: insets.bottom,
         },
@@ -57,10 +63,13 @@ export default function Main() {
         name="NewPost"
         component={NewPost}
         options={{
-          tabBarStyle: { 
+          tabBarStyle: isCameraOpen ? {
+            display: 'none',
+            height: 0,
+            opacity: 0,
+          } : {
             backgroundColor: COLORS.secondary,
             paddingBottom: insets.bottom,
-            height: 40 + insets.bottom,
           },
         }}
       />

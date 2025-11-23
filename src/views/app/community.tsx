@@ -1,10 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, NativeSyntheticEvent, NativeScrollEvent, ScrollView, ActivityIndicator } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import PostList from '../../components/Cards/PostList';
+import TopPostCard from '../../components/Cards/TopPostCard';
 import { usePost } from '../../context/PostContext';
 import { useAccount } from '../../context/AccountContext';
 import { useFocusEffect } from '@react-navigation/native';
+import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
+import { IPost } from '../../models/IPost';
+import { useToast } from '../../hooks/useToast';
 
 interface CommunityPageProps {
   navigation: any;
@@ -14,24 +18,14 @@ export default function Community({ navigation }: CommunityPageProps) {
 
   const { posts, fetchMore, refresh, loading: postsLoading } = usePost();
   const { account, loading } = useAccount();
-  const [showTopics, setShowTopics] = useState(false);
+  const toast = useToast();
   const [showAlertButton, setShowAlertButton] = useState(true);
+  const [topPosts, setTopPosts] = useState<IPost[]>([]);
+  const [loadingTopPosts, setLoadingTopPosts] = useState(false);
+  const [postOptions, setPostOptions] = useState<string>('');
+  const [postAbout, setPostAbout] = useState<string>('');
   const scrollOffset = useRef(0);
   const isInstitution = account?.role === 'institution';
-
-  const communities = [
-    { name: 'Amicão', icon: 'paw' },
-    { name: 'Gato Feliz', icon: 'paw' },
-    { name: 'SOS Pets', icon: 'paw' },
-  ];
-
-  const topics = [
-    'Adoção e Resgate',
-    'Saúde e Bem-estar',
-    'Adestramento',
-    'Cuidados Diários',
-    'Produtos e Serviços',
-  ];
 
   useEffect(() => {
     if (!loading && !account) {
@@ -39,9 +33,23 @@ export default function Community({ navigation }: CommunityPageProps) {
     }
   }, [loading, account, navigation]);
 
+  const loadTopPosts = async () => {
+    try {
+      setLoadingTopPosts(true);
+      const data = await postRepository.fetchTopPosts();
+      console.log(data);
+      setTopPosts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      toast.handleApiError(error, 'Erro ao carregar posts populares');
+    } finally {
+      setLoadingTopPosts(false);
+    }
+  };
+
   useFocusEffect(
-    React.useCallback(() => {
+    useCallback(() => {
       refresh();
+      loadTopPosts();
     }, [])
   );
 
@@ -56,15 +64,17 @@ export default function Community({ navigation }: CommunityPageProps) {
       return;
     }
     if (offsetY > scrollOffset.current + threshold) {
-      if (showAlertButton) {
-        setShowAlertButton(false);
-      }
+      setShowAlertButton(false);
     } else if (offsetY < scrollOffset.current - threshold) {
-      if (!showAlertButton) {
-        setShowAlertButton(true);
-      }
+      setShowAlertButton(true);
     }
     scrollOffset.current = offsetY;
+  };
+
+  const handleAbout = (postId?: string) => {
+    const isSamePost = postAbout === postId ? '' : postId || '';
+    setPostAbout(isSamePost);
+    setPostOptions('');
   };
 
   return (
@@ -74,37 +84,47 @@ export default function Community({ navigation }: CommunityPageProps) {
           <FontAwesome name="paw" size={24} color="#fff" />
           <Text style={styles.headerTitle}>Comunidade PetAmigo</Text>
         </View>
-        <TouchableOpacity
-          style={styles.headerIconButton}
-          onPress={() => setShowTopics(prev => !prev)}
-          accessibilityLabel="Abrir menu de assuntos"
-        >
-          <FontAwesome name="bars" size={22} color="#fff" />
-        </TouchableOpacity>
       </View>
 
-      {showTopics && (
-        <>
-          <TouchableOpacity style={styles.menuOverlay} activeOpacity={1} onPress={() => setShowTopics(false)} />
-          <View style={styles.menuContainer}>
-            <Text style={styles.menuTitle}>Assuntos</Text>
-            {topics.map((topic, i) => (
-              <TouchableOpacity key={i} style={styles.menuItem}>
-                <Text style={styles.menuItemText}>{topic}</Text>
-                <FontAwesome name="chevron-right" size={14} color="#B648A0" />
-              </TouchableOpacity>
-            ))}
+      {topPosts.length > 0 && (
+        <View style={styles.topPostsSection}>
+          <View style={styles.topPostsHeader}>
+            <FontAwesome name="fire" size={20} color="#B648A0" />
+            <Text style={styles.topPostsTitle}>Posts em Destaque</Text>
           </View>
-        </>
+          {loadingTopPosts ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#B648A0" />
+            </View>
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.topPostsScroll}
+            >
+              {topPosts.map((post, index) => (
+                <TopPostCard
+                  key={post.id}
+                  post={post}
+                  index={index}
+                  onPress={() => {
+                    handleAbout(post.id);
+                  }}
+                />
+              ))}
+            </ScrollView>
+          )}
+        </View>
       )}
+
       <View style={styles.listContainer}>
-        <PostList 
-          title="Comunidade" 
-          posts={posts} 
-          account={account} 
-          onEndReached={fetchMore} 
-          onRefresh={refresh} 
-          refreshing={postsLoading} 
+        <PostList
+          title="Comunidade"
+          posts={posts}
+          account={account}
+          onEndReached={fetchMore}
+          onRefresh={refresh}
+          refreshing={postsLoading}
           onScroll={handleScroll}
         />
       </View>
@@ -149,10 +169,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#B648A0',
+    color: '#fff',
     fontSize: 18,
     fontWeight: '700',
     marginLeft: 10,
+  },
+  topPostsSection: {
+    width: '100%',
+    paddingVertical: 12,
+  },
+  topPostsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 12,
+    gap: 8,
+  },
+  topPostsTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  topPostsScroll: {
+    paddingHorizontal: 12,
+    gap: 12,
+  },
+  topPostCard: {
+    width: '100%',
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   headerIconButton: {
     padding: 6,

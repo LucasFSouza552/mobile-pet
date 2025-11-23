@@ -1,6 +1,8 @@
 import { getLocalDb } from "../database/LocalDb";
 import { IHistory } from "../../../models/IHistory";
 import { SQLiteBindValue } from "expo-sqlite";
+import { IPet } from "../../../models/IPet";
+import { petLocalRepository } from "./petLocalRepository";
 
 function buildSqlValues<T>(values: Partial<T>) {
     const Interrogations = Object.keys(values).map(() => `?`).join(', ');
@@ -17,143 +19,204 @@ function buildSqlValues<T>(values: Partial<T>) {
     }
 }
 
-const normalizeRef = (value: any): string | null => {
-    if (!value) return null;
-    if (typeof value === "string") return value;
-    if (typeof value === "object") {
-        return value.id ?? value._id ?? null;
-    }
-    return null;
-};
 
-const normalizeAccountRef = (value: any): string | undefined => {
-    if (value === undefined || value === null) return undefined;
-    if (typeof value === "string") return value;
-    return normalizeRef(value) ?? undefined;
-};
-
-const normalizeOptionalStringRef = (value: any): string | undefined => {
-    if (value === undefined) return undefined;
-    return normalizeRef(value) ?? undefined;
-};
-
-const normalizeOptionalNullableRef = (value: any): string | null | undefined => {
-    if (value === undefined) return undefined;
-    return normalizeRef(value);
-};
-
-const normalizeHistory = (history: IHistory) => {
+const normalizeHistoryForDb = (history: IHistory) => {
     const now = new Date().toISOString();
     return {
         ...history,
-        account: normalizeAccountRef((history as any).account) ?? history.account,
-        institution: normalizeOptionalStringRef((history as any).institution),
-        pet: normalizeOptionalNullableRef((history as any).pet) ?? null,
+        account: typeof history.account === 'string' 
+            ? history.account 
+            : (history.account as any)?.id ?? history.account,
+        institution: history.institution ?? null,
+        pet: typeof history.pet === 'string' 
+            ? history.pet 
+            : (history.pet as unknown as IPet)?.id ?? null,
         amount: history.amount ?? null,
         externalReference: history.externalReference ?? null,
         createdAt: history.createdAt ?? now,
         updatedAt: history.updatedAt ?? now,
-        lastSyncedAt: history.lastSyncedAt ?? now,
+        lastSyncedAt: history.lastSyncedAt ?? null,
+    };
+};
+
+
+const normalizePetFromDb = (row: any): IPet | null => {
+    if (!row.pet_id) return null;
+
+    return {
+        id: row.pet_id,
+        name: row.pet_name,
+        type: row.pet_type,
+        age: row.pet_age ?? undefined,
+        gender: row.pet_gender,
+        weight: row.pet_weight,
+        images: row.pet_images 
+            ? (row.pet_images as string).split(',').filter((url: string) => url.length > 0)
+            : [],
+        description: row.pet_description ?? undefined,
+        adopted: Boolean(row.pet_adopted),
+        account: row.pet_account as any,
+        adoptedAt: row.pet_adoptedAt ?? undefined,
+        createdAt: row.pet_createdAt,
+        updatedAt: row.pet_updatedAt,
+        lastSyncedAt: row.pet_lastSyncedAt ?? undefined,
+    };
+};
+
+
+const normalizeHistory = (row: any): IHistory => {
+    return {
+        id: row.id,
+        type: row.type,
+        status: row.status ?? undefined,
+        pet: row.pet_id ? normalizePetFromDb(row) : (row.pet ?? null),
+        institution: row.institution ?? undefined,
+        account: row.account,
+        amount: row.amount ?? undefined,
+        externalReference: row.externalReference ?? null,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        lastSyncedAt: row.lastSyncedAt ?? undefined,
     };
 };
 
 export const historyLocalRepository = {
     getAll: async (): Promise<IHistory[]> => {
         const db = await getLocalDb();
-        const history = await db.getAllAsync("SELECT * FROM history");
-        return history as IHistory[];
+        const results = await db.getAllAsync("SELECT * FROM history") as any[];
+        return results.map(normalizeHistory);
     },
 
     getById: async (id: string): Promise<IHistory | null> => {
         const db = await getLocalDb();
-        const history = await db.getFirstAsync("SELECT * FROM history WHERE id = ?", [id]);
-        return history as IHistory ?? null;
+        const result = await db.getFirstAsync(
+            `
+            SELECT 
+                h.*,
+                p.id as pet_id,
+                p.name as pet_name,
+                p.type as pet_type,
+                p.age as pet_age,
+                p.gender as pet_gender,
+                p.weight as pet_weight,
+                p.description as pet_description,
+                p.adopted as pet_adopted,
+                p.account as pet_account,
+                p.adoptedAt as pet_adoptedAt,
+                p.createdAt as pet_createdAt,
+                p.updatedAt as pet_updatedAt,
+                p.lastSyncedAt as pet_lastSyncedAt,
+                GROUP_CONCAT(pi.url ORDER BY pi.createdAt ASC) as pet_images
+            FROM history h
+            LEFT JOIN pets p ON h.pet = p.id
+            LEFT JOIN pet_images pi ON pi.pet = p.id
+            WHERE h.id = ?
+            GROUP BY h.id
+            `,
+            [id]
+        ) as any;
+
+        return result ? normalizeHistory(result) : null;
     },
 
     getByAccount: async (accountId: string): Promise<IHistory[]> => {
         const db = await getLocalDb();
-        const history = await db.getAllAsync("SELECT * FROM history WHERE account = ? ORDER BY createdAt DESC", [accountId]);
-        return history as IHistory[];
+        const results = await db.getAllAsync(
+            `
+            SELECT 
+                h.*,
+                p.id as pet_id,
+                p.name as pet_name,
+                p.type as pet_type,
+                p.age as pet_age,
+                p.gender as pet_gender,
+                p.weight as pet_weight,
+                p.description as pet_description,
+                p.adopted as pet_adopted,
+                p.account as pet_account,
+                p.adoptedAt as pet_adoptedAt,
+                p.createdAt as pet_createdAt,
+                p.updatedAt as pet_updatedAt,
+                p.lastSyncedAt as pet_lastSyncedAt,
+                GROUP_CONCAT(pi.url ORDER BY pi.createdAt ASC) as pet_images
+            FROM history h
+            LEFT JOIN pets p ON h.pet = p.id
+            LEFT JOIN pet_images pi ON pi.pet = p.id
+            WHERE h.account = ?
+            GROUP BY h.id
+            ORDER BY h.createdAt DESC
+            `,
+            [accountId]
+        ) as any[];
+
+        return results.map(normalizeHistory);
     },
 
     create: async (history: IHistory): Promise<void> => {
         const db = await getLocalDb();
-        const clean = normalizeHistory(history);
-        await db.runAsync(
-            `
-            INSERT INTO history (
-                id, type, status, pet, institution, account, 
-                amount, externalReference, createdAt, updatedAt, lastSyncedAt
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-                type = excluded.type,
-                status = excluded.status,
-                pet = excluded.pet,
-                institution = excluded.institution,
-                account = excluded.account,
-                amount = excluded.amount,
-                externalReference = excluded.externalReference,
-                updatedAt = excluded.updatedAt,
-                lastSyncedAt = excluded.lastSyncedAt
-            `,
-            [
-                clean.id,
-                clean.type,
-                clean.status ?? 'pending',
-                clean.pet ?? null,
-                clean.institution ?? null,
-                clean.account,
-                clean.amount ?? null,
-                clean.externalReference ?? null,
-                clean.createdAt,
-                clean.updatedAt,
-                clean.lastSyncedAt ?? null
-            ]
-        );
+        const clean = normalizeHistoryForDb(history);
+        
+        // Salva o pet se vier como objeto completo
+        if (history.pet && typeof history.pet === 'object' && history.pet.id) {
+            try {
+                await petLocalRepository.create(history.pet as IPet);
+            } catch (error) {
+                console.error("Erro ao salvar pet do histórico:", error);
+            }
+        }
+        
+        try {
+            await db.runAsync(
+                `
+                INSERT INTO history (
+                    id, type, status, pet, institution, account,
+                    amount, externalReference, createdAt, updatedAt, lastSyncedAt
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    type = excluded.type,
+                    status = excluded.status,
+                    pet = excluded.pet,
+                    institution = excluded.institution,
+                    account = excluded.account,
+                    amount = excluded.amount,
+                    externalReference = excluded.externalReference,
+                    updatedAt = excluded.updatedAt,
+                    lastSyncedAt = excluded.lastSyncedAt
+                `,
+                [
+                    clean.id,
+                    clean.type,
+                    clean.status ?? 'pending',
+                    clean.pet,
+                    clean.institution?.id ?? null,
+                    clean.account,
+                    clean.amount,
+                    clean.externalReference,
+                    clean.createdAt,
+                    clean.updatedAt,
+                    clean.lastSyncedAt
+                ]
+            );
+
+        } catch (error) {
+            console.error("Erro ao criar/atualizar histórico:", error);
+            throw error;
+        }
     },
 
     update: async (id: string, history: Partial<IHistory>): Promise<void> => {
         const db = await getLocalDb();
 
-        // if (history.type !== undefined) {
-        //     updates.push("type = ?");
-        //     values.push(history.type);
-        // }
-        // if (history.status !== undefined) {
-        //     updates.push("status = ?");
-        //     values.push(history.status);
-        // }
-        // if (history.pet !== undefined) {
-        //     updates.push("pet = ?");
-        //     values.push(history.pet);
-        // }
-        // if (history.institution !== undefined) {
-        //     updates.push("institution = ?");
-        //     values.push(history.institution);
-        // }
-        // if (history.amount !== undefined) {
-        //     updates.push("amount = ?");
-        //     values.push(history.amount);
-        // }
-        // if (history.externalReference !== undefined) {
-        //     updates.push("externalReference = ?");
-        //     values.push(history.externalReference);
-        // }
-        // if (history.updatedAt !== undefined) {
-        //     updates.push("updatedAt = ?");
-        //     values.push(history.updatedAt);
-        // }
-        // if (history.lastSyncedAt !== undefined) {
-        //     updates.push("lastSyncedAt = ?");
-        //     values.push(history.lastSyncedAt);
-        // }
-
-        const normalized: Partial<IHistory> = {
+        const normalized: any = {
             ...history,
-            account: normalizeAccountRef(history.account),
-            institution: normalizeOptionalStringRef(history.institution),
-            pet: normalizeOptionalNullableRef(history.pet),
+            account: typeof history.account === 'string' 
+                ? history.account 
+                : (history.account as any)?.id ?? history.account,
+            institution: history.institution ?? null,
+            pet: typeof history.pet === 'string' 
+                ? history.pet 
+                : (history.pet as unknown as IPet)?.id ?? history.pet ?? null,
         };
 
         const { interrogations, values: sqlValues } = buildSqlValues(normalized);
@@ -161,10 +224,16 @@ export const historyLocalRepository = {
             return;
         }
 
-        await db.runAsync(
-            `UPDATE history SET ${interrogations} WHERE id = ?`,
-            [...sqlValues, id]
-        );
+        try {
+            await db.runAsync(
+                `UPDATE history SET ${interrogations} WHERE id = ?`,
+                [...sqlValues, id]
+            );
+
+        } catch (error) {
+            console.error("Erro ao atualizar histórico:", error);
+            throw error;
+        }
     },
 
     delete: async (id: string): Promise<void> => {

@@ -1,10 +1,22 @@
-import React, { useCallback, useState } from 'react';
-import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState, useRef } from 'react';
+import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountPetInteractionSync } from '../../../../data/sync/accountPetInteractionSync';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { useTheme } from '../../../../context/ThemeContext';
+
+const getImageSource = (imageId?: string | null): ImageSourcePropType => {
+  if (!imageId) {
+    return pictureRepository.getSource(undefined);
+  }
+
+  if (typeof imageId === 'string' && (imageId.startsWith('file://') || imageId.startsWith('/'))) {
+    return { uri: imageId };
+  }
+
+  return pictureRepository.getSource(imageId);
+};
 
 interface WishlistPetsListProps {
   accountId: string;
@@ -16,46 +28,76 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
   const styles = makeStyles(COLORS);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const loadingRef = useRef(false);
+  const lastAccountIdRef = useRef<string | null>(null);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    if (loadingRef.current) {
+      return;
+    }
+
     try {
+      loadingRef.current = true;
       setLoading(true);
       const interactions = await accountPetInteractionSync.getByAccount(accountId);
-      const filtered = interactions.filter((interaction: any) => {
-        const status = String(interaction?.status ?? "").toLowerCase();
-        const allowed = status === "" || status === "liked" || status === "pending" || status === "requested";
-        if (!allowed) return false;
-        const petData = interaction?.pet;
-        if (petData && typeof petData === "object") {
-          return !petData?.adopted;
+      
+      const petsMap = new Map<string, any>();
+      
+      interactions.forEach((interaction: any) => {
+        const status = String(interaction?.status ?? "").toLowerCase().trim();
+        if (status !== "liked") {
+          return;
         }
-        return true;
+        
+        const petData = interaction?.pet;
+        
+        if (!petData || typeof petData !== "object" || !petData?.id) {
+          return;
+        }
+        
+        if (petData.adopted === true || petData.adopted === 1) {
+          return;
+        }
+        
+        if (!petsMap.has(petData.id)) {
+          petsMap.set(petData.id, petData);
+        }
       });
-      const pets = filtered
-        .map(interaction => (typeof interaction?.pet === "object" ? interaction.pet : null))
-        .filter(Boolean);
-      setItems(pets as any[]);
+      
+      const uniquePets = Array.from(petsMap.values());
+
+      setItems(uniquePets);
     } catch {
       setItems([]);
     } finally {
       setLoading(false);
+      loadingRef.current = false;
     }
-  };
+  }, [accountId]);
 
   useFocusEffect(
     useCallback(() => {
-      load();
-    }, [accountId])
+      if (lastAccountIdRef.current !== accountId) {
+        lastAccountIdRef.current = accountId;
+        load();
+      }
+    }, [accountId, load])
   );
 
-
-
   return (
+    <View style={{ flex: 1 }}>
     <FlatList
       data={items}
-      keyExtractor={(item: any, index) => String(item?.id ?? index)}
+      keyExtractor={(item: any, index) => {
+        const id = item?.id;
+        if (id) {
+          return String(id);
+        }
+        return `pet-${index}`;
+      }}
       refreshing={loading}
       onRefresh={load}
+      showsVerticalScrollIndicator={false}
       ListEmptyComponent={
         !loading ? (
           <View style={styles.emptyBox}>
@@ -66,46 +108,53 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
           </View>
         ) : null
       }
-      renderItem={({ item }) => (
-        <View style={styles.petCard}>
-          <Image source={pictureRepository.getSource(item?.avatar ?? item?.images?.[0])} style={styles.petImage} />
-          <View style={styles.petInfo}>
-            <Text style={styles.petName}>{item?.name ?? 'Pet'}</Text>
-            <View style={styles.badgesRow}>
-              {!!item?.type && (
-                <View style={[styles.badge, { backgroundColor: COLORS.primary }]}>
-                  <Text style={styles.badgeText}>{String(item.type)}</Text>
-                </View>
-              )}
-              {!!item?.gender && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>
-                    {String(item.gender).toLowerCase() === 'female' ? 'Fêmea' :
-                     String(item.gender).toLowerCase() === 'male' ? 'Macho' : String(item.gender)}
-                  </Text>
-                </View>
-              )}
-              {typeof item?.age === 'number' && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{item.age} ano{item.age === 1 ? '' : 's'}</Text>
-                </View>
-              )}
-              {!!item?.weight && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{item.weight} kg</Text>
-                </View>
+      renderItem={({ item }) => {
+        const firstImage = item?.images?.[0];
+        const imageSource = getImageSource(firstImage);
+
+        return (
+          <View style={styles.petCard}>
+            <View style={styles.imageContainer}>
+              <Image source={imageSource} style={styles.petImage} />
+            </View>
+            <View style={styles.petInfo}>
+              <Text style={styles.petName}>{item?.name ?? 'Pet'}</Text>
+              <View style={styles.badgesRow}>
+                {!!item?.type && (
+                  <View style={[styles.badge, { backgroundColor: COLORS.primary }]}>
+                    <Text style={styles.badgeText}>{String(item.type)}</Text>
+                  </View>
+                )}
+                {!!item?.gender && (
+                  <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
+                    <Text style={[styles.badgeText, { color: COLORS.primary }]}>
+                      {String(item.gender).toLowerCase() === 'female' ? 'Fêmea' :
+                        String(item.gender).toLowerCase() === 'male' ? 'Macho' : String(item.gender)}
+                    </Text>
+                  </View>
+                )}
+                {typeof item?.age === 'number' && (
+                  <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
+                    <Text style={[styles.badgeText, { color: COLORS.primary }]}>{item.age} ano{item.age === 1 ? '' : 's'}</Text>
+                  </View>
+                )}
+                {!!item?.weight && (
+                  <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
+                    <Text style={[styles.badgeText, { color: COLORS.primary }]}>{item.weight} kg</Text>
+                  </View>
+                )}
+              </View>
+              {!!item?.description && (
+                <Text style={styles.description} numberOfLines={2}>
+                  {item.description}
+                </Text>
               )}
             </View>
-            {!!item?.description && (
-              <Text style={styles.description} numberOfLines={2}>
-                {item.description}
-              </Text>
-            )}
           </View>
-        </View>
-      )}
-      contentContainerStyle={items.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
+        )
+      }}
     />
+    </View>
   );
 }
 
@@ -115,46 +164,69 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: COLORS.tertiary,
-      padding: 10,
-      borderRadius: 12,
-      marginBottom: 10,
-      gap: 10,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      marginHorizontal: 16,
+      gap: 16,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.1,
+      shadowRadius: 4,
+      elevation: 3,
+    },
+    imageContainer: {
+      borderRadius: 14,
+      overflow: 'hidden',
+      backgroundColor: COLORS.bg,
+      shadowColor: '#000',
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    petImage: {
+      width: 80,
+      height: 80,
+      borderRadius: 14,
+    },
+    petInfo: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    petName: {
+      fontWeight: '700',
+      fontSize: 18,
+      color: COLORS.text,
+      marginBottom: 8,
     },
     badgesRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 6,
-      marginTop: 4,
-      marginBottom: 4,
+      gap: 8,
+      marginBottom: 8,
     },
     badge: {
-      borderRadius: 12,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
     },
     badgeText: {
       color: COLORS.bg,
-      fontWeight: '700',
-      fontSize: 12,
-    },
-    petImage: {
-      width: 60,
-      height: 60,
-      borderRadius: 10,
-      backgroundColor: COLORS.bg,
-    },
-    petInfo: {
-      flex: 1,
-    },
-    petName: {
-      fontWeight: '700',
-      color: COLORS.text,
-      marginBottom: 2,
+      fontWeight: '600',
+      fontSize: 11,
     },
     description: {
       color: COLORS.text,
-      opacity: 0.9,
-      fontSize: 12,
+      opacity: 0.7,
+      fontSize: 13,
+      lineHeight: 18,
     },
     petSub: {
       color: COLORS.text,

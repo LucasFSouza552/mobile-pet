@@ -4,7 +4,7 @@ import { IHistory } from "../../../models/IHistory";
 export const historyRemoteRepository = {
     async getByAccount(accountId: string): Promise<IHistory[]> {
         try {
-            const response = await apiClient.get(`/history/account/${accountId}`);
+            const response = await apiClient.get(`/history/profile/me`);
             return response.data;
         } catch (error) {
             console.error(`Erro ao buscar histórico da conta ${accountId}:`, error);

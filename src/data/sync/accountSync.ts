@@ -1,7 +1,7 @@
 import NetInfo from "@react-native-community/netinfo";
-import { accountLocalRepository } from "../local/repositories/accountLocalRepository";
-import { accountRemoteRepository } from "../remote/repositories/accountRemoteRepository";
 import { IAccount } from "../../models/IAccount";
+import { accountRemoteRepository } from "../remote/repositories/accountRemoteRepository";
+import { accountLocalRepository } from "../local/repositories/accountLocalRepository";
 
 export const accountSync = {
 
@@ -14,17 +14,15 @@ export const accountSync = {
         }
 
         try {
-            console.log("Sincronizando contas...");
             const account = await accountRemoteRepository.getProfile();
             if (!account) {
 
                 return;
             }
-            console.log("Conta encontrada:", account);
             await accountLocalRepository.create(account);
         } catch (error: any) {
 
-            const status = error?.response?.status;
+            const status = error?.status;
             if (status === 401 || status === 403) {
                 await accountLocalRepository.logout();
                 return;
@@ -69,17 +67,15 @@ export const accountSync = {
                 }
                 return localAccount ?? null;
             } catch (error: any) {
-                const status = error?.response?.status;
+                const status = error?.status;
                 if (status === 401 || status === 403) {
                     await accountLocalRepository.logout();
                     return null;
                 }
                 return localAccount ?? null;
             }
-            return null;
         } catch (error) {
-            console.error("Erro ao buscar do servidor:", error);
-            return null;
+            throw error;
         }
     },
 
@@ -104,7 +100,7 @@ export const accountSync = {
             return remoteAccount;
         } catch (error) {
             console.error("Erro ao buscar do servidor:", error);
+            throw error;
         }
-        return null;
     },
 };

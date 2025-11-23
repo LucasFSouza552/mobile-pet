@@ -1,5 +1,8 @@
+import { accountPetInteractionSync } from "./../../sync/accountPetInteractionSync";
 import { getLocalDb } from "../database/LocalDb";
 import { IAccountPetInteraction } from "../../../models/IAccountPetInteraction";
+import { petLocalRepository } from "./petLocalRepository";
+import { IPet } from "../../../models/IPet";
 
 export const accountPetInteractionLocalRepository = {
     getAll: async (): Promise<IAccountPetInteraction[]> => {
@@ -43,39 +46,64 @@ export const accountPetInteractionLocalRepository = {
 
     create: async (interaction: IAccountPetInteraction): Promise<void> => {
         const db = await getLocalDb();
-        const existing = await db.getFirstAsync(
-            "SELECT id FROM account_pet_interactions WHERE id = ?",
-            [interaction.id]
-        );
+        
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const existing = await db.getFirstAsync(
+                    "SELECT id FROM account_pet_interactions WHERE id = ?",
+                    [interaction.id]
+                );
 
-        if (existing) {
-            await db.runAsync(
-                `UPDATE account_pet_interactions
-                 SET account = ?, pet = ?, status = ?, updatedAt = ?
-                 WHERE id = ?`,
-                [
-                    interaction.account,
-                    typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
-                    interaction.status,
-                    interaction.updatedAt,
-                    interaction.id
-                ]
-            );
-        } else {
-            await db.runAsync(
-                `INSERT INTO account_pet_interactions (
-                    id, account, pet, status, createdAt, updatedAt
-                )
-                VALUES (?, ?, ?, ?, ?, ?)`,
-                [
-                    interaction.id,
-                    interaction.account,
-                    typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
-                    interaction.status,
-                    interaction.createdAt,
-                    interaction.updatedAt
-                ]
-            );
+                if (existing) {
+                    await db.runAsync(
+                        `UPDATE account_pet_interactions
+                         SET account = ?, pet = ?, status = ?, updatedAt = ?
+                         WHERE id = ?`,
+                        [
+                            interaction.account,
+                            typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
+                            interaction.status,
+                            interaction.updatedAt,
+                            interaction.id
+                        ]
+                    );
+                } else {
+                    await db.runAsync(
+                        `INSERT INTO account_pet_interactions (
+                            id, account, pet, status, createdAt, updatedAt
+                        )
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+                        [
+                            interaction.id,
+                            interaction.account,
+                            typeof interaction.pet === 'string' ? interaction.pet : interaction.pet.id,
+                            interaction.status,
+                            interaction.createdAt,
+                            interaction.updatedAt
+                        ]
+                    );
+                }
+
+                // Sempre salva o pet se vier como objeto completo (tanto em INSERT quanto UPDATE)
+                if (interaction.pet && typeof interaction.pet === 'object' && interaction.pet.id) {
+                    try {
+                        await petLocalRepository.create(interaction.pet as IPet);
+                    } catch (error) {
+                        console.error("Erro ao salvar pet da interação:", error);
+                    }
+                }
+                
+                return;
+            } catch (error: any) {
+                if (error?.message?.includes('database is locked') && retries > 1) {
+                    retries--;
+                    await new Promise(resolve => setTimeout(resolve, 100 * (4 - retries)));
+                    continue;
+                }
+                console.error("Erro ao criar interação:", error);
+                throw error;
+            }
         }
     },
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import Toast from 'react-native-toast-message';
 import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
 import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
@@ -20,8 +20,10 @@ export default function FindPets() {
   const isFocused = useIsFocused();
   const [petFeed, setPetFeed] = useState<IPet | null>(null);
   const [loading, setLoading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const loadNextPet = async () => {
+  const loadNextPet = useCallback(async () => {
     try {
       setLoading(true);
       const data = await accountRemoteRepository.fetchFeed();
@@ -31,7 +33,7 @@ export default function FindPets() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (isFocused) {
@@ -39,21 +41,56 @@ export default function FindPets() {
     }
   }, [isFocused]);
 
-  const owner: IAccount | null = petFeed && typeof (petFeed as any).account === 'object'
-    ? ((petFeed as any).account as IAccount)
-    : null;
+  useEffect(() => {
+    if (petFeed) {
+      setCurrentImageIndex(0);
+      scrollViewRef.current?.scrollTo({ x: 0, animated: false });
+    }
+  }, [petFeed?.id]);
 
-  const onNope = async () => {
+  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / (SCREEN_WIDTH - 32));
+    setCurrentImageIndex(index);
+  }, []);
+
+  const goToPreviousImage = useCallback(() => {
+    if (!petFeed?.images || currentImageIndex === 0) return;
+    const newIndex = currentImageIndex - 1;
+    scrollViewRef.current?.scrollTo({
+      x: newIndex * (SCREEN_WIDTH - 32),
+      animated: true,
+    });
+    setCurrentImageIndex(newIndex);
+  }, [petFeed?.images, currentImageIndex]);
+
+  const goToNextImage = useCallback(() => {
+    if (!petFeed?.images || currentImageIndex === petFeed.images.length - 1) return;
+    const newIndex = currentImageIndex + 1;
+    scrollViewRef.current?.scrollTo({
+      x: newIndex * (SCREEN_WIDTH - 32),
+      animated: true,
+    });
+    setCurrentImageIndex(newIndex);
+  }, [petFeed?.images, currentImageIndex]);
+
+  const owner: IAccount | null = useMemo(() => {
+    return petFeed && typeof (petFeed as any).account === 'object'
+      ? ((petFeed as any).account as IAccount)
+      : null;
+  }, [petFeed]);
+
+  const onNope = useCallback(async () => {
     if (!petFeed) return;
     await petRemoteRepository.dislikePet(petFeed.id);
     await loadNextPet();
-  };
+  }, [petFeed, loadNextPet]);
 
-  const onLike = async () => {
+  const onLike = useCallback(async () => {
     if (!petFeed) return;
     await petRemoteRepository.likePet(petFeed.id);
     await loadNextPet();
-  };
+  }, [petFeed, loadNextPet]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -65,62 +102,106 @@ export default function FindPets() {
         </View>
       ) : petFeed ? (
         <View style={styles.card}>
-          {petFeed.images && petFeed.images.length > 1 ? (
-            <ScrollView 
-              horizontal 
-              pagingEnabled 
-              showsHorizontalScrollIndicator={false} 
-              style={styles.scrollView}
-              contentContainerStyle={styles.scrollContent}
-            >
-              {petFeed.images.map((imgId, i) => (
-                <Image 
-                  key={`${imgId}-${i}`} 
-                  source={pictureRepository.getSource(imgId)} 
-                  style={[styles.photo, styles.photoMulti]} 
-                />
-              ))}
-            </ScrollView>
-          ) : (
-            <Image source={pictureRepository.getSource(petFeed.images?.[0])} style={styles.photo} />
-          )}
-          <View style={styles.cardInfo}>
-            <Text style={styles.name}>{petFeed.name}</Text>
-            <View style={styles.badgesRow}>
-              <View style={[styles.badge, { backgroundColor: COLORS.primary }]}>
-                <Text style={styles.badgeText}>{petFeed.type}</Text>
-              </View>
-              {!!petFeed.gender && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>
-                    {String(petFeed.gender).toLowerCase() === 'male' ? 'Macho' : 'Fêmea'}
+          <View style={styles.imageContainer}>
+            {petFeed.images && petFeed.images.length > 1 ? (
+              <>
+                <ScrollView 
+                  ref={scrollViewRef}
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.scrollView}
+                  onScroll={handleScroll}
+                  scrollEventThrottle={16}
+                  decelerationRate="fast"
+                  snapToInterval={SCREEN_WIDTH - 32}
+                  snapToAlignment="center"
+                >
+                  {petFeed.images.map((imgId, i) => (
+                    <Image 
+                      key={`${imgId}-${i}`} 
+                      source={pictureRepository.getSource(imgId)}
+                      style={[styles.photo, styles.photoMulti]}
+                    />
+                  ))}
+                </ScrollView>
+                <View style={styles.touchAreas}>
+                  <TouchableOpacity
+                    style={styles.touchAreaLeft}
+                    onPress={goToPreviousImage}
+                    activeOpacity={0.3}
+                    disabled={currentImageIndex === 0}
+                  />
+                  <TouchableOpacity
+                    style={styles.touchAreaRight}
+                    onPress={goToNextImage}
+                    activeOpacity={0.3}
+                    disabled={currentImageIndex === petFeed.images.length - 1}
+                  />
+                </View>
+                <View style={styles.imageIndicators}>
+                  {petFeed.images.map((_, index) => (
+                    <View
+                      key={index}
+                      style={[
+                        styles.indicatorDot,
+                        index === currentImageIndex && styles.indicatorDotActive
+                      ]}
+                    />
+                  ))}
+                </View>
+                <View style={styles.imageCounter}>
+                  <Text style={styles.imageCounterText}>
+                    {currentImageIndex + 1} / {petFeed.images.length}
                   </Text>
                 </View>
-              )}
-              {typeof petFeed.age === 'number' && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{petFeed.age} ano{petFeed.age === 1 ? '' : 's'}</Text>
-                </View>
-              )}
-              {!!petFeed.weight && (
-                <View style={[styles.badge, { backgroundColor: COLORS.tertiary }]}>
-                  <Text style={styles.badgeText}>{petFeed.weight} kg</Text>
+              </>
+            ) : (
+              <Image source={pictureRepository.getSource(petFeed.images?.[0])} style={styles.photo} />
+            )}
+          </View>
+          <View style={styles.cardInfo}>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{petFeed.name}</Text>
+              {petFeed.gender && (
+                <View style={styles.genderBadge}>
+                  <Ionicons
+                    name={String(petFeed.gender).toLowerCase() === 'male' ? 'male-outline' : 'female-outline'}
+                    size={16}
+                    color="#B648A0"
+                  />
                 </View>
               )}
             </View>
-            {!!petFeed.description && <Text style={styles.meta}>{petFeed.description}</Text>}
+            
+            {!!petFeed.description && (
+              <Text style={styles.description}>{petFeed.description}</Text>
+            )}
 
-            <View style={styles.ownerRow}>
-              {owner ? (
-                <>
-                  <Image source={pictureRepository.getSource(owner.avatar)} style={styles.ownerAvatar} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.ownerName}>{owner.name}</Text>
-                    <Text style={styles.ownerMeta}>{owner.email || owner.phone_number}</Text>
-                  </View>
-                </>
-              ) : null}
-            </View>
+            {owner?.address && (
+              <View style={styles.infoRow}>
+                <Ionicons name="location" size={16} color="#fff" style={styles.infoIcon} />
+                <Text style={styles.infoText}>
+                  {[owner.address.street, owner.address.neighborhood, owner.address.number].filter(Boolean).join(', ')}
+                  {owner.address.city && `, ${owner.address.city}`}
+                  {owner.address.state && `, ${owner.address.state}`}
+                </Text>
+              </View>
+            )}
+
+            {!!petFeed.weight && (
+              <View style={styles.infoRow}>
+                <MaterialIcons name="scale" size={16} color="#fff" style={styles.infoIcon} />
+                <Text style={styles.infoText}>{petFeed.weight}kg</Text>
+              </View>
+            )}
+
+            {owner && owner.role === 'institution' && (
+              <View style={styles.infoRow}>
+                <Ionicons name="shield" size={16} color="#fff" style={styles.infoIcon} />
+                <Text style={styles.infoText}>{owner.name}</Text>
+              </View>
+            )}
           </View>
         </View>
       ) : (
@@ -182,15 +263,23 @@ function makeStyles(COLORS: any) {
     },
     card: {
       flex: 1,
-      borderRadius: 16,
+      borderRadius: 20,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
       overflow: 'hidden',
       backgroundColor: COLORS.quarternary,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 8,
+    },
+    imageContainer: {
+      flex: 1,
+      position: 'relative',
     },
     scrollView: {
       flex: 1,
-    },
-    scrollContent: {
-      alignItems: 'center',
     },
     photo: {
       width: '100%',
@@ -201,59 +290,105 @@ function makeStyles(COLORS: any) {
       width: SCREEN_WIDTH - 32,
       minHeight: 400,
     },
-    cardInfo: {
-      padding: 12,
-      backgroundColor: 'rgba(0,0,0,0.3)',
-    },
-    badgesRow: {
+    imageIndicators: {
+      position: 'absolute',
+      bottom: 16,
+      left: 0,
+      right: 0,
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
       gap: 6,
-      marginTop: 4,
-      marginBottom: 6,
+      paddingHorizontal: 16,
     },
-    badge: {
-      borderRadius: 12,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+    indicatorDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: 'rgba(255, 255, 255, 0.4)',
     },
-    badgeText: {
-      color: COLORS.text,
-      fontWeight: '700',
+    indicatorDotActive: {
+      width: 24,
+      backgroundColor: '#B648A0',
+    },
+    imageCounter: {
+      position: 'absolute',
+      top: 16,
+      right: 16,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    imageCounterText: {
+      color: '#fff',
       fontSize: 12,
+      fontWeight: '600',
     },
-    name: {
-      color: COLORS.text,
-      fontSize: 18,
-      fontWeight: '700',
+    touchAreas: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      flexDirection: 'row',
+      zIndex: 5,
     },
-    meta: {
-      color: COLORS.text,
-      opacity: 0.9,
-      marginTop: 2,
+    touchAreaLeft: {
+      flex: 1,
+      backgroundColor: 'transparent',
     },
-    ownerRow: {
-      marginTop: 10,
+    touchAreaRight: {
+      flex: 1,
+      backgroundColor: 'transparent',
+    },
+    cardInfo: {
+      padding: 20,
+      backgroundColor: '#363135',
+      minHeight: 180,
+    },
+    nameRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      marginBottom: 8,
+      gap: 8,
     },
-    ownerAvatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: COLORS.bg,
-      borderWidth: 1,
-      borderColor: COLORS.text,
-    },
-    ownerName: {
-      color: COLORS.text,
+    name: {
+      color: '#fff',
+      fontSize: 22,
       fontWeight: '700',
     },
-    ownerMeta: {
-      color: COLORS.text,
-      opacity: 0.8,
-      fontSize: 12,
+    genderBadge: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: 'rgba(182, 72, 160, 0.2)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1.5,
+      borderColor: '#B648A0',
+    },
+    description: {
+      color: '#fff',
+      fontSize: 14,
+      lineHeight: 20,
+      marginBottom: 12,
+      opacity: 0.95,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    infoIcon: {
+      marginRight: 8,
+      opacity: 0.9,
+    },
+    infoText: {
+      color: '#fff',
+      fontSize: 13,
+      flex: 1,
+      opacity: 0.9,
     },
     actions: {
       flexDirection: 'row',

@@ -1,11 +1,13 @@
 import { IHistoryStatus } from "../types/IHistoryStatus";
+import { IAccount } from "./IAccount";
+import { IPet } from "./IPet";
 
 export interface IHistory {
     id: string;
     type: "adoption" | "sponsorship" | "donation";
     status?: IHistoryStatus;
-    pet?: string | null;
-    institution?: string;
+    pet?: string | IPet | null;
+    institution?: IAccount;
     account: string;
     amount?: string;
     externalReference?: string | null;

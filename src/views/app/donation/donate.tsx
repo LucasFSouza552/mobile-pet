@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../context/ThemeContext';
-import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
-import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
-import { IAccount } from '../../models/IAccount';
-import Toast from 'react-native-toast-message';
+import { useTheme } from '../../../context/ThemeContext';
+import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
+import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
+import { IAccount } from '../../../models/IAccount';
+import { useToast } from '../../../hooks/useToast';
 import { useIsFocused } from '@react-navigation/native';
 
 export default function Donate({ navigation }: any) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
   const isFocused = useIsFocused();
+  const toast = useToast();
   
   const [institutions, setInstitutions] = useState<IAccount[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,20 +50,10 @@ export default function Donate({ navigation }: any) {
       setInstitutions(institutionsList);
       
       if (institutionsList.length === 0 && !loading) {
-        Toast.show({
-          type: 'info',
-          text1: 'Nenhuma instituição encontrada',
-          text2: 'Tente atualizar a lista',
-          position: 'bottom',
-        });
+        toast.info('Nenhuma instituição encontrada', 'Tente atualizar a lista');
       }
     } catch (e: any) {
-      Toast.show({ 
-        type: 'error', 
-        text1: 'Erro ao carregar instituições', 
-        text2: e?.message || 'Tente novamente mais tarde',
-        position: 'bottom' 
-      });
+      toast.handleApiError(e, 'Erro ao carregar instituições');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -81,7 +72,7 @@ export default function Donate({ navigation }: any) {
   };
 
   const handleDonate = (institution: IAccount) => {
-    navigation?.navigate('DonatePay', { institution });
+    navigation?.navigate('DonationPage', { institution });
   };
 
   const renderInstitution = ({ item }: { item: IAccount }) => (

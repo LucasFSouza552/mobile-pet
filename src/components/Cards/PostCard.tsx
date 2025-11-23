@@ -1,284 +1,60 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, Share, useWindowDimensions, Animated, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { IPost } from '../../models/IPost';
 import { IComment } from '../../models/IComment';
-import Toast from 'react-native-toast-message';
 import { useTheme } from '../../context/ThemeContext';
-import { usePost } from '../../context/PostContext';
-import { darkTheme, lightTheme } from '../../theme/Themes';
-import { commentRepository } from '../../data/remote/repositories/commentsRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
 import { formatDate } from '../../utils/date';
-import { usePostComments } from './hooks/usePostComments';
-import { useShareMessage } from './hooks/useShareMessage';
+import { darkTheme, lightTheme } from '../../theme/Themes';
+import { usePostLike } from './hooks/usePostLike';
+import { usePostCommentsModal } from './hooks/usePostCommentsModal';
+import { useEditCommentModal } from './hooks/useEditCommentModal';
+import { usePostOptionsModal } from './hooks/usePostOptionsModal';
+import { usePostAboutModal } from './hooks/usePostAboutModal';
+import { usePostEditModal } from './hooks/usePostEditModal';
+import { usePostShare } from './hooks/usePostShare';
+import PostHeaderView from './PostHeaderView';
+import OptionsBarView from './OptionsBarView';
+import PostContent from './components/post-card/PostContent';
+import PostModals from './components/post-card/PostModals';
 
 interface PostCardProps {
 	post: IPost;
 	accountId?: string;
 	onLike?: (postId: string) => void;
-	handleOptions: (postId: string) => void;
-	handleAbout: (postId: string) => void;
-	postOptions: string;
 }
-
-import PostHeaderView from './PostHeaderView';
-import OptionsBarView from './OptionsBarView';
-import PostPictureContainer from './PostPictureContainer';
-import PostCommentsModal from './PostCommentsModal';
-import PostEditCommentModal from './PostEditCommentModal';
-import PostOptionsModal from './PostOptionsModal';
-import PostAboutModal from './PostAboutModal';
-import PostEditModal from './PostEditModal';
 
 function PostCardComponent({
 	post,
 	accountId,
 	onLike,
-	handleOptions,
-	handleAbout,
-	postOptions,
 }: PostCardProps) {
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
-	const { likePost: likePostFromContext, deletePost, editPost } = usePost();
 	const { account } = useAccount();
-	const { width, height } = useWindowDimensions();
+	const { width } = useWindowDimensions();
 	const navigation = useNavigation<any>();
-	const hideMetaText = width < 380;
-	const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-	const slideY = React.useRef(new Animated.Value(height)).current;
-	const [commentText, setCommentText] = useState('');
-	const { comments, loading: commentsLoading, hasMore: hasMoreComments, load: loadComments, add: addComment, remove: removeComment, update: updateComment } = usePostComments(post?.id);
-	const { show: showShareMessage, trigger: triggerShareMessage } = useShareMessage(2000);
-	const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-	const [isAboutOpen, setIsAboutOpen] = useState(false);
-	const aboutSlideY = React.useRef(new Animated.Value(height)).current;
-	const [editingComment, setEditingComment] = useState<IComment | null>(null);
-	const [editCommentText, setEditCommentText] = useState('');
-	const editSlideY = React.useRef(new Animated.Value(height)).current;
-	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 	const [deleted, setDeleted] = useState(false);
-	const [editSaving, setEditSaving] = useState(false);
-	const likeScale = React.useRef(new Animated.Value(1)).current;
-	const [isPostEditModalOpen, setIsPostEditModalOpen] = useState(false);
-	const postEditSlideY = React.useRef(new Animated.Value(height)).current;
-	const [postEditText, setPostEditText] = useState(post?.content ?? '');
-	const [postEditSaving, setPostEditSaving] = useState(false);
-
-	React.useEffect(() => {
-		setPostEditText(post?.content ?? '');
-	}, [post?.content]);
+	const hideMetaText = width < 380;
 
 	if (!post || deleted) return null;
 
-	const isLiked = useMemo(
-		() => !!(accountId && post?.likes?.includes(accountId)),
-		[accountId, post?.likes]
-	);
 	const isOwner = accountId === post?.account?.id;
 
-
-	const handleLikePress = async () => {
-		Animated.sequence([
-			Animated.timing(likeScale, { toValue: 1.3, duration: 120, useNativeDriver: true }),
-			Animated.timing(likeScale, { toValue: 1.0, duration: 120, useNativeDriver: true }),
-		]).start();
-		try {
-			if (!post?.id) return;
-			if (onLike) {
-				onLike(post.id);
-			} else {
-				await likePostFromContext(post.id);
-			}
-		} catch (e) {
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao curtir post',
-				text2: 'Tente novamente mais tarde.',
-				position: 'bottom',
-			});
-		}
-	};
-
-	const openOptionsSheet = () => {
-		slideY.setValue(height);
-		setIsOptionsOpen(true);
-		Animated.timing(slideY, {
-			toValue: 0,
-			duration: 250,
-			useNativeDriver: true,
-		}).start();
-	};
-
-	const openComments = () => {
-		setIsCommentsOpen(true);
-		Animated.timing(slideY, {
-			toValue: 0,
-			duration: 250,
-			useNativeDriver: true,
-		}).start();
-		if (post?.id) {
-			loadComments(true);
-		}
-	};
-
-	const closeComments = () => {
-		Animated.timing(slideY, {
-			toValue: height,
-			duration: 220,
-			useNativeDriver: true,
-		}).start(({ finished }) => {
-			if (finished) setIsCommentsOpen(false);
-		});
-	};
-
-	const handleCommentsPress = () => {
-		if (!post?.id) return;
-		openComments();
-	};
-
-	const handleEditComment = (comment: IComment) => {
-		setEditingComment(comment);
-		setEditCommentText(comment.content);
-		setIsEditModalOpen(true);
-		editSlideY.setValue(height);
-		Animated.timing(editSlideY, {
-			toValue: 0,
-			duration: 250,
-			useNativeDriver: true,
-		}).start();
-	};
-
-	const closeEditModal = () => {
-		Animated.timing(editSlideY, {
-			toValue: height,
-			duration: 220,
-			useNativeDriver: true,
-		}).start(({ finished }) => {
-			if (finished) {
-				setIsEditModalOpen(false);
-				setEditingComment(null);
-				setEditCommentText('');
-			}
-		});
-	};
-
-	const saveEditedComment = async () => {
-		if (!editingComment || !editCommentText.trim() || editSaving) return;
-		if (!post?.id) return;
-		
-		try {
-			setEditSaving(true);
-			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
-			
-			const updatedComment: IComment = {
-				...editingComment,
-				...updated,
-				content: editCommentText.trim(),
-				updatedAt: updated.updatedAt || new Date().toISOString(),
-			};
-			
-			updateComment(updatedComment);
-			
-			closeEditModal();
-			
-			setTimeout(() => {
-				Toast.show({
-					type: 'success',
-					text1: 'Comentário editado com sucesso',
-					position: 'bottom',
-				});
-			}, 300);
-		} catch (e: any) {
-			console.error('Erro ao editar comentário:', e);
-			const errorMessage = e?.response?.data?.message || e?.message || 'Tente novamente';
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao editar comentário',
-				text2: errorMessage,
-				position: 'bottom',
-			});
-		} finally {
-			setEditSaving(false);
-		}
-	};
-
-	const handleOpenEditPost = () => {
-		if (!post) return;
-		setPostEditText(post.content ?? '');
-		postEditSlideY.setValue(height);
-		setIsPostEditModalOpen(true);
-		Animated.timing(postEditSlideY, {
-			toValue: 0,
-			duration: 250,
-			useNativeDriver: true,
-		}).start();
-	};
-
-	const closePostEditModal = () => {
-		Animated.timing(postEditSlideY, {
-			toValue: height,
-			duration: 220,
-			useNativeDriver: true,
-		}).start(({ finished }) => {
-			if (finished) setIsPostEditModalOpen(false);
-		});
-	};
-
-	const savePostEdit = async () => {
-		if (!post?.id || !postEditText.trim() || postEditSaving) return;
-		try {
-			setPostEditSaving(true);
-			await editPost(post.id, { content: postEditText.trim() });
-			Toast.show({
-				type: 'success',
-				text1: 'Post atualizado com sucesso',
-				position: 'bottom',
-			});
-			closePostEditModal();
-		} catch (e: any) {
-			const message = e?.message || 'Erro ao salvar post';
-			Toast.show({
-				type: 'error',
-				text1: 'Não foi possível atualizar',
-				text2: message,
-				position: 'bottom',
-			});
-		} finally {
-			setPostEditSaving(false);
-		}
-	};
-
-	const handleDeleteComment = (comment: IComment) => {
-		Alert.alert(
-			'Excluir comentário',
-			'Tem certeza que deseja excluir este comentário?',
-			[
-				{ text: 'Cancelar', style: 'cancel' },
-				{
-					text: 'Excluir',
-					style: 'destructive',
-					onPress: async () => {
-						try {
-							await removeComment(comment.id);
-							Toast.show({
-								type: 'success',
-								text1: 'Comentário excluído com sucesso',
-								position: 'bottom',
-							});
-						} catch (e) {
-							Toast.show({
-								type: 'error',
-								text1: 'Erro ao excluir comentário',
-								position: 'bottom',
-							});
-						}
-					},
-				},
-			]
-		);
-	};
+	const { isLiked, likeScale, handleLikePress } = usePostLike({ post, accountId, onLike });
+	const { showShareMessage, handleSharePress } = usePostShare({ post });
+	const commentsModal = usePostCommentsModal({ postId: post?.id });
+	const editCommentModal = useEditCommentModal({ postId: post?.id });
+	const aboutModal = usePostAboutModal();
+	const editPostModal = usePostEditModal({ post });
+	const optionsModal = usePostOptionsModal({
+		post,
+		isOwner,
+		onShare: handleSharePress,
+		onOpenAbout: aboutModal.openAboutModal,
+		onOpenEdit: editPostModal.openEditModal,
+	});
 
 	const isCommentOwner = (comment: IComment) => {
 		if (!account || !comment.account) return false;
@@ -286,36 +62,9 @@ function PostCardComponent({
 		return account.id === commentAccountId;
 	};
 
-	const handleSharePress = async () => {
-		try {
-			const postUrl = `${post?.id}`;
-			await Share.share({
-				title: `Post de ${post.account.name ?? ''}`,
-				message:
-					post.content
-						? `${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}\n${postUrl}`
-						: `Confira este post de ${post.account.name ?? ''}! ${postUrl}`,
-			});
-			triggerShareMessage();
-		} catch {
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao compartilhar post',
-				text2: 'Tente novamente mais tarde.',
-				position: 'bottom',
-			});
-		}
-	};
-
 	const handleDeletePost = async () => {
-		if (!post?.id) return;
-		try {
-			await deletePost(post.id);
-			setDeleted(true);
-			Toast.show({ type: 'success', text1: 'Post excluído', position: 'bottom' });
-		} catch (e) {
-			Toast.show({ type: 'error', text1: 'Erro ao excluir post', position: 'bottom' });
-		}
+		await optionsModal.handleDeletePost();
+		setDeleted(true);
 	};
 
 	return (
@@ -326,122 +75,51 @@ function PostCardComponent({
 						post={post}
 						styles={styles}
 						formatDate={formatDate}
-						onPressProfile={() => handleAbout?.(post.account.id)}
-						onOpenOptions={openOptionsSheet}
+						onPressProfile={() => navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } })}
+						onOpenOptions={optionsModal.openOptionsSheet}
 					/>
-
-					<Text style={styles.postText}>{post.content || 'Sem conteúdo'}</Text>
-
-					{post?.image && <PostPictureContainer images={post.image} styles={styles} />}
+					<PostContent post={post} styles={styles} />
 				</View>
-
 				<OptionsBarView
 					post={post}
 					styles={styles}
 					isLiked={isLiked}
 					hideMetaText={hideMetaText}
 					onPressLike={handleLikePress}
-					onPressComments={handleCommentsPress}
+					onPressComments={commentsModal.handleCommentsPress}
 					onPressShare={handleSharePress}
 					showShareMessage={showShareMessage}
 					likeScale={likeScale}
 				/>
 			</View>
-
-			<PostCommentsModal
-				visible={isCommentsOpen}
-				onRequestClose={closeComments}
-				slideY={slideY}
-				styles={styles}
-				COLORS={COLORS}
-				comments={comments}
-				commentsLoading={commentsLoading}
-				hasMoreComments={hasMoreComments}
-				onEndReached={() => loadComments(false)}
-				commentText={commentText}
-				setCommentText={setCommentText}
-				onSubmitComment={() => {
-					(async () => {
-						if (!commentText.trim() || !post?.id) return;
-						try {
-							await addComment(commentText);
-							setCommentText('');
-						} catch (e) {
-							Toast.show({
-								type: 'error',
-								text1: 'Erro ao comentar',
-								position: 'bottom',
-							});
-						}
-					})();
-				}}
-				renderIsOwner={isCommentOwner}
-				onEditComment={handleEditComment}
-				onDeleteComment={handleDeleteComment}
-			/>
-
-			<PostEditCommentModal
-				visible={isEditModalOpen}
-				onRequestClose={closeEditModal}
-				editSlideY={editSlideY}
-				styles={styles}
-				COLORS={COLORS}
-				editCommentText={editCommentText}
-				setEditCommentText={setEditCommentText}
-				editSaving={editSaving}
-				onSave={saveEditedComment}
-			/>
-
-			<PostEditModal
-				visible={isPostEditModalOpen}
-				onRequestClose={closePostEditModal}
-				slideY={postEditSlideY}
-				containerHeight={height}
-				styles={styles}
-				COLORS={COLORS}
-				value={postEditText}
-				onChangeText={setPostEditText}
-				onSave={savePostEdit}
-				saving={postEditSaving}
-			/>
-
-			<PostOptionsModal
-				visible={isOptionsOpen}
-				onRequestClose={() => setIsOptionsOpen(false)}
-				slideY={slideY}
-				containerHeight={height}
-				styles={styles}
-				COLORS={COLORS}
-				onShare={handleSharePress}
-				onOpenAbout={() => {
-					setIsOptionsOpen(false);
-					aboutSlideY.setValue(height);
-					setIsAboutOpen(true);
-					Animated.timing(aboutSlideY, { toValue: 0, duration: 250, useNativeDriver: true }).start();
-				}}
-				allowDelete={isOwner}
-				onDelete={handleDeletePost}
-				allowEdit={isOwner}
-				onEdit={handleOpenEditPost}
-			/>
-
-			<PostAboutModal
-				visible={isAboutOpen}
-				onRequestClose={() => setIsAboutOpen(false)}
-				aboutSlideY={aboutSlideY}
-				containerHeight={height}
-				styles={styles}
-				COLORS={COLORS}
+			<PostModals
 				post={post}
-				onPressViewProfile={() => {
-					try {
-						navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } });
-					} finally {
-						Animated.timing(aboutSlideY, { toValue: height, duration: 220, useNativeDriver: true }).start(({ finished }) => {
-							if (finished) setIsAboutOpen(false);
-						});
-					}
+				styles={styles}
+				COLORS={COLORS}
+				commentsModal={{
+					...commentsModal,
+					renderIsOwner: isCommentOwner,
+					onEditComment: editCommentModal.openEditModal,
+					handleDeleteComment: commentsModal.handleDeleteComment,
 				}}
+				editCommentModal={editCommentModal}
+				optionsModal={{
+					...optionsModal,
+					handleDeletePost,
+					onShare: handleSharePress,
+					isOwner,
+				}}
+				aboutModal={{
+					...aboutModal,
+					onPressViewProfile: () => {
+						try {
+							navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } });
+						} finally {
+							aboutModal.closeAboutModal();
+						}
+					},
+				}}
+				editPostModal={editPostModal}
 			/>
 		</>
 	);
@@ -454,8 +132,7 @@ function areEqual(prev: PostCardProps, next: PostCardProps) {
 		prev.post.id === next.post.id &&
 		prev.post.updatedAt === next.post.updatedAt &&
 		prevLikes === nextLikes &&
-		prev.accountId === next.accountId &&
-		prev.postOptions === next.postOptions
+		prev.accountId === next.accountId
 	);
 }
 
@@ -577,45 +254,6 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			paddingVertical: 4,
 			borderRadius: 6,
 			fontSize: 12,
-		},
-		picturesScroll: {
-			position: 'relative',
-			width: '100%',
-			borderRadius: 12,
-			overflow: 'hidden',
-		},
-		carouselDots: {
-			position: 'absolute',
-			bottom: 8,
-			left: 0,
-			right: 0,
-			flexDirection: 'row',
-			justifyContent: 'center',
-			gap: 6,
-		},
-		dot: {
-			width: 6,
-			height: 6,
-			borderRadius: 3,
-			backgroundColor: COLORS.tertiary,
-			opacity: 0.6,
-		},
-		dotActive: {
-			opacity: 1,
-			backgroundColor: COLORS.text,
-		},
-		postPicture: {
-			position: 'relative',
-			width: '100%',
-			borderRadius: 12,
-			overflow: 'hidden',
-		},
-		postPictureImage: {
-			width: '100%',
-			minHeight: 200,
-			maxHeight: 500,
-			borderRadius: 12,
-			resizeMode: 'contain',
 		},
 		modalOverlay: {
 			flex: 1,

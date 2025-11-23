@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../context/ThemeContext';
-import { IAccount } from '../../models/IAccount';
-import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
-import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
-import Toast from 'react-native-toast-message';
+import { useTheme } from '../../../context/ThemeContext';
+import { IAccount } from '../../../models/IAccount';
+import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
+import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
+import { useToast } from '../../../hooks/useToast';
+import { FontAwesome } from '@expo/vector-icons';
 
 interface DonatePayProps {
   navigation: any;
@@ -20,6 +21,7 @@ interface DonatePayProps {
 export default function DonatePay({ navigation, route }: DonatePayProps) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
+  const toast = useToast();
   
   const institution = route?.params?.institution;
   
@@ -43,23 +45,13 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
   const handleDonate = async () => {
     if (!amount) {
-      Toast.show({
-        type: 'error',
-        text1: 'Valor inválido',
-        text2: 'Por favor, digite um valor para doação',
-        position: 'bottom',
-      });
+      toast.error('Valor inválido', 'Por favor, digite um valor para doação');
       return;
     }
 
     const value = parseFloat(amount.replace(',', '.'));
     if (isNaN(value) || value < 10) {
-      Toast.show({
-        type: 'error',
-        text1: 'Valor mínimo',
-        text2: 'O valor mínimo para doação é R$10,00',
-        position: 'bottom',
-      });
+      toast.error('Valor mínimo', 'O valor mínimo para doação é R$10,00');
       return;
     }
 
@@ -68,84 +60,16 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
       
       const amountString = value.toFixed(2);
       
-      console.log('[DONATE] Valor formatado:', amountString);
-      console.log('[DONATE] Tipo do valor:', typeof amountString);
-      
       const response = await accountRemoteRepository.donate(amountString);
       
-      console.log('[DONATE] Resposta recebida:', response);
-      
       if (!response || !response.url) {
-        console.error('[DONATE] Resposta inválida:', response);
         throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
       }
 
-      const canOpen = await Linking.canOpenURL(response.url);
-      if (canOpen) {
-        await Linking.openURL(response.url);
-        
-        Toast.show({
-          type: 'success',
-          text1: 'Redirecionando para pagamento...',
-          text2: 'Você será redirecionado para o MercadoPago',
-          position: 'bottom',
-        });
-        
-        setTimeout(() => {
-          setAmount('');
-          navigation.goBack();
-        }, 2000);
-      } else {
-        Alert.alert(
-          'Erro',
-          'Não foi possível abrir o link de pagamento. Por favor, tente novamente.',
-          [{ text: 'OK' }]
-        );
-      }
+      navigation.navigate('DonationWebView', { url: response.url });
+      setAmount('');
     } catch (error: any) {
-      console.error('[DONATE] Erro completo:', JSON.stringify(error, null, 2));
-      console.error('[DONATE] Tipo do erro:', typeof error);
-      console.error('[DONATE] Erro.message:', error?.message);
-      console.error('[DONATE] Erro.response:', error?.response);
-      console.error('[DONATE] Erro.response?.data:', error?.response?.data);
-      console.error('[DONATE] Erro.response?.status:', error?.response?.status);
-      
-      let errorMessage = 'Tente novamente mais tarde';
-      
-      if (error && typeof error === 'object') {
-        if ('message' in error) {
-          errorMessage = (error as any).message;
-        } else if ('error' in error) {
-          errorMessage = (error as any).error;
-        }
-      }
-      
-      if (errorMessage === 'Tente novamente mais tarde') {
-        if (error?.message) {
-          errorMessage = error.message;
-        } else if (error?.response?.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (typeof error === 'string') {
-          errorMessage = error;
-        }
-      }
-      
-      if (errorMessage.includes('Token não encontrado') || errorMessage.includes('Unauthorized')) {
-        errorMessage = 'Sessão expirada. Por favor, faça login novamente.';
-      } else if (errorMessage.includes('Quantidade não foi informada')) {
-        errorMessage = 'Por favor, informe um valor para doação.';
-      } else if (errorMessage.includes('Usuário não encontrado')) {
-        errorMessage = 'Usuário não encontrado. Por favor, faça login novamente.';
-      } else if (errorMessage.includes('Erro ao doar para petApp') || errorMessage.includes('Erro ao doar')) {
-        errorMessage = 'Erro ao processar doação. Verifique sua conexão e tente novamente. Se o problema persistir, entre em contato com o suporte.';
-      }
-      
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao realizar doação',
-        text2: errorMessage,
-        position: 'bottom',
-      });
+      toast.error('Erro ao realizar doação', error.data.message);
     } finally {
       setLoading(false);
     }
@@ -153,11 +77,20 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <FontAwesome name="chevron-left" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+
         {institution && (
           <View style={styles.institutionCard}>
             <Image 
-              source={pictureRepository.getSource(institution.avatar)} 
+              source={pictureRepository.getSource(institution.avatar)}
               style={styles.institutionAvatar} 
             />
             <Text style={styles.institutionName}>{institution.name}</Text>
@@ -187,7 +120,7 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
                 placeholderTextColor="#999"
                 keyboardType="numeric"
                 value={amount}
-                onChangeText={handleAmountChange}
+                onChangeText={handleAmountChange} 
                 editable={!loading}
               />
             </View>
@@ -217,6 +150,15 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
 function makeStyles(COLORS: any) {
   return StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 20,
+    },
+    backButton: {
+      padding: 8,
+    },
     container: {
       flex: 1,
       backgroundColor: COLORS.secondary,

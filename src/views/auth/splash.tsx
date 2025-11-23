@@ -8,15 +8,13 @@ import { Images } from '../../../assets';
 
 export default function Splash({ navigation }: any) {
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
     const checkConnectionAndNavigate = async () => {
       try {
 
         await runMigrations();
 
         const account = await accountSync.getProfile();
-
+        console.log('account', account);
         if (account) {
           navigation.replace('Main');
           return;
@@ -26,16 +24,12 @@ export default function Splash({ navigation }: any) {
         return;
 
       } catch (error: any) {
-        console.error('Erro em Splash:', error);
         navigation.replace('Welcome');
       }
     };
 
     checkConnectionAndNavigate();
 
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
   }, [navigation]);
   return (
     <SafeAreaView style={styles.container}>

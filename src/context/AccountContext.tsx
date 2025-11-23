@@ -22,7 +22,6 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
         try {
             setLoading(true);
             const localAccount = await accountSync.getProfile();
-            console.log("LOCAL ACCOUNT:",localAccount);
             if (localAccount) {
                 setAccount(localAccount);
             }

@@ -2,7 +2,6 @@ import { IAccount } from "./IAccount";
 
 export interface IPost {
     id: string;
-    title: string;
     content: string;
     image?: string[];
     account: IAccount;

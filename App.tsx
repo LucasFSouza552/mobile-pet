@@ -15,8 +15,8 @@ import EditProfileScreen from './src/views/app/profile/editProfile';
 import EditPetScreen from './src/views/app/pets/editPet';
 import NewNotificationScreen from './src/views/app/newNotification';
 import InstitutionNotificationsScreen from './src/views/app/institutionNotifications';
-import DonationPage from './src/views/app/donatePay';
-import DonationWebView from './src/views/app/DonationWebView';
+import DonationPage from './src/views/app/donation/donatePay';
+import DonationWebView from './src/views/app/donation/DonationWebView';
 import NewPetScreen from './src/views/app/pets/newPet';
 
 
@@ -27,6 +27,7 @@ import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
 import { Keyboard } from 'react-native';
 import { AccountProvider } from './src/context/AccountContext';
 import { PostProvider } from './src/context/PostContext';
+import { CameraProvider } from './src/context/CameraContext';
 import { runMigrations } from './src/data';
 
 const Stack = createNativeStackNavigator();
@@ -71,7 +72,7 @@ export default function App() {
         <AccountProvider>
 
           <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-            
+            <CameraProvider>
             <PostProvider>
               <NavigationContainer>
                 <Stack.Navigator
@@ -108,7 +109,7 @@ export default function App() {
 
               </NavigationContainer>
             </PostProvider>
-            
+            </CameraProvider>
           </SafeAreaProvider>
 
         </AccountProvider>
@@ -169,6 +170,27 @@ const toastConfig = {
       text2Style={{
         fontSize: 14,
         color: '#555',
+      }}
+    />
+  ),
+  info: (props: any) => (
+    <BaseToast
+      {...props}
+      style={{
+        borderLeftColor: '#3498DB',
+        borderRadius: 10,
+        minHeight: 70,
+        width: '90%',
+        alignSelf: 'center',
+      }}
+      text1Style={{
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#3498DB',
+      }}
+      text2Style={{
+        fontSize: 14,
+        color: '#333',
       }}
     />
   ),

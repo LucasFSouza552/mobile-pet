@@ -1,7 +1,7 @@
 import axios, { AxiosHeaders } from "axios";
 import { getStorage } from "../../../utils/storange";
 import { API_URL } from '@env';
-console.log(API_URL)
+
 const BASE_URL = (API_URL && API_URL.trim().length > 0)
   ? API_URL
   : "http://10.0.2.2:3000/api";
@@ -42,7 +42,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error?.response) {
-      return Promise.reject(error.response?.data);
+      return Promise.reject(error.response);
     } else {
       console.log("[NETWORK ERROR]", error?.message ?? error);
       return Promise.reject(error);

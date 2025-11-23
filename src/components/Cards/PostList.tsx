@@ -15,19 +15,6 @@ interface PostListProps {
 }
 
 export default function PostList({ title, posts, account, onEndReached, onRefresh, refreshing, onScroll }: PostListProps) {
-	const [postOptions, setPostOptions] = React.useState<string>('');
-	const [postAbout, setPostAbout] = React.useState<string>('');
-
-	const handleOptions = useCallback((postId?: string) => {
-		const isSamePost = postOptions === postId ? '' : postId || '';
-		setPostOptions(isSamePost);
-	}, [postOptions]);
-
-	const handleAbout = useCallback((postId?: string) => {
-		const isSamePost = postAbout === postId ? '' : postId || '';
-		setPostAbout(isSamePost);
-		setPostOptions('');
-	}, [postAbout]);
 
 	const renderItem = useCallback(({ item }: { item: IPost; index: number }) => {
 		return (
@@ -35,13 +22,10 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 				<PostCard
 					post={item}
 					accountId={account?.id}
-					handleOptions={handleOptions}
-					handleAbout={handleAbout}
-					postOptions={postOptions}
 				/>
 			</View>
 		);
-	}, [account?.id, handleOptions, handleAbout, postOptions]);
+	}, [account?.id]);
 
 	const keyExtractor = useCallback((item: IPost) => item.id, []);
 

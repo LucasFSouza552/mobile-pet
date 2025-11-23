@@ -5,6 +5,7 @@ import createHistoryTable from "./migrations/03_CreateHistoryTable";
 import createAccountPetInteractionsTable from "./migrations/04_CreateAccountPetInteractionsTable";
 import * as SQLite from 'expo-sqlite';
 import { getLocalDb } from "./LocalDb";
+import createPetImagesTable from "./migrations/05_CreatePetImagesTable";
 
 type Migration = {
   id: number;
@@ -15,9 +16,10 @@ type Migration = {
 const migrations: Migration[] = [
   { id: 0, name: "00_CreateAccountTable", up: createAccountTable },
   { id: 1, name: "01_CreateAchievementsTable", up: createAchievementsTable },
-  { id: 2, name: "02_CreatePetsTable", up: createPetsTable },
-  { id: 3, name: "03_CreateHistoryTable", up: createHistoryTable },
-  { id: 4, name: "04_CreateAccountPetInteractionsTable", up: createAccountPetInteractionsTable },
+  { id: 2, name: "05_CreatePetImagesTable", up: createPetImagesTable },
+  { id: 3, name: "02_CreatePetsTable", up: createPetsTable },
+  { id: 4, name: "03_CreateHistoryTable", up: createHistoryTable },
+  { id: 5, name: "04_CreateAccountPetInteractionsTable", up: createAccountPetInteractionsTable },
 ];
 
 async function ensureMigrationsTable() {

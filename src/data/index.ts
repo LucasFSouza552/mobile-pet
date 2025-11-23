@@ -21,3 +21,4 @@ export { accountSync } from './sync/accountSync';
 export { historySync } from './sync/historySync';
 export { achievementsSync } from './sync/achievementsSync';
 export { accountPetInteractionSync } from './sync/accountPetInteractionSync';
+export { petSync } from './sync/petSync';

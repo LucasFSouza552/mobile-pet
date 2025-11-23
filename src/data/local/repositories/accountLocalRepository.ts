@@ -1,6 +1,7 @@
 import { getLocalDb } from "../database/LocalDb";
 import { IAccount } from "../../../models/IAccount";
 import { removeStorage } from "../../../utils/storange";
+import { petImageLocalRepository } from "./petImageLocalRepository";
 
 export const accountLocalRepository = {
     getAll: async (): Promise<IAccount[]> => {
@@ -20,11 +21,12 @@ export const accountLocalRepository = {
             await db.runAsync(
                 `
         INSERT INTO accounts (
-            name, email, avatar, phone_number, role, cpf, cnpj, verified,
+            id, name, email, avatar, phone_number, role, cpf, cnpj, verified,
             street, number, complement, city, state, cep, neighborhood, lastSyncedAt, postCount
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(email) DO UPDATE SET
+            id = excluded.id,
             name = excluded.name,
             avatar = excluded.avatar,
             phone_number = excluded.phone_number,
@@ -43,11 +45,12 @@ export const accountLocalRepository = {
             postCount = excluded.postCount
         `,
                 [
-                    account.name ?? null,
-                    account.email ?? null,
+                    account.id,
+                    account.name,
+                    account.email,
                     account.avatar ?? null,
                     account.phone_number ?? null,
-                    account.role ?? null,
+                    account.role ,
                     account.cpf ?? null,
                     account.cnpj ?? null,
                     account.verified ? 1 : 0,
@@ -58,12 +61,13 @@ export const accountLocalRepository = {
                     account.address?.state ?? null,
                     account.address?.cep ?? null,
                     account.address?.neighborhood ?? null,
-                    null,
+                    account.lastSyncedAt ?? null,
                     account.postCount ?? 0
                 ]
             );
         } catch (error) {
-            console.log(error)
+            console.error(error);
+            throw error;
         }
 
     },
@@ -78,12 +82,69 @@ export const accountLocalRepository = {
     },
     logout: async (): Promise<void> => {
         const db = await getLocalDb();
-        await db.runAsync("DELETE FROM accounts");
-        await db.runAsync("DELETE FROM achievements");
-        await db.runAsync("DELETE FROM history");
-        await db.runAsync("DELETE FROM account_pet_interactions");
-        await removeStorage("@token");
-        await removeStorage("@email");
+        
+        try {
+            await db.execAsync("BEGIN");
+            
+            try {
+                await db.runAsync("DELETE FROM account_pet_interactions");
+            } catch (error) {
+                console.error("Erro ao deletar account_pet_interactions:", error);
+            }
+            
+            try {
+                await db.runAsync("DELETE FROM pet_images");
+            } catch (error) {
+                console.error("Erro ao deletar pet_images:", error);
+            }
+            
+            try {
+                await db.runAsync("DELETE FROM pets");
+            } catch (error) {
+                console.error("Erro ao deletar pets:", error);
+            }
+            
+            try {
+                await db.runAsync("DELETE FROM history");
+            } catch (error) {
+                console.error("Erro ao deletar history:", error);
+            }
+            
+            try {
+                await db.runAsync("DELETE FROM achievements");
+            } catch (error) {
+                console.error("Erro ao deletar achievements:", error);
+            }
+            
+            try {
+                await db.runAsync("DELETE FROM accounts");
+            } catch (error) {
+                console.error("Erro ao deletar accounts:", error);
+            }
+            
+            await db.execAsync("COMMIT");
+        } catch (error) {
+            try {
+                await db.execAsync("ROLLBACK");
+            } catch (rollbackError) {
+                console.error("Erro ao fazer rollback:", rollbackError);
+            }
+            console.error("Erro ao limpar dados do banco:", error);
+            throw error;
+        }
+
+        try {
+            await petImageLocalRepository.deleteAllLocalImages();
+        } catch (error) {
+            console.error("Erro ao deletar imagens locais:", error);
+        }
+
+        try {
+            await removeStorage("@token");
+            await removeStorage("@email");
+        } catch (error) {
+            console.error("Erro ao remover storage:", error);
+        }
     },
 
     getLastSyncTime: async () => {
