@@ -39,7 +39,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     textAlign: 'center',
   },
   
-  // Progress Indicator
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -74,7 +73,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     backgroundColor: '#B648A0',
   },
 
-  // Form
   formContainer: {
     flex: 1,
     alignItems: 'center',
@@ -89,7 +87,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     lineHeight: scale(32),
   },
 
-  // Avatar
   avatarContainer: {
     width: scale(150),
     height: scale(150),
@@ -111,7 +108,10 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     alignItems: 'center',
   },
 
-  // Inputs
+  inputWrapper: {
+    width: '100%',
+    marginBottom: verticalScale(5),
+  },
   input: {
     width: '100%',
     height: verticalScale(55),
@@ -122,10 +122,20 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     paddingHorizontal: scale(20),
     fontSize: scale(16),
     color: '#fff',
-    marginBottom: verticalScale(20),
+    marginBottom: verticalScale(5),
+  },
+  inputError: {
+    borderColor: '#FF6B6B',
+    borderWidth: 2,
+  },
+  errorText: {
+    fontSize: scale(12),
+    color: '#FF6B6B',
+    marginTop: verticalScale(-5),
+    marginBottom: verticalScale(10),
+    marginLeft: scale(5),
   },
 
-  // Password Input with Eye Icon
   passwordContainer: {
     width: '100%',
     flexDirection: 'row',
@@ -133,9 +143,13 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     borderWidth: 2,
     borderColor: '#B648A0',
     borderRadius: scale(10),
-    marginBottom: verticalScale(20),
+    marginBottom: verticalScale(5),
     backgroundColor: 'transparent',
     height: verticalScale(55),
+  },
+  passwordContainerError: {
+    borderColor: '#FF6B6B',
+    borderWidth: 2,
   },
   passwordInput: {
     flex: 1,
@@ -150,7 +164,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     justifyContent: 'center',
   },
 
-  // Hint Text
   hintText: {
     fontSize: scale(12),
     color: '#FFD700',
@@ -166,7 +179,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     alignSelf: 'flex-start',
   },
 
-  // Document Type Selection
   documentTypeContainer: {
     width: '100%',
     gap: verticalScale(20),
@@ -205,7 +217,6 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     color: '#999',
   },
 
-  // Buttons
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',

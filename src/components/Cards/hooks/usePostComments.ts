@@ -43,10 +43,8 @@ export function usePostComments(postId?: string) {
 		setComments(prev => {
 			const index = prev.findIndex(c => c.id === updated.id);
 			if (index === -1) {
-				// Se não encontrar, adiciona no início
 				return [updated, ...prev];
 			}
-			// Atualiza o comentário mantendo a ordem
 			const newComments = [...prev];
 			newComments[index] = updated;
 			return newComments;

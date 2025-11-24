@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const createLoginStyles = (width: number, height: number) => {
   const scale = (size: number) => (width / 375) * size;
   const verticalScale = (size: number) => (height / 812) * size;
-  
+
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -38,15 +38,13 @@ export const createLoginStyles = (width: number, height: number) => {
       color: '#ddd',
       textAlign: 'center',
     },
-  
-    // Form
+
     formContainer: {
       flex: 1,
       alignItems: 'center',
       marginTop: verticalScale(40),
     },
-    
-    // Inputs
+
     inputContainer: {
       width: '100%',
     },
@@ -62,8 +60,6 @@ export const createLoginStyles = (width: number, height: number) => {
       color: '#fff',
       marginBottom: verticalScale(20),
     },
-
-    // Password Input with Eye Icon
     passwordContainer: {
       width: '100%',
       flexDirection: 'row',
@@ -87,8 +83,6 @@ export const createLoginStyles = (width: number, height: number) => {
       height: '100%',
       justifyContent: 'center',
     },
-
-    // Buttons
     buttonContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',

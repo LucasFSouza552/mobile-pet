@@ -18,6 +18,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
+import { validateName } from '../../../utils/validation';
 
 export default function RegisterStep1({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
@@ -26,6 +27,8 @@ export default function RegisterStep1({ navigation, route }: any) {
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<any>(null);
+  const [nameError, setNameError] = useState<string | undefined>();
+  const [nameTouched, setNameTouched] = useState(false);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -48,9 +51,26 @@ export default function RegisterStep1({ navigation, route }: any) {
     }
   };
 
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (nameTouched) {
+      const validation = validateName(text);
+      setNameError(validation.isValid ? undefined : validation.error);
+    }
+  };
+
+  const handleNameBlur = () => {
+    setNameTouched(true);
+    const validation = validateName(name);
+    setNameError(validation.isValid ? undefined : validation.error);
+  };
+
   const handleNext = () => {
-    if (!name.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe seu nome.');
+    setNameTouched(true);
+    const validation = validateName(name);
+    setNameError(validation.isValid ? undefined : validation.error);
+    
+    if (!validation.isValid) {
       return;
     }
 
@@ -88,7 +108,6 @@ export default function RegisterStep1({ navigation, route }: any) {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={registerStepStyles.content}>
-                {/* Header */}
                 <View style={registerStepStyles.header}>
                   <Text style={registerStepStyles.headerTitle}>Registrar</Text>
                   <Text style={registerStepStyles.headerSubtitle}>
@@ -96,7 +115,6 @@ export default function RegisterStep1({ navigation, route }: any) {
                   </Text>
                 </View>
 
-                {/* Progress Indicator */}
                 <View style={registerStepStyles.progressContainer}>
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
                     <FontAwesome name="user" size={20} color="#fff" />
@@ -115,11 +133,9 @@ export default function RegisterStep1({ navigation, route }: any) {
                   </View>
                 </View>
 
-                {/* Form */}
                 <View style={registerStepStyles.formContainer}>
                   <Text style={registerStepStyles.title}>Como você quer{'\n'}ser conhecido(a)?</Text>
 
-                  {/* Avatar Picker */}
                   <TouchableOpacity 
                     style={registerStepStyles.avatarContainer}
                     onPress={pickImage}
@@ -133,20 +149,27 @@ export default function RegisterStep1({ navigation, route }: any) {
                     )}
                   </TouchableOpacity>
 
-                  {/* Name Input */}
-                  <TextInput
-                    style={registerStepStyles.input}
-                    placeholder="Nome"
-                    placeholderTextColor="#999999"
-                    value={name}
-                    onChangeText={setName}
-                    autoCapitalize="words"
-                    returnKeyType="done"
-                    onSubmitEditing={handleNext}
-                  />
+                  <View style={registerStepStyles.inputWrapper}>
+                    <TextInput
+                      style={[
+                        registerStepStyles.input,
+                        nameTouched && nameError && registerStepStyles.inputError
+                      ]}
+                      placeholder="Nome"
+                      placeholderTextColor="#999999"
+                      value={name}
+                      onChangeText={handleNameChange}
+                      onBlur={handleNameBlur}
+                      autoCapitalize="words"
+                      returnKeyType="done"
+                      onSubmitEditing={handleNext}
+                    />
+                    {nameTouched && nameError && (
+                      <Text style={registerStepStyles.errorText}>{nameError}</Text>
+                    )}
+                  </View>
                 </View>
 
-                {/* Buttons */}
                 <View style={registerStepStyles.buttonContainer}>
                   <TouchableOpacity style={registerStepStyles.backButton} onPress={handleBack}>
                     <Text style={registerStepStyles.backButtonText}>Voltar</Text>
@@ -155,10 +178,10 @@ export default function RegisterStep1({ navigation, route }: any) {
                   <TouchableOpacity 
                     style={[
                       registerStepStyles.nextButton,
-                      !name.trim() && registerStepStyles.nextButtonDisabled
+                      (!validateName(name).isValid || nameTouched && nameError) && registerStepStyles.nextButtonDisabled
                     ]} 
                     onPress={handleNext}
-                    disabled={!name.trim()}
+                    disabled={!validateName(name).isValid}
                   >
                     <Text style={registerStepStyles.nextButtonText}>Próximo</Text>
                   </TouchableOpacity>

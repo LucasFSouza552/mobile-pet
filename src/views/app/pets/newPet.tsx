@@ -21,6 +21,7 @@ import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useToast } from '../../../hooks/useToast';
+import { validateRequired, validateWeight, validateAge } from '../../../utils/validation';
 
 const PET_TYPES = ['Cachorro', 'Gato', 'Pássaro', 'Outro'] as const;
 const GENDERS = [
@@ -69,22 +70,27 @@ export default function NewPet({ navigation }: any) {
       toast.error('Somente instituições podem cadastrar pets.');
       return false;
     }
-    if (!name.trim()) {
-      toast.info('Informe o nome do pet.');
+    
+    const nameValidation = validateRequired(name, 'Nome do pet');
+    if (!nameValidation.isValid) {
+      toast.error('Validação', nameValidation.error || 'Informe o nome do pet.');
       return false;
     }
-    const weightValue = Number(weight.replace(',', '.'));
-    if (!weight.trim() || Number.isNaN(weightValue) || weightValue <= 0) {
-      toast.info('Insira um peso válido.');
+    
+    const weightValidation = validateWeight(weight);
+    if (!weightValidation.isValid) {
+      toast.error('Validação', weightValidation.error || 'Insira um peso válido.');
       return false;
     }
+    
     if (age.trim()) {
-      const ageValue = Number(age);
-      if (Number.isNaN(ageValue) || ageValue < 0) {
-        toast.info('Idade deve ser um número positivo.');
+      const ageValidation = validateAge(age, false);
+      if (!ageValidation.isValid) {
+        toast.error('Validação', ageValidation.error || 'Idade inválida.');
         return false;
       }
     }
+    
     return true;
   };
 

@@ -17,6 +17,7 @@ import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
+import { validateEmail, validatePhone } from '../../../utils/validation';
 
 export default function RegisterStep2({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
@@ -24,11 +25,10 @@ export default function RegisterStep2({ navigation, route }: any) {
   const { documentType, name, avatar, avatarFile } = route.params;
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const [emailError, setEmailError] = useState<string | undefined>();
+  const [phoneError, setPhoneError] = useState<string | undefined>();
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [phoneTouched, setPhoneTouched] = useState(false);
 
   const formatPhone = (text: string): string => {
     const numbers = text.replace(/\D/g, '');
@@ -45,27 +45,45 @@ export default function RegisterStep2({ navigation, route }: any) {
   const handlePhoneChange = (text: string) => {
     const formatted = formatPhone(text);
     setPhone(formatted);
+    
+    if (phoneTouched) {
+      const validation = validatePhone(formatted);
+      setPhoneError(validation.isValid ? undefined : validation.error);
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    
+    if (emailTouched) {
+      const validation = validateEmail(text);
+      setEmailError(validation.isValid ? undefined : validation.error);
+    }
+  };
+
+  const handleEmailBlur = () => {
+    setEmailTouched(true);
+    const validation = validateEmail(email);
+    setEmailError(validation.isValid ? undefined : validation.error);
+  };
+
+  const handlePhoneBlur = () => {
+    setPhoneTouched(true);
+    const validation = validatePhone(phone);
+    setPhoneError(validation.isValid ? undefined : validation.error);
   };
 
   const handleNext = () => {
-    if (!email.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe seu e-mail.');
-      return;
-    }
+    setEmailTouched(true);
+    setPhoneTouched(true);
 
-    if (!validateEmail(email)) {
-      Alert.alert('Atenção', 'Por favor, informe um e-mail válido.');
-      return;
-    }
+    const emailValidation = validateEmail(email);
+    const phoneValidation = validatePhone(phone);
 
-    if (!phone.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe seu telefone.');
-      return;
-    }
+    setEmailError(emailValidation.isValid ? undefined : emailValidation.error);
+    setPhoneError(phoneValidation.isValid ? undefined : phoneValidation.error);
 
-    const phoneNumbers = phone.replace(/\D/g, '');
-    if (phoneNumbers.length < 10) {
-      Alert.alert('Atenção', 'Por favor, informe um telefone válido.');
+    if (!emailValidation.isValid || !phoneValidation.isValid) {
       return;
     }
 
@@ -83,7 +101,9 @@ export default function RegisterStep2({ navigation, route }: any) {
     navigation.goBack();
   };
 
-  const isFormValid = email.trim() !== '' && phone.trim() !== '' && validateEmail(email);
+  const emailValidation = validateEmail(email);
+  const phoneValidation = validatePhone(phone);
+  const isFormValid = emailValidation.isValid && phoneValidation.isValid;
 
   return (
     <View style={registerStepStyles.container}>
@@ -139,29 +159,47 @@ export default function RegisterStep2({ navigation, route }: any) {
             <Text style={registerStepStyles.title}>Qual é o seu{'\n'}e-mail e telefone?</Text>
 
             {/* Email Input */}
-            <TextInput
-              style={registerStepStyles.input}
-              placeholder="Email"
-              placeholderTextColor="#999999"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              returnKeyType="next"
-            />
+            <View style={registerStepStyles.inputWrapper}>
+              <TextInput
+                style={[
+                  registerStepStyles.input,
+                  emailTouched && emailError && registerStepStyles.inputError
+                ]}
+                placeholder="Email"
+                placeholderTextColor="#999999"
+                value={email}
+                onChangeText={handleEmailChange}
+                onBlur={handleEmailBlur}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+              />
+              {emailTouched && emailError && (
+                <Text style={registerStepStyles.errorText}>{emailError}</Text>
+              )}
+            </View>
 
             {/* Phone Input */}
-            <TextInput
-              style={registerStepStyles.input}
-              placeholder="Telefone"
-              placeholderTextColor="#999999"
-              value={phone}
-              onChangeText={handlePhoneChange}
-              keyboardType="phone-pad"
-              returnKeyType="done"
-              maxLength={15}
-              onSubmitEditing={handleNext}
-            />
+            <View style={registerStepStyles.inputWrapper}>
+              <TextInput
+                style={[
+                  registerStepStyles.input,
+                  phoneTouched && phoneError && registerStepStyles.inputError
+                ]}
+                placeholder="Telefone"
+                placeholderTextColor="#999999"
+                value={phone}
+                onChangeText={handlePhoneChange}
+                onBlur={handlePhoneBlur}
+                keyboardType="phone-pad"
+                returnKeyType="done"
+                maxLength={15}
+                onSubmitEditing={handleNext}
+              />
+              {phoneTouched && phoneError && (
+                <Text style={registerStepStyles.errorText}>{phoneError}</Text>
+              )}
+            </View>
           </View>
 
           {/* Buttons */}

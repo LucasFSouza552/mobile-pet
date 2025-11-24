@@ -17,12 +17,15 @@ import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
+import { validateCPF, validateCNPJ } from '../../../utils/validation';
 
 export default function RegisterStep3({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
   const { documentType, name, avatar, avatarFile, email, phone_number } = route.params;
   const [document, setDocument] = useState('');
+  const [documentError, setDocumentError] = useState<string | undefined>();
+  const [documentTouched, setDocumentTouched] = useState(false);
 
   const formatCPF = (text: string): string => {
     const numbers = text.replace(/\D/g, '');
@@ -55,27 +58,32 @@ export default function RegisterStep3({ navigation, route }: any) {
   const handleDocumentChange = (text: string) => {
     const formatted = documentType === 'cpf' ? formatCPF(text) : formatCNPJ(text);
     setDocument(formatted);
+    
+    if (documentTouched) {
+      const validation = documentType === 'cpf' 
+        ? validateCPF(formatted) 
+        : validateCNPJ(formatted);
+      setDocumentError(validation.isValid ? undefined : validation.error);
+    }
   };
 
-  const validateCPF = (cpf: string): boolean => {
-    const numbers = cpf.replace(/\D/g, '');
-    return numbers.length === 11;
-  };
-
-  const validateCNPJ = (cnpj: string): boolean => {
-    const numbers = cnpj.replace(/\D/g, '');
-    return numbers.length === 14;
+  const handleDocumentBlur = () => {
+    setDocumentTouched(true);
+    const validation = documentType === 'cpf' 
+      ? validateCPF(document) 
+      : validateCNPJ(document);
+    setDocumentError(validation.isValid ? undefined : validation.error);
   };
 
   const handleNext = () => {
-    if (!document.trim()) {
-      Alert.alert('Atenção', `Por favor, informe seu ${documentType.toUpperCase()}.`);
-      return;
-    }
-
-    const isValid = documentType === 'cpf' ? validateCPF(document) : validateCNPJ(document);
-    if (!isValid) {
-      Alert.alert('Atenção', `Por favor, informe um ${documentType.toUpperCase()} válido.`);
+    setDocumentTouched(true);
+    const validation = documentType === 'cpf' 
+      ? validateCPF(document) 
+      : validateCNPJ(document);
+    
+    setDocumentError(validation.isValid ? undefined : validation.error);
+    
+    if (!validation.isValid) {
       return;
     }
 
@@ -98,8 +106,10 @@ export default function RegisterStep3({ navigation, route }: any) {
     navigation.goBack();
   };
 
-  const isFormValid = document.trim() !== '' && 
-    (documentType === 'cpf' ? validateCPF(document) : validateCNPJ(document));
+  const documentValidation = documentType === 'cpf' 
+    ? validateCPF(document) 
+    : validateCNPJ(document);
+  const isFormValid = documentValidation.isValid;
 
   return (
     <View style={registerStepStyles.container}>
@@ -155,17 +165,26 @@ export default function RegisterStep3({ navigation, route }: any) {
             </Text>
 
             {/* Document Input */}
-            <TextInput
-              style={registerStepStyles.input}
-              placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
-              placeholderTextColor="#999999"
-              value={document}
-              onChangeText={handleDocumentChange}
-              keyboardType="numeric"
-              returnKeyType="done"
-              maxLength={documentType === 'cpf' ? 14 : 18}
-              onSubmitEditing={handleNext}
-            />
+            <View style={registerStepStyles.inputWrapper}>
+              <TextInput
+                style={[
+                  registerStepStyles.input,
+                  documentTouched && documentError && registerStepStyles.inputError
+                ]}
+                placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
+                placeholderTextColor="#999999"
+                value={document}
+                onChangeText={handleDocumentChange}
+                onBlur={handleDocumentBlur}
+                keyboardType="numeric"
+                returnKeyType="done"
+                maxLength={documentType === 'cpf' ? 14 : 18}
+                onSubmitEditing={handleNext}
+              />
+              {documentTouched && documentError && (
+                <Text style={registerStepStyles.errorText}>{documentError}</Text>
+              )}
+            </View>
           </View>
 
           {/* Buttons */}

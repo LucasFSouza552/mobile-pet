@@ -25,6 +25,7 @@ import { accountSync } from '../../../data/sync/accountSync';
 import { useAccount } from '../../../context/AccountContext';
 import { Images } from '../../../../assets';
 import { useToast } from '../../../hooks/useToast';
+import { validatePassword, validatePasswordConfirmation } from '../../../utils/validation';
 
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
@@ -35,26 +36,57 @@ export default function RegisterStep4({ navigation, route }: any) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | undefined>();
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | undefined>();
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const { refreshAccount } = useAccount();
   const toast = useToast();
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+    if (passwordTouched) {
+      const validation = validatePassword(value);
+      setPasswordError(validation.isValid ? undefined : validation.error);
+      
+      // Valida confirmação também se já foi tocada
+      if (confirmPasswordTouched) {
+        const confirmValidation = validatePasswordConfirmation(value, confirmPassword);
+        setConfirmPasswordError(confirmValidation.isValid ? undefined : confirmValidation.error);
+      }
+    }
+  };
+
+  const handleConfirmPasswordChange = (value: string) => {
+    setConfirmPassword(value);
+    if (confirmPasswordTouched) {
+      const validation = validatePasswordConfirmation(password, value);
+      setConfirmPasswordError(validation.isValid ? undefined : validation.error);
+    }
+  };
+
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true);
+    const validation = validatePassword(password);
+    setPasswordError(validation.isValid ? undefined : validation.error);
+  };
+
+  const handleConfirmPasswordBlur = () => {
+    setConfirmPasswordTouched(true);
+    const validation = validatePasswordConfirmation(password, confirmPassword);
+    setConfirmPasswordError(validation.isValid ? undefined : validation.error);
+  };
+
   const handleRegister = async () => {
-    if (!password.trim()) {
-      toast.info('Por favor, informe sua senha.');
-      return;
-    }
+    setPasswordTouched(true);
+    setConfirmPasswordTouched(true);
 
-    if (password.length < 8) {
-      toast.info('A senha deve ter no mínimo 8 caracteres.');
-      return;
-    }
+    const passwordValidation = validatePassword(password);
+    const confirmValidation = validatePasswordConfirmation(password, confirmPassword);
 
-    if (!confirmPassword.trim()) {
-      toast.info('Por favor, confirme sua senha.');
-      return;
-    }
+    setPasswordError(passwordValidation.isValid ? undefined : passwordValidation.error);
+    setConfirmPasswordError(confirmValidation.isValid ? undefined : confirmValidation.error);
 
-    if (password !== confirmPassword) {
-      toast.info('As senhas não coincidem.');
+    if (!passwordValidation.isValid || !confirmValidation.isValid) {
       return;
     }
 
@@ -116,11 +148,9 @@ export default function RegisterStep4({ navigation, route }: any) {
     navigation.goBack();
   };
 
-  const isFormValid =
-    password.trim() !== '' &&
-    confirmPassword.trim() !== '' &&
-    password === confirmPassword &&
-    password.length >= 8;
+  const passwordValidation = validatePassword(password);
+  const confirmValidation = validatePasswordConfirmation(password, confirmPassword);
+  const isFormValid = passwordValidation.isValid && confirmValidation.isValid;
 
   return (
     <View style={registerStepStyles.container}>
@@ -178,63 +208,74 @@ export default function RegisterStep4({ navigation, route }: any) {
                   </Text>
 
                   {/* Password Input */}
-                  <View style={registerStepStyles.passwordContainer}>
-                    <TextInput
-                      style={registerStepStyles.passwordInput}
-                      placeholder="Senha"
-                      placeholderTextColor="#999999"
-                      value={password}
-                      onChangeText={setPassword}
-                      secureTextEntry={!showPassword}
-                      returnKeyType="next"
-                    />
-                    <TouchableOpacity
-                      style={registerStepStyles.eyeButton}
-                      onPress={() => setShowPassword(!showPassword)}
-                    >
-                      <FontAwesome
-                        name={showPassword ? "eye" : "eye-slash"}
-                        size={20}
-                        color="#999"
+                  <View style={registerStepStyles.inputWrapper}>
+                    <View style={[
+                      registerStepStyles.passwordContainer,
+                      passwordTouched && passwordError && registerStepStyles.passwordContainerError
+                    ]}>
+                      <TextInput
+                        style={registerStepStyles.passwordInput}
+                        placeholder="Senha"
+                        placeholderTextColor="#999999"
+                        value={password}
+                        onChangeText={handlePasswordChange}
+                        onBlur={handlePasswordBlur}
+                        secureTextEntry={!showPassword}
+                        returnKeyType="next"
                       />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={registerStepStyles.eyeButton}
+                        onPress={() => setShowPassword(!showPassword)}
+                      >
+                        <FontAwesome
+                          name={showPassword ? "eye" : "eye-slash"}
+                          size={20}
+                          color="#999"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {passwordTouched && passwordError && (
+                      <Text style={registerStepStyles.errorText}>{passwordError}</Text>
+                    )}
+                    {password.length > 0 && password.length < 8 && !passwordError && (
+                      <Text style={registerStepStyles.hintText}>
+                        A senha deve ter no mínimo 8 caracteres e conter letras e números
+                      </Text>
+                    )}
                   </View>
 
                   {/* Confirm Password Input */}
-                  <View style={registerStepStyles.passwordContainer}>
-                    <TextInput
-                      style={registerStepStyles.passwordInput}
-                      placeholder="Confirme sua senha"
-                      placeholderTextColor="#999999"
-                      value={confirmPassword}
-                      onChangeText={setConfirmPassword}
-                      secureTextEntry={!showConfirmPassword}
-                      returnKeyType="done"
-                      onSubmitEditing={handleRegister}
-                    />
-                    <TouchableOpacity
-                      style={registerStepStyles.eyeButton}
-                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      <FontAwesome
-                        name={showConfirmPassword ? "eye" : "eye-slash"}
-                        size={20}
-                        color="#999"
+                  <View style={registerStepStyles.inputWrapper}>
+                    <View style={[
+                      registerStepStyles.passwordContainer,
+                      confirmPasswordTouched && confirmPasswordError && registerStepStyles.passwordContainerError
+                    ]}>
+                      <TextInput
+                        style={registerStepStyles.passwordInput}
+                        placeholder="Confirme sua senha"
+                        placeholderTextColor="#999999"
+                        value={confirmPassword}
+                        onChangeText={handleConfirmPasswordChange}
+                        onBlur={handleConfirmPasswordBlur}
+                        secureTextEntry={!showConfirmPassword}
+                        returnKeyType="done"
+                        onSubmitEditing={handleRegister}
                       />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={registerStepStyles.eyeButton}
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        <FontAwesome
+                          name={showConfirmPassword ? "eye" : "eye-slash"}
+                          size={20}
+                          color="#999"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {confirmPasswordTouched && confirmPasswordError && (
+                      <Text style={registerStepStyles.errorText}>{confirmPasswordError}</Text>
+                    )}
                   </View>
-
-                  {password.length > 0 && password.length < 8 && (
-                    <Text style={registerStepStyles.hintText}>
-                      A senha deve ter no mínimo 8 caracteres
-                    </Text>
-                  )}
-
-                  {password.length >= 8 && confirmPassword.length > 0 && password !== confirmPassword && (
-                    <Text style={registerStepStyles.errorHintText}>
-                      As senhas não coincidem
-                    </Text>
-                  )}
                 </View>
 
                 {/* Buttons */}

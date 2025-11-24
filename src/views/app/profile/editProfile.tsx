@@ -25,6 +25,7 @@ import { IAccount } from '../../../models/IAccount';
 import IAddress from '../../../models/IAddress';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
+import { validateName, validatePhone, validatePassword, validatePasswordConfirmation, validateCEP } from '../../../utils/validation';
 
 interface EditProfileProps {
   navigation: any;
@@ -129,9 +130,28 @@ export default function EditProfile({ navigation }: EditProfileProps) {
 
     try {
       // Validações de campos obrigatórios
-      if (!displayFormData.name || displayFormData.name.trim().length === 0) {
-        toast.error('Nome obrigatório', 'Por favor, preencha o campo nome');
+      const nameValidation = validateName(displayFormData.name || '');
+      if (!nameValidation.isValid) {
+        toast.error('Validação', nameValidation.error || 'Nome é obrigatório');
         return;
+      }
+
+      // Validar telefone se fornecido
+      if (displayFormData.phone_number) {
+        const phoneValidation = validatePhone(displayFormData.phone_number);
+        if (!phoneValidation.isValid) {
+          toast.error('Validação', phoneValidation.error || 'Telefone inválido');
+          return;
+        }
+      }
+
+      // Validar CEP se fornecido
+      if (address.cep) {
+        const cepValidation = validateCEP(address.cep);
+        if (!cepValidation.isValid) {
+          toast.error('Validação', cepValidation.error || 'CEP inválido');
+          return;
+        }
       }
 
       // Validar senha se fornecida
@@ -140,16 +160,16 @@ export default function EditProfile({ navigation }: EditProfileProps) {
           toast.error('Senha atual obrigatória', 'Digite sua senha atual para alterar a senha');
           return;
         }
-        if (!password.new) {
-          toast.error('Nova senha obrigatória', 'Digite sua nova senha');
+        
+        const passwordValidation = validatePassword(password.new, 6);
+        if (!passwordValidation.isValid) {
+          toast.error('Validação', passwordValidation.error || 'Senha inválida');
           return;
         }
-        if (password.new.length < 6) {
-          toast.error('Senha muito curta', 'A nova senha deve ter pelo menos 6 caracteres');
-          return;
-        }
-        if (password.new !== password.confirm) {
-          toast.error('Senhas não coincidem', 'A confirmação de senha deve ser igual à nova senha');
+        
+        const confirmValidation = validatePasswordConfirmation(password.new, password.confirm);
+        if (!confirmValidation.isValid) {
+          toast.error('Validação', confirmValidation.error || 'As senhas não coincidem');
           return;
         }
 
