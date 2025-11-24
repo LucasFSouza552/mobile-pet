@@ -50,11 +50,11 @@ export default function Main() {
         swipeEnabled: true,
         tabBarActiveTintColor: '#f2f2f2',
         tabBarInactiveTintColor: COLORS.primary,
-        tabBarStyle: isCameraOpen ? { 
+        tabBarStyle: isCameraOpen ? {
           display: 'none',
           height: 0,
           opacity: 0,
-        } : { 
+        } : {
           backgroundColor: COLORS.secondary,
           paddingBottom: insets.bottom,
         },

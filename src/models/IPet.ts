@@ -5,15 +5,16 @@ export interface IPet {
     name: string;
     type: "Cachorro" | "Gato" | "Pássaro" | "Outro";
     age?: number;
-    gender: "Male" | "Female";
+    gender: "male" | "female";
     weight: number;
-    images: string[];
+    images?: string[];
     description?: string;
     adopted: boolean;
-    account: IAccount;
+    account: string | IAccount;
     adoptedAt?: string;
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string;
     lastSyncedAt?: string;
 }
 

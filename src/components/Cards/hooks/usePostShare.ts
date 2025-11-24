@@ -5,6 +5,7 @@ import { useShareMessage } from './useShareMessage';
 import { useToast } from '../../../hooks/useToast';
 import Constants from 'expo-constants';
 import { API_URL } from '@env';
+import { IAccount } from '../../../models/IAccount';
 
 interface UsePostShareProps {
 	post: IPost;
@@ -17,13 +18,27 @@ function getPostUrl(postId: string): string {
 	return `${baseUrl}/post/${postId}`;
 }
 
+function isAccount(value: IAccount | string): value is IAccount {
+	return typeof value !== "string" && 
+		   typeof value === "object" && 
+		   value !== null && 
+		   "name" in value;
+}
+
+function getAccountName(account: IAccount | string): string {
+	if (isAccount(account)) {
+		return account.name || 'Alguém';
+	}
+	return 'Alguém';
+}
+
 function formatShareMessage(post: IPost, includeUrl: boolean = true): string {
-	const authorName = post.account?.name || 'Alguém';
+	const authorName = getAccountName(post.account);
 	const content = post.content || '';
 	const url = includeUrl ? getPostUrl(post.id) : '';
-	
+
 	let message = `📱 Post de ${authorName}\n\n`;
-	
+
 	if (content) {
 		const maxLength = 200;
 		const truncatedContent = content.length > maxLength
@@ -31,11 +46,11 @@ function formatShareMessage(post: IPost, includeUrl: boolean = true): string {
 			: content;
 		message += `${truncatedContent}\n\n`;
 	}
-	
+
 	if (includeUrl && url) {
 		message += `🔗 ${url}`;
 	}
-	
+
 	return message;
 }
 
@@ -46,8 +61,8 @@ export function usePostShare({ post }: UsePostShareProps) {
 	const handleSharePress = async () => {
 		try {
 			const message = formatShareMessage(post, true);
-			const title = `Post de ${post.account?.name || 'Alguém'}`;
-			
+			const title = `Post de ${getAccountName(post.account)}`;
+
 			const shareOptions: any = {
 				title,
 				message,
@@ -60,7 +75,7 @@ export function usePostShare({ post }: UsePostShareProps) {
 			}
 
 			const result = await Share.share(shareOptions);
-			
+
 			if (result.action === Share.sharedAction) {
 				triggerShareMessage();
 				toast.success('Compartilhado!', 'Post compartilhado com sucesso');
@@ -93,4 +108,6 @@ export function usePostShare({ post }: UsePostShareProps) {
 		getPostUrl: () => getPostUrl(post.id),
 	};
 }
+
+
 

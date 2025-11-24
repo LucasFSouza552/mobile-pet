@@ -85,7 +85,7 @@ const TabItem: React.FC<TabItemProps> = ({ tabKey, label, isActive, onPress, sty
       style={[styles.tabItem, isActive && styles.tabItemActive]}
       accessibilityState={{ selected: isActive }}
     >
-      <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+      <Text style={styles.tabText}>
         {label}
       </Text>
     </TouchableOpacity>
@@ -183,11 +183,8 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       backgroundColor: COLORS.primary,
     },
     tabText: {
-      color: COLORS.text,
-      fontWeight: '600',
-    },
-    tabTextActive: {
       color: COLORS.bg,
+      fontWeight: '600',
     },
   });
 }

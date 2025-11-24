@@ -64,7 +64,7 @@ export const postRepository = {
     },
     async searchPosts(query: string, page: number = 1, limit: number = 10) {
         try {
-            const response = await apiClient.get(`/post/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+            const response = await apiClient.get(`/post/search?content=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
             return response.data;
         } catch (error) {
             throw error;

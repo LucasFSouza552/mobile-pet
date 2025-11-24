@@ -7,8 +7,8 @@ export interface IHistory {
     type: "adoption" | "sponsorship" | "donation";
     status?: IHistoryStatus;
     pet?: string | IPet | null;
-    institution?: IAccount;
-    account: string;
+    institution?: string | IAccount;
+    account: string | IAccount;
     amount?: string;
     externalReference?: string | null;
     urlPayment?: string | null;

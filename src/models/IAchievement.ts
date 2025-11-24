@@ -1,10 +1,10 @@
 export interface IAchievement {
     id: string;
     name: string;
-    description: string;
+    description?: string;
     type: "donation" | "sponsorship" | "adoption";
     createdAt: string;
     updatedAt: string;
-    unlockedAt?: string;
+    lastSyncedAt?: string;
 }
 

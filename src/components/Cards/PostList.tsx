@@ -12,9 +12,11 @@ interface PostListProps {
 	onRefresh?: () => void | Promise<void>;
 	refreshing?: boolean;
 	onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+	headerComponent?: React.ReactElement | null;
+	emptyMessage?: string;
 }
 
-export default function PostList({ title, posts, account, onEndReached, onRefresh, refreshing, onScroll }: PostListProps) {
+export default function PostList({ title, posts, account, onEndReached, onRefresh, refreshing, onScroll, headerComponent, emptyMessage }: PostListProps) {
 
 	const renderItem = useCallback(({ item }: { item: IPost; index: number }) => {
 		return (
@@ -29,7 +31,32 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 
 	const keyExtractor = useCallback((item: IPost) => item.id, []);
 
-	const emptyComponent = useMemo(() => <Text style={styles.empty}>Sem posts</Text>, []);
+	const emptyComponent = useMemo(() => <Text style={styles.empty}>{emptyMessage || 'Sem posts'}</Text>, [emptyMessage]);
+
+	const listEmptyComponent = useMemo(() => {
+		if (headerComponent) {
+			return (
+				<View>
+					{headerComponent}
+					<Text style={styles.title}>{title}</Text>
+					<Text style={styles.empty}>{emptyMessage || 'Sem posts'}</Text>
+				</View>
+			);
+		}
+		return emptyComponent;
+	}, [headerComponent, title, emptyComponent, emptyMessage]);
+
+	const listHeader = useMemo(() => {
+		if (!headerComponent) {
+			return <Text style={styles.title}>{title}</Text>;
+		}
+		return (
+			<View>
+				{headerComponent}
+				<Text style={styles.title}>{title}</Text>
+			</View>
+		);
+	}, [headerComponent, title]);
 
 	return (
 		<View style={styles.container}>
@@ -38,14 +65,14 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 				keyExtractor={keyExtractor}
 				renderItem={renderItem}
 				contentContainerStyle={styles.listContent}
-				ListHeaderComponent={<Text style={styles.title}>{title}</Text>}
+				ListHeaderComponent={listHeader}
 				showsVerticalScrollIndicator={false}
 				refreshing={!!refreshing}
 				onRefresh={onRefresh}
 				alwaysBounceVertical
 				onEndReachedThreshold={0.2}
 				onEndReached={onEndReached}
-				ListEmptyComponent={emptyComponent}
+				ListEmptyComponent={listEmptyComponent}
 				initialNumToRender={6}
 				maxToRenderPerBatch={8}
 				updateCellsBatchingPeriod={50}

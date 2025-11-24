@@ -7,5 +7,6 @@ export interface IAccountPetInteraction {
     status: "liked" | "disliked" | "viewed";
     createdAt: string;
     updatedAt: string;
+    lastSyncedAt?: string;
 }
 

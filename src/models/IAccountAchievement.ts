@@ -4,5 +4,6 @@ export interface IAccountAchievement {
     achievement: string;
     createdAt: string;
     updatedAt: string;
+    lastSyncedAt?: string;
 }
 

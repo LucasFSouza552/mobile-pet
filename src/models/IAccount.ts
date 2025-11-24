@@ -11,9 +11,9 @@ export interface IAccount {
     cpf?: string;
     cnpj?: string;
     verified: boolean;
-    address: IAddress;
+    address?: IAddress;
     createdAt: string;
     updatedAt: string;
-    lastSyncedAt: string;
-    postCount: number;
+    lastSyncedAt?: string;
+    postCount?: number;
 }
