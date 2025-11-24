@@ -7,7 +7,6 @@ export const historyRemoteRepository = {
             const response = await apiClient.get(`/history/profile/me`);
             return response.data;
         } catch (error) {
-            console.error(`Erro ao buscar histórico da conta ${accountId}:`, error);
             throw error;
         }
     },
@@ -17,7 +16,6 @@ export const historyRemoteRepository = {
             const response = await apiClient.get(`/history/${id}`);
             return response.data;
         } catch (error) {
-            console.error(`Erro ao buscar histórico ${id}:`, error);
             throw error;
         }
     },
@@ -27,7 +25,6 @@ export const historyRemoteRepository = {
             const response = await apiClient.post("/history", history);
             return response.data;
         } catch (error) {
-            console.error("Erro ao criar histórico:", error);
             throw error;
         }
     },
@@ -37,7 +34,6 @@ export const historyRemoteRepository = {
             const response = await apiClient.patch(`/history/${id}`, history);
             return response.data;
         } catch (error) {
-            console.error(`Erro ao atualizar histórico ${id}:`, error);
             throw error;
         }
     },
@@ -46,7 +42,15 @@ export const historyRemoteRepository = {
         try {
             await apiClient.delete(`/history/${id}`);
         } catch (error) {
-            console.error(`Erro ao deletar histórico ${id}:`, error);
+            throw error;
+        }
+    },
+
+    async updateHistoryStatus(id: string, status: string): Promise<IHistory> {
+        try {
+            const response = await apiClient.patch(`/history/status/${id}`, { status });
+            return response.data;
+        } catch (error) {
             throw error;
         }
     }

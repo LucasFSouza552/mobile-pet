@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "mobile-pet",
+    "name": "myPets",
     "slug": "mobile-pet",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -37,13 +37,14 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-sqlite"
-    ],
+    "plugins": ["expo-sqlite"],
     "extra": {
       "eas": {
         "projectId": "6e73d393-3951-4eb2-8682-b0977c705a0a"
       }
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
     }
   }
 }

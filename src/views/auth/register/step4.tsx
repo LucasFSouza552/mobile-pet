@@ -4,7 +4,6 @@ import {
   Text,
   TouchableOpacity,
   Image,
-  Alert,
   ActivityIndicator,
   useWindowDimensions,
   KeyboardAvoidingView,
@@ -19,42 +18,43 @@ import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
+import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { IAccount } from '../../../models/IAccount';
 import { ITypeAccounts } from '../../../models/ITypeAccounts';
-import Toast from 'react-native-toast-message';
 import { accountSync } from '../../../data/sync/accountSync';
 import { useAccount } from '../../../context/AccountContext';
 import { Images } from '../../../../assets';
+import { useToast } from '../../../hooks/useToast';
 
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar, email, phone_number, cpf, cnpj } = route.params;
+  const { documentType, name, avatar, avatarFile, email, phone_number, cpf, cnpj } = route.params;
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { refreshAccount } = useAccount();
-
+  const toast = useToast();
   const handleRegister = async () => {
     if (!password.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe sua senha.');
+      toast.info('Por favor, informe sua senha.');
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Atenção', 'A senha deve ter no mínimo 8 caracteres.');
+      toast.info('A senha deve ter no mínimo 8 caracteres.');
       return;
     }
 
     if (!confirmPassword.trim()) {
-      Alert.alert('Atenção', 'Por favor, confirme sua senha.');
+      toast.info('Por favor, confirme sua senha.');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Atenção', 'As senhas não coincidem.');
+      toast.info('As senhas não coincidem.');
       return;
     }
 
@@ -66,7 +66,6 @@ export default function RegisterStep4({ navigation, route }: any) {
       const accountData: IAccount = {
         name,
         email,
-        avatar: avatar || undefined,
         phone_number,
         role,
         cpf: cpf?.replaceAll("-", "")?.replaceAll(".", "") || undefined,
@@ -81,26 +80,33 @@ export default function RegisterStep4({ navigation, route }: any) {
       };
 
       await authRemoteRepository.register(registerData as any);
+      
+      if (avatarFile && avatar) {
+        try {
+          const formData = new FormData();
+          formData.append('avatar', {
+            uri: avatar,
+            type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
+            name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
+          } as any);
+          
+          await accountRemoteRepository.uploadAvatar(formData);
+        } catch (avatarError: any) {
+          console.error('Erro ao fazer upload do avatar:', avatarError);
+          toast.info('Conta criada, mas houve um erro ao fazer upload da foto. Você pode adicionar uma foto depois no perfil.');
+        }
+      }
+      
       await accountSync.syncFromServer();
       await refreshAccount();
 
-      Toast.show({
-        type: 'success',
-        text1: 'Sucesso!',
-        text2: 'Cadastro realizado com sucesso!',
-        position: 'bottom',
-      });
+      toast.success('Cadastro realizado com sucesso!');
 
-      navigation.replace("Login")
+      navigation.replace("Login");
 
     } catch (error: any) {
-      console.error('Erro no cadastro:', error);
-      Toast.show({
-        type: 'error',
-        text1: 'Erro',
-        text2: error.message || 'Erro ao realizar cadastro. Tente novamente.',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Erro ao realizar cadastro. Tente novamente.');
+      return;
     } finally {
       setLoading(false);
     }

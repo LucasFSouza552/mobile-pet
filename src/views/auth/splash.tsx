@@ -7,6 +7,7 @@ import { runMigrations } from '../../data/local/database/migrations';
 import { Images } from '../../../assets';
 
 export default function Splash({ navigation }: any) {
+
   useEffect(() => {
     const checkConnectionAndNavigate = async () => {
       try {
@@ -14,7 +15,6 @@ export default function Splash({ navigation }: any) {
         await runMigrations();
 
         const account = await accountSync.getProfile();
-        console.log('account', account);
         if (account) {
           navigation.replace('Main');
           return;

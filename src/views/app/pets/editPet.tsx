@@ -14,9 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as ExpoCamera from 'expo-camera';
-import Toast from 'react-native-toast-message';
-import { Alert } from 'react-native';
+  import * as ExpoCamera from 'expo-camera';
 
 import { useTheme } from '../../../context/ThemeContext';
 import { useAccount } from '../../../context/AccountContext';
@@ -28,6 +26,7 @@ import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import CameraView from '../../../components/CameraView';
 import { IPet } from '../../../models/IPet';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { useToast } from '../../../hooks/useToast';
 
 type PetFormState = {
   name: string;
@@ -54,7 +53,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
   const { account } = useAccount();
   const { setIsCameraOpen } = useCamera();
   const styles = makeStyles(COLORS);
-
+  const toast = useToast();
   const petId = route?.params?.petId;
 
   const [form, setForm] = useState<PetFormState>({
@@ -91,13 +90,9 @@ export default function EditPet({ navigation, route }: EditPetProps) {
       setNewImages([]);
       setRemovedImageIndices(new Set());
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Não foi possível carregar o pet',
-        text2: error?.message ?? 'Tente novamente mais tarde',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Não foi possível carregar o pet');
       navigation.goBack();
+      return;
     } finally {
       setLoading(false);
     }
@@ -105,11 +100,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
 
   useEffect(() => {
     if (!petId) {
-      Toast.show({
-        type: 'error',
-        text1: 'Pet não identificado',
-        position: 'bottom',
-      });
+      toast.error('Erro', 'Pet não identificado');
       navigation.goBack();
       return;
     }
@@ -153,12 +144,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Toast.show({
-          type: 'info',
-          text1: 'Permissão necessária',
-          text2: 'Precisamos de acesso à galeria para adicionar fotos.',
-          position: 'bottom',
-        });
+        toast.info('Permissão necessária', 'Precisamos de acesso à galeria para adicionar fotos.');
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -178,23 +164,13 @@ export default function EditPet({ navigation, route }: EditPetProps) {
       
       const totalImages = petImages.length - removedImageIndices.size + newImages.length + picked.length;
       if (totalImages > 6) {
-        Toast.show({
-          type: 'info',
-          text1: 'Limite de imagens',
-          text2: 'Você pode adicionar no máximo 6 imagens.',
-          position: 'bottom',
-        });
+        toast.info('Limite de imagens', 'Você pode adicionar no máximo 6 imagens.');
         return;
       }
       
       setNewImages(prev => [...prev, ...picked]);
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro',
-        text2: 'Não foi possível abrir a galeria.',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Não foi possível abrir a galeria.');
     }
   };
 
@@ -205,35 +181,20 @@ export default function EditPet({ navigation, route }: EditPetProps) {
         (ExpoCamera as any).Camera?.requestCameraPermissionsAsync;
       const { status } = await (request ? request() : Promise.resolve({ status: 'denied' }));
       if (status !== 'granted') {
-        Toast.show({
-          type: 'info',
-          text1: 'Permissão necessária',
-          text2: 'Precisamos de acesso à câmera para tirar fotos.',
-          position: 'bottom',
-        });
+        toast.info('Permissão necessária', 'Precisamos de acesso à câmera para tirar fotos.');
         return;
       }
       setIsCameraOpen(true);
       setIsCameraOpenLocal(true);
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro',
-        text2: 'Não foi possível acessar a câmera.',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Não foi possível acessar a câmera.');
     }
   };
 
   const handleCameraCapture = (photo: { uri: string; name: string; type: string }) => {
     const totalImages = petImages.length - removedImageIndices.size + newImages.length + 1;
     if (totalImages > 6) {
-      Toast.show({
-        type: 'info',
-        text1: 'Limite de imagens',
-        text2: 'Você pode adicionar no máximo 6 imagens.',
-        position: 'bottom',
-      });
+      toast.info('Limite de imagens', 'Você pode adicionar no máximo 6 imagens.');
       return;
     }
     setNewImages(prev => [...prev, photo]);
@@ -248,18 +209,18 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     if (!petId || !canEdit || saving) return;
 
     if (!form.name.trim()) {
-      Toast.show({ type: 'info', text1: 'Informe o nome do pet', position: 'bottom' });
+      toast.info('Informe o nome do pet');
       return;
     }
 
     if (!form.weight.trim()) {
-      Toast.show({ type: 'info', text1: 'Informe o peso do pet', position: 'bottom' });
+      toast.info('Informe o peso do pet');
       return;
     }
 
     const parsedWeight = Number(String(form.weight).replace(',', '.'));
     if (!Number.isFinite(parsedWeight) || parsedWeight <= 0) {
-      Toast.show({ type: 'info', text1: 'Peso inválido', text2: 'Use somente números maiores que zero.', position: 'bottom' });
+      toast.info('Peso inválido', 'Use somente números maiores que zero.');
       return;
     }
 
@@ -267,7 +228,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     if (form.age.trim()) {
       const tempAge = Number(form.age);
       if (!Number.isFinite(tempAge) || tempAge < 0) {
-        Toast.show({ type: 'info', text1: 'Idade inválida', text2: 'Utilize apenas números positivos.', position: 'bottom' });
+        toast.info('Idade inválida', 'Utilize apenas números positivos.');
         return;
       }
       parsedAge = tempAge;
@@ -316,19 +277,10 @@ export default function EditPet({ navigation, route }: EditPetProps) {
         }
       }
 
-      Toast.show({
-        type: 'success',
-        text1: 'Pet atualizado com sucesso!',
-        position: 'bottom',
-      });
+      toast.success('Pet atualizado com sucesso!');
       navigation.goBack();
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro ao salvar alterações',
-        text2: error?.message ?? 'Tente novamente mais tarde',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Erro ao salvar alterações');
     } finally {
       setSaving(false);
     }
@@ -598,11 +550,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
               text={saving ? 'Salvando...' : 'Salvar alterações'}
               onPress={() => {
                 if (!canEdit) {
-                  Toast.show({
-                    type: 'info',
-                    text1: 'Você não pode editar este pet',
-                    position: 'bottom',
-                  });
+                  toast.info('Você não pode editar este pet', 'Apenas a instituição que cadastrou este pet pode alterar os dados e apenas enquanto ele estiver disponível.');
                   return;
                 }
                 handleSave();

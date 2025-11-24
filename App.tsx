@@ -20,25 +20,25 @@ import InstitutionNotificationsScreen from './src/views/app/institutionNotificat
 import DonationPage from './src/views/app/donation/donatePay';
 import DonationWebView from './src/views/app/donation/DonationWebView';
 import NewPetScreen from './src/views/app/pets/newPet';
+import ForgotPasswordScreen from './src/views/auth/forgotPassword';
+import ResetPasswordScreen from './src/views/auth/resetPassword';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 import { useTheme as useAppTheme } from './src/context/ThemeContext';
 import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
-import { Keyboard } from 'react-native';
 import { AccountProvider } from './src/context/AccountContext';
 import { PostProvider } from './src/context/PostContext';
 import { CameraProvider } from './src/context/CameraContext';
 import { runMigrations } from './src/data';
-
 const Stack = createNativeStackNavigator();
 
 export default function App() {
 
-  const [keyboardOffset, setKeyboardOffset] = useState(50);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [dbReady, setDbReady] = useState(false);
+
+
   useEffect(() => {
     (async () => {
       try {
@@ -48,19 +48,6 @@ export default function App() {
       }
     })();
 
-    const showSubscription = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardVisible(true);
-      setKeyboardOffset(e.endCoordinates.height + 30);
-    });
-    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardVisible(false);
-      setKeyboardOffset(50);
-    });
-
-    return () => {
-      showSubscription.remove();
-      hideSubscription.remove();
-    };
   }, []);
 
   if (!dbReady) {
@@ -86,6 +73,8 @@ export default function App() {
                   <Stack.Screen name="Splash" component={SplashScreen} />
                   <Stack.Screen name="Welcome" component={WelcomeScreen} />
                   <Stack.Screen name="Login" component={LoginScreen} />
+                  <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                  <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                   <Stack.Screen name="Register" component={RegisterScreen} />
                   <Stack.Screen name="RegisterStep1" component={RegisterStep1Screen} />
                   <Stack.Screen name="RegisterStep2" component={RegisterStep2Screen} />

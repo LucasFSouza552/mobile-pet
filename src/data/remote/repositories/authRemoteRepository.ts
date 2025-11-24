@@ -35,9 +35,9 @@ export const authRemoteRepository = {
         }
     },
 
-    async resetPassword(token: string) {
+    async resetPassword(token: string, newPassword: string) {
         try {
-            const response = await apiClient.post("/auth/reset-password", { token });
+            const response = await apiClient.post("/auth/reset-password", { token, newPassword });
             return response.data;
         } catch (error) {
             throw error;

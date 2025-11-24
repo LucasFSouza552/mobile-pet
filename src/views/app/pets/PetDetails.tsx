@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, ActivityIndicator, TouchableOpacity, Linking, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
@@ -24,7 +24,6 @@ export default function PetDetails(props: PetDetailsProps) {
   const styles = makeStyles(COLORS);
   const toast = useToast();
   const petId = route?.params?.petId || '';
-  const toast = useToast();
   const [pet, setPet] = useState<any>(null);
   const [institution, setInstitution] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -79,6 +78,76 @@ export default function PetDetails(props: PetDetailsProps) {
   useEffect(() => {
     loadData();
   }, [petId]);
+
+  const handlePhonePress = useCallback(async (phoneNumber: string) => {
+    if (!phoneNumber) return;
+
+    // Remove caracteres não numéricos, exceto +
+    const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
+    
+    // Se não começar com +, adiciona código do Brasil
+    const formattedNumber = cleanNumber.startsWith('+') 
+      ? cleanNumber 
+      : `+55${cleanNumber.replace(/^0/, '')}`;
+
+    // Remove o + para o formato do WhatsApp
+    const whatsappNumber = formattedNumber.replace(/^\+/, '');
+
+    Alert.alert(
+      'Contato',
+      'Como deseja entrar em contato?',
+      [
+        {
+          text: 'WhatsApp',
+          onPress: async () => {
+            try {
+              const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}`;
+              const canOpen = await Linking.canOpenURL(whatsappUrl);
+              
+              if (canOpen) {
+                await Linking.openURL(whatsappUrl);
+              } else {
+                // Tenta abrir WhatsApp Web
+                const whatsappWebUrl = `https://wa.me/${whatsappNumber}`;
+                const canOpenWeb = await Linking.canOpenURL(whatsappWebUrl);
+                
+                if (canOpenWeb) {
+                  await Linking.openURL(whatsappWebUrl);
+                } else {
+                  toast.error('Erro', 'WhatsApp não está instalado');
+                }
+              }
+            } catch (error) {
+              console.error('Erro ao abrir WhatsApp:', error);
+              toast.error('Erro', 'Não foi possível abrir o WhatsApp');
+            }
+          },
+        },
+        {
+          text: 'Ligar',
+          onPress: async () => {
+            try {
+              const phoneUrl = `tel:${cleanNumber}`;
+              const canOpen = await Linking.canOpenURL(phoneUrl);
+              
+              if (canOpen) {
+                await Linking.openURL(phoneUrl);
+              } else {
+                toast.error('Erro', 'Não foi possível fazer a ligação');
+              }
+            } catch (error) {
+              console.error('Erro ao fazer ligação:', error);
+              toast.error('Erro', 'Não foi possível fazer a ligação');
+            }
+          },
+        },
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+      ]
+    );
+  }, [toast]);
 
   if (loading) {
     return (
@@ -236,10 +305,17 @@ export default function PetDetails(props: PetDetailsProps) {
                 )}
 
                 {institution?.phone_number && (
-                  <View style={styles.infoRow}>
+                  <TouchableOpacity
+                    style={styles.infoRow}
+                    onPress={() => handlePhonePress(institution.phone_number)}
+                    activeOpacity={0.7}
+                  >
                     <FontAwesome5 name="phone" size={14} color={COLORS.primary} />
-                    <Text style={styles.institutionAddress}>{institution.phone_number}</Text>
-                  </View>
+                    <Text style={[styles.institutionAddress, styles.phoneLink]}>
+                      {institution.phone_number}
+                    </Text>
+                    <FontAwesome5 name="whatsapp" size={14} color="#25D366" style={{ marginLeft: 4 }} />
+                  </TouchableOpacity>
                 )}
 
                 {institution?.email && (
@@ -252,7 +328,7 @@ export default function PetDetails(props: PetDetailsProps) {
                 {institution?.verified && (
                   <View style={styles.verifiedBadge}>
                     <FontAwesome5 name="check-circle" size={14} color="#166534" />
-                    <Text style={styles.verifiedText}>Instituição verificada</Text>
+                    <Text style={styles.verifiedText}>Verificada</Text>
                   </View>
                 )}
               </View>
@@ -409,6 +485,11 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontSize: 12,
       fontWeight: '600',
       color: '#166534',
+    },
+    phoneLink: {
+      textDecorationLine: 'underline',
+      color: COLORS.primary,
+      fontWeight: '600',
     },
   });
 }

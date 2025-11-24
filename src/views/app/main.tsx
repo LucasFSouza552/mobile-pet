@@ -11,6 +11,8 @@ import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccount } from '../../context/AccountContext';
 import { useCamera } from '../../context/CameraContext';
+import { useEffect } from 'react';
+import { useNetworkSync } from '../../hooks/useNetworkSync';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -27,6 +29,16 @@ export default function Main() {
   const { COLORS } = useTheme();
   const insets = useSafeAreaInsets();
   const { isCameraOpen } = useCamera();
+  const { account } = useAccount();
+  const isInstitution = account?.role === 'institution';
+
+  const { syncNow } = useNetworkSync();
+
+  useEffect(() => {
+    (async () => {
+      await syncNow();
+    })();
+  }, [syncNow]);
 
   return (
     <Tab.Navigator
@@ -57,7 +69,9 @@ export default function Main() {
         },
       })}
     >
-      <Tab.Screen name="FindPets" component={FindPets} />
+      {!isInstitution && (
+        <Tab.Screen name="FindPets" component={FindPets} />
+      )}
       <Tab.Screen name="Donate" component={Donate} />
       <Tab.Screen
         name="NewPost"
@@ -79,7 +93,7 @@ export default function Main() {
         component={Profile}
         listeners={({ navigation }) => ({
           tabPress: () => {
-            navigation.navigate('Profile', {});
+            navigation.setParams({ accountId: undefined });
           },
         })}
       />

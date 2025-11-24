@@ -63,11 +63,7 @@ export function useEditCommentModal({ postId }: UseEditCommentModalProps) {
 			closeEditModal();
 
 			setTimeout(() => {
-				Toast.show({
-					type: 'success',
-					text1: 'Comentário editado com sucesso',
-					position: 'bottom',
-				});
+				toast.success('Comentário editado com sucesso');
 			}, 300);
 		} catch (error: any) {
 			toast.handleApiError(error, error?.data?.message || 'Erro ao editar comentário');

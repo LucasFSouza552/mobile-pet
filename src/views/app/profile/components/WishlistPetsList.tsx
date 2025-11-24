@@ -1,10 +1,10 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { accountPetInteractionSync } from '../../../../data/sync/accountPetInteractionSync';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { useTheme } from '../../../../context/ThemeContext';
+import { useWishPetsList } from './hooks/useWishPetsList';
 
 const getImageSource = (imageId?: string | null): ImageSourcePropType => {
   if (!imageId) {
@@ -27,57 +27,7 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
   const navigation = useNavigation();
-  const [items, setItems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const loadingRef = useRef(false);
-
-  const load = useCallback(async () => {
-    if (loadingRef.current) {
-      return;
-    }
-
-    try {
-      loadingRef.current = true;
-      setLoading(true);
-      const interactions = await accountPetInteractionSync.getByAccount(accountId);
-
-      const petsMap = new Map<string, any>();
-
-      interactions.forEach((interaction: any) => {
-        const status = String(interaction?.status ?? "").toLowerCase().trim();
-        if (status !== "liked") {
-          return;
-        }
-
-        const petData = interaction?.pet;
-
-        if (!petData || typeof petData !== "object" || !petData?.id) {
-          return;
-        }
-
-        if (petData.adopted === true || petData.adopted === 1) {
-          return;
-        }
-
-        if (!petsMap.has(petData.id)) {
-          petsMap.set(petData.id, petData);
-        }
-      });
-
-      const uniquePets = Array.from(petsMap.values());
-
-      setItems(uniquePets);
-    } catch {
-      setItems([]);
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-    }
-  }, [accountId]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { items, loading, refreshing, error, load, onRefresh } = useWishPetsList(accountId);
 
   useFocusEffect(
     useCallback(() => {
@@ -96,8 +46,8 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
           }
           return `pet-${index}`;
         }}
-        refreshing={loading}
-        onRefresh={load}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           !loading ? (
@@ -138,7 +88,7 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
                   )}
                   {!!item?.gender && (
                     <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
-                      <Text style={[styles.badgeText, { color: COLORS.primary }]}>
+                      <Text style={[styles.badgeText]}>
                         {String(item.gender).toLowerCase() === 'female' ? 'Fêmea' :
                           String(item.gender).toLowerCase() === 'male' ? 'Macho' : String(item.gender)}
                       </Text>
@@ -146,12 +96,12 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
                   )}
                   {typeof item?.age === 'number' && (
                     <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
-                      <Text style={[styles.badgeText, { color: COLORS.primary }]}>{item.age} ano{item.age === 1 ? '' : 's'}</Text>
+                      <Text style={[styles.badgeText]}>{item.age} ano{item.age === 1 ? '' : 's'}</Text>
                     </View>
                   )}
                   {!!item?.weight && (
                     <View style={[styles.badge, { backgroundColor: COLORS.primary + '20', borderWidth: 1, borderColor: COLORS.primary + '40' }]}>
-                      <Text style={[styles.badgeText, { color: COLORS.primary }]}>{item.weight} kg</Text>
+                      <Text style={[styles.badgeText]}>{item.weight} kg</Text>
                     </View>
                   )}
                 </View>
@@ -229,13 +179,12 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingVertical: 5,
     },
     badgeText: {
-      color: COLORS.bg,
+      color: COLORS.text,
       fontWeight: '600',
       fontSize: 11,
     },
     description: {
       color: COLORS.text,
-      opacity: 0.7,
       fontSize: 13,
       lineHeight: 18,
     },

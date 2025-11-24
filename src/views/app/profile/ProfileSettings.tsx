@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { useAccount } from '../../../context/AccountContext';
+import { usePost } from '../../../context/PostContext';
 
 interface ProfileSettingsProps {
   navigation: any;
@@ -13,6 +14,7 @@ interface ProfileSettingsProps {
 export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
   const { COLORS } = useTheme();
   const { logout, account } = useAccount();
+  const { cleanPosts } = usePost();
   const styles = makeStyles(COLORS);
   const isInstitution = account?.role === 'institution';
 
@@ -26,6 +28,7 @@ export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
 
   const handleLogout = async () => {
     await logout();
+    cleanPosts();
     navigation.reset({
       index: 0,
       routes: [{ name: 'Welcome' }],
@@ -48,7 +51,7 @@ export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Perfil</Text>
-          
+
           <TouchableOpacity
             style={styles.option}
             onPress={handleEditProfile}
@@ -63,13 +66,13 @@ export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
             <FontAwesome5 name="chevron-right" size={14} color={COLORS.text} style={{ opacity: 0.5 }} />
           </TouchableOpacity>
 
-          
+
         </View>
 
         {isInstitution && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Conta</Text>
-            
+
             <TouchableOpacity
               style={styles.option}
               onPress={handleNotifications}

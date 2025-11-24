@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
@@ -13,7 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
-import Toast from 'react-native-toast-message';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 
 import { useTheme } from '../../../context/ThemeContext';
@@ -22,6 +20,7 @@ import { petRemoteRepository } from '../../../data/remote/repositories/petRemote
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { useToast } from '../../../hooks/useToast';
 
 const PET_TYPES = ['Cachorro', 'Gato', 'Pássaro', 'Outro'] as const;
 const GENDERS = [
@@ -33,7 +32,7 @@ export default function NewPet({ navigation }: any) {
   const { COLORS } = useTheme();
   const { account } = useAccount();
   const styles = useMemo(() => makeStyles(COLORS), [COLORS]);
-
+  const toast = useToast();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<typeof PET_TYPES[number]>('Cachorro');
@@ -67,22 +66,22 @@ export default function NewPet({ navigation }: any) {
 
   const validate = () => {
     if (!isInstitution) {
-      Toast.show({ type: 'error', text1: 'Somente instituições podem cadastrar pets.' });
+      toast.error('Somente instituições podem cadastrar pets.');
       return false;
     }
     if (!name.trim()) {
-      Toast.show({ type: 'info', text1: 'Informe o nome do pet.' });
+      toast.info('Informe o nome do pet.');
       return false;
     }
     const weightValue = Number(weight.replace(',', '.'));
     if (!weight.trim() || Number.isNaN(weightValue) || weightValue <= 0) {
-      Toast.show({ type: 'info', text1: 'Insira um peso válido.' });
+      toast.info('Insira um peso válido.');
       return false;
     }
     if (age.trim()) {
       const ageValue = Number(age);
       if (Number.isNaN(ageValue) || ageValue < 0) {
-        Toast.show({ type: 'info', text1: 'Idade deve ser um número positivo.' });
+        toast.info('Idade deve ser um número positivo.');
         return false;
       }
     }
@@ -115,11 +114,11 @@ export default function NewPet({ navigation }: any) {
         } as any);
         await petRemoteRepository.updateImages(created.id, formData);
       }
-      Toast.show({ type: 'success', text1: 'Pet cadastrado com sucesso!' });
+      toast.success('Pet cadastrado com sucesso!');
       navigation.goBack();
     } catch (error: any) {
-      const message = error?.message || 'Não foi possível cadastrar o pet.';
-      Toast.show({ type: 'error', text1: 'Erro', text2: message });
+      toast.handleApiError(error, error?.data?.message || 'Não foi possível cadastrar o pet.');
+      return;
     } finally {
       setLoading(false);
     }

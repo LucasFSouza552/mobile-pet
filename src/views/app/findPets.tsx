@@ -3,13 +3,13 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import Toast from 'react-native-toast-message';
 import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
 import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
 import { useIsFocused } from '@react-navigation/native';
 import { IPet } from '../../models/IPet';
 import { IAccount } from '../../models/IAccount';
 import { petRemoteRepository } from '../../data/remote/repositories/petRemoteRepository';
+import { useToast } from '../../hooks/useToast';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -22,14 +22,16 @@ export default function FindPets() {
   const [loading, setLoading] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
+  const toast = useToast();
 
   const loadNextPet = useCallback(async () => {
     try {
       setLoading(true);
       const data = await accountRemoteRepository.fetchFeed();
       setPetFeed(data || null);
-    } catch (e: any) {
-      Toast.show({ type: 'error', text1: 'Erro ao carregar feed', text2: e?.message, position: 'bottom' });
+    } catch (error: any) {
+      toast.handleApiError(error, error?.data?.message || 'Erro ao carregar feed');
+      return;
     } finally {
       setLoading(false);
     }

@@ -66,7 +66,6 @@ export const accountLocalRepository = {
                 ]
             );
         } catch (error: any) {
-            toast.handleApiError(error, error?.data?.message || 'Erro ao criar conta');
             throw error;
         }
 
@@ -93,37 +92,37 @@ export const accountLocalRepository = {
                 try {
                     await db.runAsync("DELETE FROM account_pet_interactions");
                 } catch (error) {
-                    console.error("Erro ao deletar account_pet_interactions:", error);
+                    throw error;
                 }
                 
                 try {
                     await db.runAsync("DELETE FROM pet_images");
                 } catch (error) {
-                    console.error("Erro ao deletar pet_images:", error);
+                    throw error;
                 }
                 
                 try {
                     await db.runAsync("DELETE FROM pets");
                 } catch (error) {
-                    console.error("Erro ao deletar pets:", error);
+                    throw error;
                 }
                 
                 try {
                     await db.runAsync("DELETE FROM history");
                 } catch (error) {
-                    console.error("Erro ao deletar history:", error);
+                    throw error;
                 }
                 
                 try {
                     await db.runAsync("DELETE FROM achievements");
                 } catch (error) {
-                    console.error("Erro ao deletar achievements:", error);
+                    throw error;
                 }
                 
                 try {
                     await db.runAsync("DELETE FROM accounts");
                 } catch (error) {
-                    console.error("Erro ao deletar accounts:", error);
+                    throw error;
                 }
                 
                 await db.execAsync("COMMIT");
@@ -135,7 +134,7 @@ export const accountLocalRepository = {
                 try {
                     await db.execAsync("ROLLBACK");
                 } catch (rollbackError) {
-                    console.error("Erro ao fazer rollback:", rollbackError);
+                    throw rollbackError;
                 }
                 
                 if (!error?.message?.includes('database is locked') && !error?.message?.includes('locked')) {
@@ -149,7 +148,6 @@ export const accountLocalRepository = {
                     continue;
                 }
                 
-                console.error("Erro ao limpar dados do banco após múltiplas tentativas:", error);
                 throw error;
             }
         }
@@ -157,14 +155,14 @@ export const accountLocalRepository = {
         try {
             await petImageLocalRepository.deleteAllLocalImages();
         } catch (error) {
-            console.error("Erro ao deletar imagens locais:", error);
+            throw error;
         }
 
         try {
             await removeStorage("@token");
             await removeStorage("@email");
         } catch (error) {
-            console.error("Erro ao remover storage:", error);
+            throw error;
         }
     },
 

@@ -4,6 +4,7 @@ import { Animated } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { IComment } from '../../../models/IComment';
 import { usePostComments } from './usePostComments';
+import { useToast } from '../../../hooks/useToast';
 
 interface UsePostCommentsModalProps {
 	postId?: string;
@@ -15,7 +16,7 @@ export function usePostCommentsModal({ postId }: UsePostCommentsModalProps) {
 	const [commentText, setCommentText] = useState('');
 	const slideY = useRef(new Animated.Value(height)).current;
 	const { comments, loading, hasMore, load, add, remove, update } = usePostComments(postId);
-
+	const toast = useToast();
 	const openComments = () => {
 		setIsOpen(true);
 		Animated.timing(slideY, {
@@ -49,11 +50,10 @@ export function usePostCommentsModal({ postId }: UsePostCommentsModalProps) {
 			await add(commentText);
 			setCommentText('');
 		} catch (e) {
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao comentar',
-				position: 'bottom',
-			});
+			toast.handleApiError(e, 'Erro ao comentar');
+			return;
+		} finally {
+			setCommentText('');
 		}
 	};
 
@@ -69,17 +69,10 @@ export function usePostCommentsModal({ postId }: UsePostCommentsModalProps) {
 					onPress: async () => {
 						try {
 							await remove(comment.id);
-							Toast.show({
-								type: 'success',
-								text1: 'Comentário excluído com sucesso',
-								position: 'bottom',
-							});
+							toast.success('Comentário excluído com sucesso');
 						} catch (e) {
-							Toast.show({
-								type: 'error',
-								text1: 'Erro ao excluir comentário',
-								position: 'bottom',
-							});
+							toast.handleApiError(e, 'Erro ao excluir comentário');
+							return;
 						}
 					},
 				},

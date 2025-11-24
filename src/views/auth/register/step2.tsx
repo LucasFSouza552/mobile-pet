@@ -21,7 +21,7 @@ import { Images } from '../../../../assets';
 export default function RegisterStep2({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar } = route.params;
+  const { documentType, name, avatar, avatarFile } = route.params;
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -73,6 +73,7 @@ export default function RegisterStep2({ navigation, route }: any) {
       documentType,
       name,
       avatar,
+      avatarFile,
       email: email.trim(),
       phone_number: phone,
     });

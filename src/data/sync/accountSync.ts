@@ -9,7 +9,6 @@ export const accountSync = {
     async syncFromServer(): Promise<void> {
         const netState = await NetInfo.fetch();
         if (!netState.isConnected) {
-            console.log("Sem conexão - pulando sincronização");
             return;
         }
 
@@ -27,7 +26,6 @@ export const accountSync = {
                 await accountLocalRepository.logout();
                 return;
             }
-            console.log("Erro de rede/servidor ao sincronizar. Mantendo sessão.");
         }
     },
 
@@ -35,7 +33,6 @@ export const accountSync = {
     async syncToServer(): Promise<void> {
         const netState = await NetInfo.fetch();
         if (!netState.isConnected) {
-            console.log("Sem conexão - dados salvos apenas localmente");
             return;
         }
 
@@ -45,7 +42,6 @@ export const accountSync = {
 
 
         } catch (error) {
-            console.log("Erro ao sincronizar:", error);
             accountLocalRepository.logout();
         }
     },
@@ -99,7 +95,6 @@ export const accountSync = {
             }
             return remoteAccount;
         } catch (error) {
-            console.error("Erro ao buscar do servidor:", error);
             throw error;
         }
     },

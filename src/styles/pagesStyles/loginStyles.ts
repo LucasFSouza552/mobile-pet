@@ -118,5 +118,33 @@ export const createLoginStyles = (width: number, height: number) => {
       fontWeight: 'bold',
       color: '#fff',
     },
+    backButtonTop: {
+      padding: scale(10),
+      marginBottom: verticalScale(10),
+      alignSelf: 'flex-start',
+    },
+    successContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: verticalScale(40),
+    },
+    successText: {
+      fontSize: scale(16),
+      color: '#fff',
+      textAlign: 'center',
+      marginTop: verticalScale(20),
+      paddingHorizontal: scale(20),
+      lineHeight: scale(24),
+    },
+    forgotPasswordLink: {
+      alignSelf: 'flex-end',
+      marginTop: verticalScale(-10),
+      marginBottom: verticalScale(10),
+    },
+    forgotPasswordText: {
+      fontSize: scale(14),
+      color: '#B648A0',
+      fontWeight: '600',
+    },
   });
 };

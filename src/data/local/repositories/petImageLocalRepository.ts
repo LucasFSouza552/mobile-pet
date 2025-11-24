@@ -1,4 +1,5 @@
-import { pictureRepository } from "../..";
+
+import { pictureRepository } from "../../remote/repositories/pictureRemoteRepository";
 import { getLocalDb } from "../database/LocalDb";
 
 let FileSystem: any = null;
@@ -47,8 +48,7 @@ async function downloadImage(url: string, petId: string, index: number): Promise
     
     return null;
   } catch (error) {
-    console.error(`Erro ao baixar imagem ${url}:`, error);
-    return null;
+    throw error;
   }
 }
 
@@ -78,7 +78,7 @@ async function getLocalPath(url: string, petId: string): Promise<string | null> 
     
     return null;
   } catch (error) {
-    return null;
+    throw error;
   }
 }
 
@@ -123,7 +123,7 @@ export const petImageLocalRepository = {
     );
 
     this.downloadImagesForPet(petId, unique).catch(error => {
-      console.error(`Erro ao baixar imagens do pet ${petId}:`, error);
+      throw error;
     });
   },
 
@@ -197,7 +197,7 @@ export const petImageLocalRepository = {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
       }
     } catch (error) {
-      console.error(`Erro ao deletar imagens locais do pet ${petId}:`, error);
+      throw error;
     }
   },
   async deleteAllLocalImages(): Promise<void> {
@@ -220,7 +220,7 @@ export const petImageLocalRepository = {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
       }
     } catch (error) {
-      console.error('Erro ao deletar todas as imagens locais:', error);
+      throw error;
     }
   },
 

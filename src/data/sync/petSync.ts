@@ -1,8 +1,9 @@
-import NetInfo from "@react-native-community/netinfo";
+
 import { petLocalRepository } from "../local/repositories/petLocalRepository";
 import { petRemoteRepository } from "../remote/repositories/petRemoteRepository";
 import { IPet } from "../../models/IPet";
 import { pictureRepository } from "../remote/repositories/pictureRemoteRepository";
+import { isNetworkConnected } from "../../utils/network";
 
 // Controle de sincronizações em andamento para evitar duplicatas
 const syncingPets = new Set<string>();
@@ -11,15 +12,13 @@ export const petSync = {
     async getById(petId: string): Promise<IPet | null> {
         const localPet = await petLocalRepository.getById(petId);
         
-        const netState = await NetInfo.fetch();
-        if (!netState.isConnected) {
+        if (!await isNetworkConnected()) {
             return localPet;
         }
 
-        // Sincroniza em background apenas se não estiver sincronizando
         if (!syncingPets.has(petId)) {
             this.syncFromServer(petId).catch(error => {
-                console.error("Erro ao sincronizar pet:", error);
+                throw error;
             });
         }
 
@@ -31,8 +30,7 @@ export const petSync = {
             return;
         }
 
-        const netState = await NetInfo.fetch();
-        if (!netState.isConnected) {
+        if (!await isNetworkConnected()) {
             return;
         }
 
@@ -61,7 +59,7 @@ export const petSync = {
                 }
             }
         } catch (error) {
-            console.error("Erro ao sincronizar pet do servidor:", error);
+            throw error;
         } finally {
             syncingPets.delete(petId);
         }

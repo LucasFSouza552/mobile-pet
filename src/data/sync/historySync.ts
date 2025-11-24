@@ -1,185 +1,127 @@
-import NetInfo from "@react-native-community/netinfo";
+
 import { historyLocalRepository } from "../local/repositories/historyLocalRepository";
 import { historyRemoteRepository } from "../remote/repositories/historyRemoteRepository";
 import { IHistory } from "../../models/IHistory";
 import { petLocalRepository } from "../local/repositories/petLocalRepository";
 import { IPet } from "../../models/IPet";
 import { petSync } from "./petSync";
+import { isNetworkConnected } from "../../utils/network";
 
 export const historySync = {
     // Atualiza o banco local com as alterações vindas do servidor.
     async syncFromServer(accountId: string): Promise<void> {
-        const netState = await NetInfo.fetch();
-        if (!netState.isConnected) {
-            console.log("Sem conexão - pulando sincronização de histórico");
+        if (!await isNetworkConnected()) {
             return;
         }
 
         try {
             const historyItems = await historyRemoteRepository.getByAccount(accountId);
             if (!historyItems || historyItems.length === 0) {
+                await historyLocalRepository.deleteAll();
                 return;
             }
 
-            for (const historyItem of historyItems) {
-                // Verifica se pet existe localmente antes de salvar
-                if (historyItem.pet) {
-                    if (typeof historyItem.pet === 'string') {
-                        const petExists = await petLocalRepository.exists(historyItem.pet);
-                        if (!petExists) {
-                            // Busca do servidor e salva
-                            try {
-                                await petSync.syncFromServer(historyItem.pet);
-                                // Pequeno delay após sincronizar pet
-                                await new Promise(resolve => setTimeout(resolve, 50));
-                            } catch (error) {
-                                console.error(`Erro ao sincronizar pet ${historyItem.pet}:`, error);
-                            }
+            const rawList: any[] = Array.isArray(historyItems) ? historyItems : [];
+            const remoteIds = new Set<string>();
+            const batchSize = 5;
+
+            for (let i = 0; i < rawList.length; i += batchSize) {
+                const batch = rawList.slice(i, i + batchSize);
+
+                await Promise.all(
+                    batch.map(async (history: IHistory) => {
+                        try {
+                            remoteIds.add(history.id);
+                            await historyLocalRepository.create(history);
+                        } catch (error) {
+                            console.error("Erro ao sincronizar histórico:", error);
                         }
-                    } else if (typeof historyItem.pet === 'object' && historyItem.pet.id) {
-                        const petExists = await petLocalRepository.exists(historyItem.pet.id);
-                        if (!petExists) {
-                            // Salva o pet completo
-                            try {
-                                await petLocalRepository.create(historyItem.pet as IPet);
-                                // Pequeno delay após salvar pet
-                                await new Promise(resolve => setTimeout(resolve, 50));
-                            } catch (error) {
-                                console.error(`Erro ao salvar pet ${historyItem.pet.id}:`, error);
-                            }
-                        }
+                    })
+                );
+
+                if (i + batchSize < rawList.length) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+
+            const localHistory = await historyLocalRepository.getByAccount(accountId);
+            for (const local of localHistory) {
+                if (!remoteIds.has(local.id)) {
+                    try {
+                        await historyLocalRepository.delete(local.id);
+                    } catch (error) {
+                        console.error("Erro ao remover histórico local:", error);
                     }
                 }
-                await historyLocalRepository.create(historyItem);
-                // Pequeno delay entre itens de histórico
-                await new Promise(resolve => setTimeout(resolve, 30));
             }
-        } catch (error) {
-            console.error("Erro ao sincronizar histórico do servidor:", error);
-        } finally {
-            console.log("Sincronização de histórico finalizada");
-        }
-    },
-    async syncToServer(accountId: string): Promise<void> {
-        const netState = await NetInfo.fetch();
-        if (!netState.isConnected) {
-            console.log("Sem conexão - histórico salvo apenas localmente");
-            return;
-        }
 
-        try {
-            const localHistoryItems = await historyLocalRepository.getByAccount(accountId);
-            const unsyncedItems = localHistoryItems.filter(item => !item.lastSyncedAt);
+            const petIds = new Set<string>();
+            for (const it of rawList) {
+                const p = it?.pet || {};
+                const petId = p?.id;
+                if (petId) petIds.add(petId);
+            }
 
-            for (const item of unsyncedItems) {
+            for (const petId of petIds) {
                 try {
-                    if (item.externalReference) {
-                        await historyRemoteRepository.update(item.id, item);
-                    } else {
-                        await historyRemoteRepository.create(item);
+                    const exists = await petLocalRepository.exists(petId);
+                    if (!exists) {
+                        await petSync.syncFromServer(petId);
+                        await new Promise(resolve => setTimeout(resolve, 100));
                     }
-
-                    await historyLocalRepository.update(item.id, {
-                        lastSyncedAt: new Date().toISOString()
-                    });
                 } catch (error) {
-                    console.error(`Erro ao sincronizar item ${item.id}:`, error);
+                    console.error(`Erro ao sincronizar pet (${petId}):`, error);
                 }
             }
         } catch (error) {
-            console.error("Erro ao sincronizar histórico para servidor:", error);
+            throw error;
         }
     },
 
-    async getHistory(accountId: string): Promise<IHistory[]> {
+    async getHistory(accountId: string, onRemoteLoaded?: () => void): Promise<IHistory[]> {
         try {
             const localHistory = await historyLocalRepository.getByAccount(accountId);
-            const netState = await NetInfo.fetch();
-
-            if (!netState.isConnected) {
+            if (!await isNetworkConnected()) {
                 return localHistory;
             }
 
-            try {
-                const remoteHistory = await historyRemoteRepository.getByAccount(accountId);
-
-                if (remoteHistory && remoteHistory.length > 0) {
-                    for (const item of remoteHistory) {
-                        if (item.pet) {
-                            if (typeof item.pet === 'string') {
-                                // Verifica se pet existe antes de buscar do servidor
-                                const petExists = await petLocalRepository.exists(item.pet);
-                                if (!petExists) {
-                                    try {
-                                        await petSync.syncFromServer(item.pet);
-                                        // Pequeno delay após sincronizar pet
-                                        await new Promise(resolve => setTimeout(resolve, 50));
-                                    } catch (error) {
-                                        console.error(`Erro ao sincronizar pet ${item.pet}:`, error);
-                                    }
-                                }
-                            } else if (typeof item.pet === 'object' && item.pet.id) {
-                                // Verifica se pet existe antes de salvar
-                                const petExists = await petLocalRepository.exists(item.pet.id);
-                                if (!petExists) {
-                                    try {
-                                        const pet = item.pet as unknown as IPet;
-                                        await petLocalRepository.create(pet);
-                                        // Pequeno delay após salvar pet
-                                        await new Promise(resolve => setTimeout(resolve, 50));
-                                    } catch (error) {
-                                        console.error(`Erro ao salvar pet ${item.pet.id}:`, error);
-                                    }
-                                }
-                            }
-                        }
-                        try {
-                            await historyLocalRepository.create(item);
-                            // Pequeno delay entre itens
-                            await new Promise(resolve => setTimeout(resolve, 30));
-                        } catch (error) {
-                            console.error("Erro ao criar histórico:", error);
-                        }
-
-                    }
-                    return remoteHistory;
+            // ✅ Só chama callback se fornecido
+            this.syncFromServer(accountId).then(async () => {
+                if (onRemoteLoaded) {
+                    onRemoteLoaded();
                 }
-                return localHistory ?? [];
-            } catch (error) {
-                return localHistory ?? [];
-            }
+            }).catch(error => {
+                console.error(`Erro ao sincronizar histórico do account ${accountId}:`, error);
+            });
+
+            return localHistory ?? [];
 
         } catch (error) {
-            return [];
+            throw error;
         }
     },
 
     async getHistoryItemById(id: string): Promise<IHistory | null> {
         const localHistory = await historyLocalRepository.getById(id);
-        const netState = await NetInfo.fetch();
-
-        if (!netState.isConnected && !localHistory) {
+        if (!await isNetworkConnected() && !localHistory) {
             return null;
         }
 
-        if (!netState.isConnected) {
+        if (!await isNetworkConnected()) {
             return localHistory;
         }
 
         try {
             const remoteHistory = await historyRemoteRepository.getById(id);
             if (remoteHistory) {
-                // Se pet vier apenas como ID, busca do servidor e salva
                 if (remoteHistory.pet) {
                     if (typeof remoteHistory.pet === 'string') {
                         const petExists = await petLocalRepository.exists(remoteHistory.pet);
                         if (!petExists) {
                             try {
                                 await petSync.syncFromServer(remoteHistory.pet);
-                                // Delay após sincronizar pet
-                                await new Promise(resolve => setTimeout(resolve, 50));
                             } catch (error) {
-                                console.error(`Erro ao sincronizar pet ${remoteHistory.pet}:`, error);
+                                throw error;
                             }
                         }
                     } else if (typeof remoteHistory.pet === 'object' && remoteHistory.pet.id) {
@@ -187,10 +129,8 @@ export const historySync = {
                         if (!petExists) {
                             try {
                                 await petLocalRepository.create(remoteHistory.pet as IPet);
-                                // Delay após salvar pet
-                                await new Promise(resolve => setTimeout(resolve, 50));
                             } catch (error) {
-                                console.error(`Erro ao salvar pet ${remoteHistory.pet.id}:`, error);
+                                throw error;
                             }
                         }
                     }
@@ -199,20 +139,16 @@ export const historySync = {
             }
             return remoteHistory;
         } catch (error) {
-            console.error("Erro ao buscar item do servidor:", error);
+            throw error;
         }
-        return null;
     },
     async createHistory(history: IHistory, accountId: string): Promise<IHistory | null> {
         try {
-            // Salva o pet se vier como objeto completo
             if (history.pet && typeof history.pet === 'object' && history.pet.id) {
                 try {
                     await petLocalRepository.create(history.pet as IPet);
-                    // Pequeno delay após salvar pet
-                    await new Promise(resolve => setTimeout(resolve, 50));
                 } catch (error) {
-                    console.error("Erro ao salvar pet ao criar histórico:", error);
+                    throw error;
                 }
             }
 
@@ -232,9 +168,7 @@ export const historySync = {
 
             await historyLocalRepository.create(newHistory);
 
-            const netState = await NetInfo.fetch();
-
-            if (netState.isConnected) {
+            if (await isNetworkConnected()) {
                 try {
                     const createdHistory = await historyRemoteRepository.create(history);
                     await historyLocalRepository.update(newHistory.id, {
@@ -243,14 +177,13 @@ export const historySync = {
                     });
                     return createdHistory;
                 } catch (error) {
-                    console.error("Erro ao criar histórico no servidor:", error);
+                    throw error;
                 }
             }
 
             return newHistory;
         } catch (error) {
-            console.error("Erro ao criar histórico:", error);
-            return null;
+            throw error;
         }
     }
 };

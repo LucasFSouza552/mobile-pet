@@ -110,7 +110,7 @@ export default function DonatePay({ navigation, route }: DonatePayProps) {
 
         <View style={styles.content}>
           <Text style={styles.title}>
-            {institution ? `Doe para ${institution.name}` : 'Doe para PetAmigo'}
+            {institution ? `Doe para ${institution.name}` : 'Doe para myPets'}
           </Text>
           <Text style={styles.subtitle}>
             Sua ajuda faz a diferença na vida de muitos animais

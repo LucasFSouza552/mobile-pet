@@ -156,12 +156,11 @@ export const historyLocalRepository = {
         const db = await getLocalDb();
         const clean = normalizeHistoryForDb(history);
         
-        // Salva o pet se vier como objeto completo
         if (history.pet && typeof history.pet === 'object' && history.pet.id) {
             try {
                 await petLocalRepository.create(history.pet as IPet);
             } catch (error) {
-                console.error("Erro ao salvar pet do histórico:", error);
+                throw error;
             }
         }
         
@@ -200,7 +199,6 @@ export const historyLocalRepository = {
             );
 
         } catch (error) {
-            console.error("Erro ao criar/atualizar histórico:", error);
             throw error;
         }
     },
@@ -231,7 +229,6 @@ export const historyLocalRepository = {
             );
 
         } catch (error) {
-            console.error("Erro ao atualizar histórico:", error);
             throw error;
         }
     },

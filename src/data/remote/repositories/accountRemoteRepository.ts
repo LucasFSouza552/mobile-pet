@@ -112,7 +112,7 @@ export const accountRemoteRepository = {
     },
     async fetchMyPosts() {
         try {
-            const response = await apiClient.get("/post/my-posts");
+            const response = await apiClient.get("/account/profile/posts");
             return response.data;
         } catch (error) {
             throw error;
@@ -120,7 +120,7 @@ export const accountRemoteRepository = {
     },
     async fetchAccountByName(name: string) {
         try {
-            const response = await apiClient.get(`/account/search?name=${name}`);
+            const response = await apiClient.get(`/account/search?name=${encodeURIComponent(name)}`);
             return response.data;
         } catch (error) {
             throw error;

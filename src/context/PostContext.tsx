@@ -22,6 +22,7 @@ interface PostContextProps {
     loadingSearchResults: boolean;
     deletePost: (postId: string) => Promise<void>;
     editPost: (postId: string, payload: Partial<IPost>) => Promise<IPost | void>;
+    cleanPosts: () => void;
 }
 
 const PostContext = createContext<PostContextProps | undefined>(undefined);
@@ -250,6 +251,13 @@ export function PostProvider({ children }: { children: ReactNode }) {
         return normalized;
     }, [isConnected, posts, userPosts, searchResults]);
 
+
+    const cleanPosts = useCallback(() => {
+        setPosts([]);
+        setUserPosts([]);
+        setSearchResults([]);
+    }, []);
+
     useEffect(() => {
         if (isConnected) {
             refresh();
@@ -272,6 +280,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         loadingSearchResults,
         deletePost,
         editPost,
+        cleanPosts,
     }), [
         posts,
         loading,
@@ -281,6 +290,7 @@ export function PostProvider({ children }: { children: ReactNode }) {
         loadingSearchResults,
         deletePost,
         editPost,
+        cleanPosts,
     ]);
 
     return (

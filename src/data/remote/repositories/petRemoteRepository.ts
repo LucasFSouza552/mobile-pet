@@ -59,7 +59,11 @@ export const petRemoteRepository = {
         return response.data;
     },
     async deleteImage(petId: string, imageId: string) {
-        const response = await apiClient.delete(`/pet/${petId}/avatar/${imageId}`);
+        const response = await apiClient.post(`/pet/${petId}/image`, { imageId });
+        return response.data;
+    },
+    async softDelete(petId: string) {
+        const response = await apiClient.post(`/pet/${petId}/delete`);
         return response.data;
     },
     async paymentReturn(paymentId: string, status: "completed" | "cancelled" | "refunded", externalReference: string) {

@@ -48,7 +48,7 @@ export const getHistoryDescription = (entry: IHistory): string => {
       return petName ? `Solicitação de adoção para ${petName}` : 'Solicitação de adoção enviada';
     
     case 'donation':
-      return entry.amount ? 'Doação para o PetAmigo' : 'Contribuiu com a causa';
+      return entry.amount ? 'Doação para o myPets' : 'Contribuiu com a causa';
     
     case 'sponsorship':
       return institutionName

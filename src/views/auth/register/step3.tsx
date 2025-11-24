@@ -21,7 +21,7 @@ import { Images } from '../../../../assets';
 export default function RegisterStep3({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar, email, phone_number } = route.params;
+  const { documentType, name, avatar, avatarFile, email, phone_number } = route.params;
   const [document, setDocument] = useState('');
 
   const formatCPF = (text: string): string => {
@@ -87,6 +87,7 @@ export default function RegisterStep3({ navigation, route }: any) {
       documentType,
       name,
       avatar,
+      avatarFile,
       email,
       phone_number,
       ...documentData,

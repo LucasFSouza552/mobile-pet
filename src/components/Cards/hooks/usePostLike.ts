@@ -1,8 +1,8 @@
 import { useMemo, useRef } from 'react';
 import { Animated } from 'react-native';
-import Toast from 'react-native-toast-message';
 import { IPost } from '../../../models/IPost';
 import { usePost } from '../../../context/PostContext';
+import { useToast } from '../../../hooks/useToast';
 
 interface UsePostLikeProps {
 	post: IPost;
@@ -13,7 +13,7 @@ interface UsePostLikeProps {
 export function usePostLike({ post, accountId, onLike }: UsePostLikeProps) {
 	const { likePost: likePostFromContext } = usePost();
 	const likeScale = useRef(new Animated.Value(1)).current;
-
+	const toast = useToast();
 	const isLiked = useMemo(
 		() => !!(accountId && post?.likes?.includes(accountId)),
 		[accountId, post?.likes]
@@ -31,13 +31,9 @@ export function usePostLike({ post, accountId, onLike }: UsePostLikeProps) {
 			} else {
 				await likePostFromContext(post.id);
 			}
-		} catch (e) {
-			Toast.show({
-				type: 'error',
-				text1: 'Erro ao curtir post',
-				text2: 'Tente novamente mais tarde.',
-				position: 'bottom',
-			});
+		} catch (error: any) {
+			toast.handleApiError(error, error?.data?.message || 'Erro ao curtir post');
+			return;
 		}
 	};
 

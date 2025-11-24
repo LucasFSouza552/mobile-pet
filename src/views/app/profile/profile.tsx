@@ -14,8 +14,8 @@ import WishlistPetsList from './components/WishlistPetsList';
 import InstitutionPetsList from './components/InstitutionPetsList';
 import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
 import UserHistoryList from './components/UserHistoryList';
-import Toast from 'react-native-toast-message';
 import ProfileHeader from './components/ProfileHeader';
+import { useToast } from '../../../hooks/useToast';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -25,15 +25,14 @@ interface ProfileProps {
 }
 
 export default function Profile({ navigation, route }: ProfileProps) {
-  const { account, loading, logout, refreshAccount } = useAccount();
+  const { account, loading } = useAccount();
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist' | 'history'>('posts');
-
+  const toast = useToast();
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
-
   const styles = makeStyles(COLORS);
 
   const isInstitution = account?.role === 'institution';
@@ -55,12 +54,12 @@ export default function Profile({ navigation, route }: ProfileProps) {
   useEffect(() => {
     let active = true;
     (async () => {
-      if (!targetAccountId) {
-        setViewAccount(account || null);
+      if (!targetAccountId || loading) {
+        if (active) setViewAccount(account || null);
         return;
       }
       if (isSelf) {
-        setViewAccount(account || null);
+        if (active) setViewAccount(account || null);
         return;
       }
       try {
@@ -73,11 +72,12 @@ export default function Profile({ navigation, route }: ProfileProps) {
     return () => {
       active = false;
     };
-  }, [targetAccountId, account, isSelf]);
+  }, [targetAccountId, account]);
 
   useEffect(() => {
     if (postsError) {
-      Toast.show({ type: "error", text1: postsError, position: "bottom" });
+      toast.handleApiError(postsError, postsError);
+      return;
     }
   }, [postsError]);
 
@@ -112,32 +112,32 @@ export default function Profile({ navigation, route }: ProfileProps) {
           showHistory={isSelf}
         />
 
-          {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
-            targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
-          ) : activeTab === 'posts' ? (
-            <PostList
-              title={isSelf ? "Seus posts" : "Posts"}
-              posts={userPosts}
-              account={viewAccount}
-              onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
-              onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
-              refreshing={postsLoading}
-            />
-          ) : activeTab === 'adopted' ? (
-            targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
-          ) : activeTab === 'history' ? (
-            isSelf && targetAccountId ? (
-              <UserHistoryList accountId={targetAccountId} />
-            ) : (
-              <View style={styles.emptyHistoryBox}>
-                <Text style={styles.emptyHistoryText}>O histórico completo só está disponível para o dono da conta.</Text>
-              </View>
-            )
+        {activeTab === 'pets' && viewAccount?.role === 'institution' ? (
+          targetAccountId ? <InstitutionPetsList institutionId={targetAccountId} canManage={isSelf} /> : null
+        ) : activeTab === 'posts' ? (
+          <PostList
+            title={isSelf ? "Seus posts" : "Posts"}
+            posts={userPosts}
+            account={viewAccount}
+            onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
+            onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
+            refreshing={postsLoading}
+          />
+        ) : activeTab === 'adopted' ? (
+          targetAccountId ? <AdoptedPetsList accountId={targetAccountId} /> : null
+        ) : activeTab === 'history' ? (
+          isSelf && targetAccountId ? (
+            <UserHistoryList accountId={targetAccountId} />
           ) : (
-            viewAccount?.role === 'institution'
-              ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
-              : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('FindPets')} /> : null)
-          )}
+            <View style={styles.emptyHistoryBox}>
+              <Text style={styles.emptyHistoryText}>O histórico completo só está disponível para o dono da conta.</Text>
+            </View>
+          )
+        ) : (
+          viewAccount?.role === 'institution'
+            ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
+            : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('FindPets')} /> : null)
+        )}
 
       </View>
     </SafeAreaView>

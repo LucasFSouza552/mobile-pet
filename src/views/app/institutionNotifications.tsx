@@ -4,7 +4,6 @@ import {
   FlatList,
   Image,
   RefreshControl,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,7 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import Toast from "react-native-toast-message";
+import MapView, { Marker } from "react-native-maps";
 import { useAccount } from "../../context/AccountContext";
 import { useTheme } from "../../context/ThemeContext";
 import { notificationRemoteRepository } from "../../data/remote/repositories/notificationRemoteRepository";
@@ -20,7 +19,8 @@ import { pictureRepository } from "../../data/remote/repositories/pictureRemoteR
 import { INotification } from "../../models/INotification";
 import { darkTheme, lightTheme } from "../../theme/Themes";
 import { formatDate } from "../../utils/date";
-
+import { useToast } from "../../hooks/useToast";
+import { SafeAreaView } from "react-native-safe-area-context";
 export default function InstitutionNotifications({ navigation }: any) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
@@ -28,17 +28,18 @@ export default function InstitutionNotifications({ navigation }: any) {
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
+  const toast = useToast();
   const loadNotifications = useCallback(async () => {
     setLoadingList(true);
     try {
       const list = await notificationRemoteRepository.fetchAll();
       setNotifications(list);
     } catch (error: any) {
-      const message = error?.message || "Não foi possível carregar as notificações.";
-      Toast.show({ type: "info", text1: message });
+      toast.handleApiError(error, error?.data?.message || "Não foi possível carregar as notificações.");
+      return;
     } finally {
       setLoadingList(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -97,70 +98,125 @@ export default function InstitutionNotifications({ navigation }: any) {
     const senderPhone = item.sender?.phone_number;
     const senderRole =
       item.sender?.role ? ` (${item.sender.role.charAt(0).toUpperCase()}${item.sender.role.slice(1)})` : "";
-    
+
     const typeConfig = getTypeConfig(item.type);
+
+    const hasValidCoordinates = 
+      typeof item.latitude === 'number' && 
+      typeof item.longitude === 'number' &&
+      !isNaN(item.latitude) && 
+      !isNaN(item.longitude) &&
+      item.latitude >= -90 && 
+      item.latitude <= 90 &&
+      item.longitude >= -180 && 
+      item.longitude <= 180;
 
     return (
       <View style={styles.card}>
         <View style={styles.imageContainer}>
           <Image source={pictureRepository.getSource(item.image)} style={styles.cardImage} />
-        </View>
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
+          <View style={styles.imageOverlay}>
             <View style={[styles.alertBadge, { backgroundColor: typeConfig.backgroundColor }]}>
-              <FontAwesome5 name={typeConfig.icon as any} size={12} color={typeConfig.iconColor} />
+              <FontAwesome5 name={typeConfig.icon as any} size={14} color={typeConfig.iconColor} />
               <Text style={styles.alertBadgeText}>{typeConfig.label}</Text>
             </View>
             <View style={styles.timeContainer}>
-              <FontAwesome5 name="clock" size={11} color={COLORS.text} style={{ opacity: 0.5 }} />
+              <FontAwesome5 name="clock" size={12} color={COLORS.bg} />
               <Text style={styles.cardTime}>{formatDate(item.createdAt, { style: 'compact' })}</Text>
             </View>
           </View>
-          
+        </View>
+
+        <View style={styles.infoSection}>
           <Text style={styles.cardTitle}>{item.content}</Text>
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.infoSection}>
-            <View style={styles.infoRow}>
-              <FontAwesome5 name="user" size={14} color={COLORS.primary} style={styles.infoIcon} />
-              <View style={styles.infoContent}>
+
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <View style={[styles.infoIconContainer, { backgroundColor: COLORS.primary + '20' }]}>
+                <FontAwesome5 name="user" size={16} color={COLORS.primary} />
+              </View>
+              <View style={styles.infoItemContent}>
                 <Text style={styles.infoLabel}>Usuário</Text>
                 <Text style={styles.infoValue}>{senderName + senderRole}</Text>
               </View>
             </View>
-            
+
             {senderEmail ? (
-              <View style={styles.infoRow}>
-                <FontAwesome5 name="envelope" size={14} color={COLORS.primary} style={styles.infoIcon} />
-                <View style={styles.infoContent}>
+              <View style={styles.infoItem}>
+                <View style={[styles.infoIconContainer, { backgroundColor: COLORS.primary + '20' }]}>
+                  <FontAwesome5 name="envelope" size={16} color={COLORS.primary} />
+                </View>
+                <View style={styles.infoItemContent}>
                   <Text style={styles.infoLabel}>E-mail</Text>
                   <Text style={styles.infoValue}>{senderEmail}</Text>
                 </View>
               </View>
             ) : null}
-            
+
             {senderPhone ? (
-              <View style={styles.infoRow}>
-                <FontAwesome5 name="phone" size={14} color={COLORS.primary} style={styles.infoIcon} />
-                <View style={styles.infoContent}>
+              <View style={styles.infoItem}>
+                <View style={[styles.infoIconContainer, { backgroundColor: COLORS.primary + '20' }]}>
+                  <FontAwesome5 name="phone" size={16} color={COLORS.primary} />
+                </View>
+                <View style={styles.infoItemContent}>
                   <Text style={styles.infoLabel}>Telefone</Text>
                   <Text style={styles.infoValue}>{senderPhone}</Text>
                 </View>
               </View>
             ) : null}
-            
-            <View style={styles.infoRow}>
-              <FontAwesome5 name="map-marker-alt" size={14} color={COLORS.primary} style={styles.infoIcon} />
-              <View style={styles.infoContent}>
-                <Text style={styles.infoLabel}>Localização</Text>
-                <Text style={styles.infoValue}>
-                  {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
-                </Text>
-              </View>
-            </View>
           </View>
         </View>
+
+        {hasValidCoordinates ? (
+          <View style={styles.mapSection}>
+            <View style={styles.mapHeader}>
+              <FontAwesome5 name="map-marker-alt" size={16} color={COLORS.primary} />
+              <Text style={styles.mapLabel}>Localização</Text>
+            </View>
+            <View style={styles.mapContainer}>
+              <MapView
+                style={styles.map}
+                initialRegion={{
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                region={{
+                  latitude: item.latitude,
+                  longitude: item.longitude,
+                  latitudeDelta: 0.01,
+                  longitudeDelta: 0.01,
+                }}
+                scrollEnabled={false}
+                zoomEnabled={false}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                liteMode={true}
+                mapType="standard"
+              >
+                <Marker
+                  coordinate={{
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                  }}
+                  title="Localização do alerta"
+                />
+              </MapView>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.mapSection}>
+            <View style={styles.mapHeader}>
+              <FontAwesome5 name="map-marker-alt" size={16} color={COLORS.primary} />
+              <Text style={styles.mapLabel}>Localização</Text>
+            </View>
+            <View style={styles.mapErrorContainer}>
+              <FontAwesome5 name="exclamation-circle" size={24} color={COLORS.text} style={{ opacity: 0.5 }} />
+              <Text style={styles.mapErrorText}>Localização não disponível</Text>
+            </View>
+          </View>
+        )}
       </View>
     );
   };
@@ -174,7 +230,7 @@ export default function InstitutionNotifications({ navigation }: any) {
         >
           <FontAwesome5 name="chevron-left" size={20} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Alertas</Text>
+        <Text style={styles.headerTitle}>Notificações</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -200,12 +256,17 @@ export default function InstitutionNotifications({ navigation }: any) {
             notifications.length === 0 ? styles.emptyContainer : styles.listContainer
           }
           showsVerticalScrollIndicator={false}
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          updateCellsBatchingPeriod={50}
+          initialNumToRender={3}
+          windowSize={5}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <FontAwesome5 name="bell-slash" size={64} color={COLORS.text} style={{ opacity: 0.3 }} />
-              <Text style={styles.emptyTitle}>Nenhum alerta ainda</Text>
+              <Text style={styles.emptyTitle}>Nenhuma notificação ainda</Text>
               <Text style={styles.emptyText}>
-                Quando usuários enviarem alertas sobre animais em risco, eles aparecerão aqui.
+                Quando usuários enviarem notificações sobre animais em risco, eles aparecerão aqui.
               </Text>
             </View>
           }
@@ -253,59 +314,61 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingBottom: 24,
     },
     card: {
-      flexDirection: "row",
       backgroundColor: COLORS.tertiary,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 16,
+      borderRadius: 20,
+      marginBottom: 20,
+      marginHorizontal: 16,
+      overflow: "hidden",
       shadowColor: "#000",
       shadowOffset: {
         width: 0,
-        height: 2,
+        height: 4,
       },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 5,
     },
     imageContainer: {
-      borderRadius: 12,
-      overflow: "hidden",
+      width: "100%",
+      height: 280,
+      position: "relative",
       backgroundColor: COLORS.bg,
-      marginRight: 16,
     },
     cardImage: {
-      width: 100,
-      height: 100,
-      borderRadius: 12,
+      width: "100%",
+      height: "100%",
+      resizeMode: "cover",
     },
-    cardContent: {
-      flex: 1,
-    },
-    cardHeader: {
+    imageOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      marginBottom: 12,
+      padding: 16,
+      backgroundColor: "rgba(0, 0, 0, 0.3)",
     },
     alertBadge: {
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
       paddingHorizontal: 12,
-      paddingVertical: 7,
-      borderRadius: 10,
+      paddingVertical: 8,
+      borderRadius: 12,
       shadowColor: "#000",
       shadowOffset: {
         width: 0,
-        height: 1,
+        height: 2,
       },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      elevation: 3,
     },
     alertBadgeText: {
       color: COLORS.bg,
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: "700",
       textTransform: "uppercase",
       letterSpacing: 0.5,
@@ -314,42 +377,43 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      backgroundColor: COLORS.tertiary,
-      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      borderRadius: 12,
     },
     cardTime: {
-      color: COLORS.text,
-      opacity: 0.7,
+      color: COLORS.bg,
       fontSize: 12,
       fontWeight: "600",
     },
+    infoSection: {
+      padding: 20,
+      backgroundColor: COLORS.tertiary,
+    },
     cardTitle: {
       color: COLORS.text,
-      fontSize: 16,
-      fontWeight: "600",
-      lineHeight: 22,
-      marginBottom: 12,
+      fontSize: 18,
+      fontWeight: "700",
+      lineHeight: 24,
+      marginBottom: 20,
     },
-    divider: {
-      height: 1,
-      backgroundColor: COLORS.tertiary,
-      marginVertical: 12,
-      opacity: 0.3,
+    infoGrid: {
+      gap: 16,
     },
-    infoSection: {
-      gap: 12,
-    },
-    infoRow: {
+    infoItem: {
       flexDirection: "row",
-      alignItems: "flex-start",
+      alignItems: "center",
       gap: 12,
     },
-    infoIcon: {
-      marginTop: 2,
+    infoIconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
     },
-    infoContent: {
+    infoItemContent: {
       flex: 1,
     },
     infoLabel: {
@@ -358,12 +422,42 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontSize: 11,
       fontWeight: "600",
       textTransform: "uppercase",
-      marginBottom: 2,
+      marginBottom: 4,
+      letterSpacing: 0.5,
     },
     infoValue: {
       color: COLORS.text,
+      fontSize: 15,
+      fontWeight: "600",
+    },
+    mapSection: {
+      padding: 20,
+      paddingTop: 0,
+      backgroundColor: COLORS.tertiary,
+    },
+    mapHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      marginBottom: 12,
+    },
+    mapLabel: {
+      color: COLORS.text,
       fontSize: 14,
-      fontWeight: "500",
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.5,
+    },
+    mapContainer: {
+      height: 180,
+      borderRadius: 16,
+      overflow: "hidden",
+      borderWidth: 2,
+      borderColor: COLORS.primary + "30",
+    },
+    map: {
+      width: "100%",
+      height: "100%",
     },
     emptyContainer: {
       flex: 1,
@@ -390,6 +484,21 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontSize: 14,
       lineHeight: 20,
       paddingHorizontal: 40,
+    },
+    mapErrorContainer: {
+      height: 180,
+      borderRadius: 16,
+      backgroundColor: COLORS.bg,
+      borderWidth: 2,
+      borderColor: COLORS.primary + "30",
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 8,
+    },
+    mapErrorText: {
+      color: COLORS.text,
+      opacity: 0.6,
+      fontSize: 14,
     },
   });
 }

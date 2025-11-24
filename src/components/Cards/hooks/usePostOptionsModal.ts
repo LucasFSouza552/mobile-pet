@@ -1,10 +1,9 @@
 import { useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Animated } from 'react-native';
-import { Share } from 'react-native';
-import Toast from 'react-native-toast-message';
 import { IPost } from '../../../models/IPost';
 import { usePost } from '../../../context/PostContext';
+import { useToast } from '../../../hooks/useToast';
 
 interface UsePostOptionsModalProps {
 	post: IPost;
@@ -25,7 +24,7 @@ export function usePostOptionsModal({
 	const [isOpen, setIsOpen] = useState(false);
 	const slideY = useRef(new Animated.Value(height)).current;
 	const { deletePost } = usePost();
-
+	const toast = useToast();
 	const openOptionsSheet = () => {
 		slideY.setValue(height);
 		setIsOpen(true);
@@ -51,9 +50,10 @@ export function usePostOptionsModal({
 		try {
 			await deletePost(post.id);
 			closeOptionsSheet();
-			Toast.show({ type: 'success', text1: 'Post excluído', position: 'bottom' });
-		} catch (e) {
-			Toast.show({ type: 'error', text1: 'Erro ao excluir post', position: 'bottom' });
+			toast.success('Post excluído com sucesso');
+		} catch (error: any) {
+			toast.handleApiError(error, error?.data?.message || 'Erro ao excluir post');
+			return;
 		}
 	};
 

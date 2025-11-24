@@ -25,6 +25,7 @@ export default function RegisterStep1({ navigation, route }: any) {
   const { documentType } = route.params;
   const [name, setName] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<any>(null);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -41,8 +42,9 @@ export default function RegisterStep1({ navigation, route }: any) {
       quality: 0.8,
     });
 
-    if (!result.canceled) {
+    if (!result.canceled && result.assets[0]) {
       setAvatar(result.assets[0].uri);
+      setAvatarFile(result.assets[0]);
     }
   };
 
@@ -56,6 +58,7 @@ export default function RegisterStep1({ navigation, route }: any) {
       documentType,
       name: name.trim(),
       avatar,
+      avatarFile,
     });
   };
 

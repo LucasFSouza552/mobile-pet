@@ -98,7 +98,6 @@ export const petLocalRepository = {
           await new Promise(resolve => setTimeout(resolve, 100 * (4 - retries)));
           continue;
         }
-        console.error("Erro ao criar/atualizar pet:", error);
         throw error;
       }
     }
@@ -140,7 +139,6 @@ export const petLocalRepository = {
           await new Promise(resolve => setTimeout(resolve, 50 * (4 - retries)));
           continue;
         }
-        console.error("Erro ao verificar existência do pet:", error);
         return false;
       }
     }

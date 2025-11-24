@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Animated } from 'react-native';
-import Toast from 'react-native-toast-message';
 import { IPost } from '../../../models/IPost';
 import { usePost } from '../../../context/PostContext';
+import { useToast } from '../../../hooks/useToast';
 
 interface UsePostEditModalProps {
 	post: IPost;
@@ -16,6 +16,7 @@ export function usePostEditModal({ post }: UsePostEditModalProps) {
 	const [saving, setSaving] = useState(false);
 	const postEditSlideY = useRef(new Animated.Value(height)).current;
 	const { editPost } = usePost();
+	const toast = useToast();
 
 	useEffect(() => {
 		setPostEditText(post?.content ?? '');
@@ -48,20 +49,11 @@ export function usePostEditModal({ post }: UsePostEditModalProps) {
 		try {
 			setSaving(true);
 			await editPost(post.id, { content: postEditText.trim() });
-			Toast.show({
-				type: 'success',
-				text1: 'Post atualizado com sucesso',
-				position: 'bottom',
-			});
+			toast.success('Post atualizado com sucesso');
 			closeEditModal();
-		} catch (e: any) {
-			const message = e?.message || 'Erro ao salvar post';
-			Toast.show({
-				type: 'error',
-				text1: 'Não foi possível atualizar',
-				text2: message,
-				position: 'bottom',
-			});
+		} catch (error: any) {
+			toast.handleApiError(error, error?.data?.message || 'Erro ao salvar post');
+			return;
 		} finally {
 			setSaving(false);
 		}

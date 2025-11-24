@@ -38,7 +38,7 @@ export default function Community({ navigation }: CommunityPageProps) {
       setLoadingTopPosts(true);
       const data = await postRepository.fetchTopPosts();
       setTopPosts(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch (error: any) {
       toast.handleApiError(error, error?.data?.message || 'Erro ao carregar posts populares');
     } finally {
       setLoadingTopPosts(false);
@@ -81,7 +81,7 @@ export default function Community({ navigation }: CommunityPageProps) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <FontAwesome name="paw" size={24} color="#fff" />
-          <Text style={styles.headerTitle}>Comunidade PetAmigo</Text>
+          <Text style={styles.headerTitle}>Comunidade myPets</Text>
         </View>
       </View>
 

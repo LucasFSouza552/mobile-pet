@@ -15,10 +15,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { createLoginStyles } from '../../styles/pagesStyles/loginStyles';
 import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
-import Toast from 'react-native-toast-message';
 import { useAccount } from '../../context/AccountContext';
 import { accountSync } from '../../data/sync/accountSync';
 import { Images } from '../../../assets';
+import { useToast } from '../../hooks/useToast';
 
 export default function Login({ navigation }: any) {
   const { width, height } = useWindowDimensions();
@@ -26,42 +26,27 @@ export default function Login({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string>();
   const { refreshAccount } = useAccount();
-
+  const toast = useToast();
   const handleLogin = async () => {
     Keyboard.dismiss();
     if (!email || !password) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro',
-        text2: 'Preencha todos os campos.',
-        position: 'bottom',
-      });
+      toast.info('Preencha todos os campos.');
       return;
     }
 
     try {
       const response = await authRemoteRepository.login(email, password);
       if (!response?.token) {
-        Toast.show({
-          type: 'error',
-          text1: 'Erro',
-          text2: 'Email ou senha inválidos.',
-          position: 'bottom',
-        });
+        toast.error('Email ou senha inválidos.');
         throw new Error('Email ou senha inválidos.');
       }
       await accountSync.syncFromServer();
       await refreshAccount();
       navigation.navigate('Main');
     } catch (error: any) {
-      Toast.show({
-        type: 'error',
-        text1: 'Erro',
-        text2: error.message || 'Email ou senha inválidos.',
-        position: 'bottom',
-      });
+      toast.handleApiError(error, error?.data?.message || 'Email ou senha inválidos.');
+      return;
     }
   };
 
@@ -136,6 +121,16 @@ export default function Login({ navigation }: any) {
                       </TouchableOpacity>
                     </View>
                   </View>
+                    
+                  {/* Forgot Password Link */}
+                  <TouchableOpacity
+                    style={loginStepStyles.forgotPasswordLink}
+                    onPress={() => navigation.navigate('ForgotPassword')}
+                  >
+                    <Text style={loginStepStyles.forgotPasswordText}>
+                      Esqueci minha senha
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Buttons */}
@@ -161,5 +156,5 @@ export default function Login({ navigation }: any) {
       </SafeAreaView>
     </View>
   );
-}
+} 
 
