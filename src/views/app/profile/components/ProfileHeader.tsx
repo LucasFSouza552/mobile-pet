@@ -1,22 +1,60 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { darkTheme, lightTheme } from '../../../../theme/Themes';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
+import type { IAchievement } from '../../../../models/IAchievement';
 
 interface ProfileHeaderProps {
   account: any;
   COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
   isSelf: boolean;
+  achievements?: IAchievement[];
 }
 
-export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeaderProps) {
+export default function ProfileHeader({ account, COLORS, isSelf, achievements = [] }: ProfileHeaderProps) {
   const styles = makeStyles(COLORS);
   const navigation = useNavigation();
 
   const handleSettingsPress = () => {
     (navigation as any).getParent()?.navigate('ProfileSettings');
+  };
+
+  const renderAchievementBadge = (achievement: IAchievement, index: number) => {
+    let iconName: string;
+    let IconComponent: any;
+    let color: string;
+    
+    switch (achievement.type) {
+      case "adoption":
+        IconComponent = MaterialIcons;
+        iconName = "pets";
+        color = "#BC2DEB";
+        break;
+      case "donation":
+        IconComponent = FontAwesome5;
+        iconName = "shield-dog";
+        color = "#E02880";
+        break;
+      case "sponsorship":
+        IconComponent = FontAwesome5;
+        iconName = "hands-helping";
+        color = "#427AF4";
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <View key={index} style={styles.badgeContainer}>
+        <IconComponent 
+          name={iconName} 
+          size={18} 
+          color={color} 
+        />
+      </View>
+    );
   };
 
   return (
@@ -30,9 +68,13 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
       <View style={styles.headerInfo}>
         <View style={styles.nameRow}>
           <Text style={styles.name}>{account?.name}</Text>
+          {account?.verified && (
+            <MaterialIcons name="verified" size={18} color="#00D9FF" style={styles.verifiedBadge} />
+          )}
+          {achievements.map((achievement, index) => renderAchievementBadge(achievement, index))}
         </View>
         <View style={styles.postsRow}>
-          <Text style={styles.posts}>{account?.postCount} Publicações</Text>
+          <Text style={styles.posts}>{account?.postCount || 0} Publicações</Text>
         </View>
       </View>
       {isSelf ? (
@@ -86,6 +128,13 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontWeight: 'bold',
       color: COLORS.text,
       marginRight: 8,
+    },
+    verifiedBadge: {
+      marginLeft: 4,
+    },
+    badgeContainer: {
+      marginLeft: 6,
+      padding: 2,
     },
     postsRow: {
       flexDirection: 'row',
