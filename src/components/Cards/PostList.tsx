@@ -34,17 +34,12 @@ export default function PostList({ title, posts, account, onEndReached, onRefres
 	const emptyComponent = useMemo(() => <Text style={styles.empty}>{emptyMessage || 'Sem posts'}</Text>, [emptyMessage]);
 
 	const listEmptyComponent = useMemo(() => {
-		if (headerComponent) {
-			return (
-				<View>
-					{headerComponent}
-					<Text style={styles.title}>{title}</Text>
-					<Text style={styles.empty}>{emptyMessage || 'Sem posts'}</Text>
-				</View>
-			);
-		}
-		return emptyComponent;
-	}, [headerComponent, title, emptyComponent, emptyMessage]);
+		return (
+			<View>
+				<Text style={styles.empty}>{emptyMessage || 'Sem posts'}</Text>
+			</View>
+		);
+	}, [title, emptyComponent, emptyMessage]);
 
 	const listHeader = useMemo(() => {
 		if (!headerComponent) {
