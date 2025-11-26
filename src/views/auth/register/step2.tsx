@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -22,13 +22,38 @@ import { validateEmail, validatePhone } from '../../../utils/validation';
 export default function RegisterStep2({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar, avatarFile } = route.params;
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const {
+    documentType,
+    name,
+    avatar,
+    avatarFile,
+    email: initialEmail = '',
+    phone_number: initialPhone = '',
+    cpf,
+    cnpj,
+    password,
+    confirmPassword,
+  } = route.params || {};
+  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
   const [emailError, setEmailError] = useState<string | undefined>();
   const [phoneError, setPhoneError] = useState<string | undefined>();
   const [emailTouched, setEmailTouched] = useState(false);
   const [phoneTouched, setPhoneTouched] = useState(false);
+
+  useEffect(() => {
+    if (!documentType || !name) {
+      navigation.navigate('Register');
+    }
+  }, [documentType, name, navigation]);
+
+  useEffect(() => {
+    setEmail(initialEmail);
+  }, [initialEmail]);
+
+  useEffect(() => {
+    setPhone(initialPhone);
+  }, [initialPhone]);
 
   const formatPhone = (text: string): string => {
     const numbers = text.replace(/\D/g, '');
@@ -94,11 +119,20 @@ export default function RegisterStep2({ navigation, route }: any) {
       avatarFile,
       email: email.trim(),
       phone_number: phone,
+      cpf,
+      cnpj,
+      password,
+      confirmPassword,
     });
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    navigation.navigate('RegisterStep1', {
+      documentType,
+      name,
+      avatar,
+      avatarFile,
+    });
   };
 
   const emailValidation = validateEmail(email);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -23,12 +23,33 @@ import { validateName } from '../../../utils/validation';
 export default function RegisterStep1({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType } = route.params;
-  const [name, setName] = useState('');
-  const [avatar, setAvatar] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<any>(null);
+  const { documentType, name: initialName = '', avatar: initialAvatar = null, avatarFile: initialAvatarFile = null } = route.params || {};
+  const [name, setName] = useState(initialName);
+  const [avatar, setAvatar] = useState<string | null>(initialAvatar);
+  const [avatarFile, setAvatarFile] = useState<any>(initialAvatarFile);
   const [nameError, setNameError] = useState<string | undefined>();
   const [nameTouched, setNameTouched] = useState(false);
+
+  useEffect(() => {
+    if (!documentType) {
+      navigation.navigate('Register');
+    }
+  }, [documentType, navigation]);
+
+  useEffect(() => {
+    if (initialName !== undefined) {
+      setName(initialName);
+    }
+  }, [initialName]);
+
+  useEffect(() => {
+    if (initialAvatar !== undefined) {
+      setAvatar(initialAvatar);
+    }
+    if (initialAvatarFile !== undefined) {
+      setAvatarFile(initialAvatarFile);
+    }
+  }, [initialAvatar, initialAvatarFile]);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();

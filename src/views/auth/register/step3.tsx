@@ -117,7 +117,18 @@ export default function RegisterStep3({ navigation, route }: any) {
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    navigation.navigate('RegisterStep2', {
+      documentType,
+      name,
+      avatar,
+      avatarFile,
+      email,
+      phone_number,
+      cpf: documentType === 'cpf' ? document : cpf,
+      cnpj: documentType === 'cnpj' ? document : cnpj,
+      password,
+      confirmPassword,
+    });
   };
 
   const documentValidation = documentType === 'cpf'
