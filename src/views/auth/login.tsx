@@ -53,11 +53,7 @@ export default function Login({ navigation }: any) {
   const handleRegister = () => {
     navigation.navigate('Register');
   };
-
-  const goToMain = () => {
-    navigation.navigate('Main');
-  };
-
+  
   return (
     <View style={loginStepStyles.container}>
       <Image

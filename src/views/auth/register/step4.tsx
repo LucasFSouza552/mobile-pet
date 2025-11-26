@@ -30,9 +30,20 @@ import { validatePassword, validatePasswordConfirmation } from '../../../utils/v
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar, avatarFile, email, phone_number, cpf, cnpj } = route.params;
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const {
+    documentType,
+    name,
+    avatar,
+    avatarFile,
+    email,
+    phone_number,
+    cpf,
+    cnpj,
+    password: initialPassword = '',
+    confirmPassword: initialConfirmPassword = '',
+  } = route.params;
+  const [password, setPassword] = useState(initialPassword);
+  const [confirmPassword, setConfirmPassword] = useState(initialConfirmPassword);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,8 +58,7 @@ export default function RegisterStep4({ navigation, route }: any) {
     if (passwordTouched) {
       const validation = validatePassword(value);
       setPasswordError(validation.isValid ? undefined : validation.error);
-      
-      // Valida confirmação também se já foi tocada
+
       if (confirmPasswordTouched) {
         const confirmValidation = validatePasswordConfirmation(value, confirmPassword);
         setConfirmPasswordError(confirmValidation.isValid ? undefined : confirmValidation.error);
@@ -112,7 +122,7 @@ export default function RegisterStep4({ navigation, route }: any) {
       };
 
       await authRemoteRepository.register(registerData as any);
-      
+
       if (avatarFile && avatar) {
         try {
           const formData = new FormData();
@@ -121,14 +131,13 @@ export default function RegisterStep4({ navigation, route }: any) {
             type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
             name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
           } as any);
-          
+
           await accountRemoteRepository.uploadAvatar(formData);
         } catch (avatarError: any) {
-          console.error('Erro ao fazer upload do avatar:', avatarError);
           toast.info('Conta criada, mas houve um erro ao fazer upload da foto. Você pode adicionar uma foto depois no perfil.');
         }
       }
-      
+
       await accountSync.syncFromServer();
       await refreshAccount();
 
@@ -145,7 +154,18 @@ export default function RegisterStep4({ navigation, route }: any) {
   };
 
   const handleBack = () => {
-    navigation.goBack();
+    navigation.navigate('RegisterStep3', {
+      documentType,
+      name,
+      avatar,
+      avatarFile,
+      email,
+      phone_number,
+      cpf,
+      cnpj,
+      password,
+      confirmPassword,
+    });
   };
 
   const passwordValidation = validatePassword(password);

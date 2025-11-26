@@ -136,7 +136,6 @@ export default function PetDetails(props: PetDetailsProps) {
                 toast.error('Erro', 'Não foi possível fazer a ligação');
               }
             } catch (error) {
-              console.error('Erro ao fazer ligação:', error);
               toast.error('Erro', 'Não foi possível fazer a ligação');
             }
           },

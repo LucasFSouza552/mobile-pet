@@ -4,7 +4,7 @@ export interface IPost {
     id: string;
     content: string;
     image?: string[];
-    account: string | IAccount;
+    account: IAccount;
     likes: string[];
     comments?: string[];
     commentsCount?: number;

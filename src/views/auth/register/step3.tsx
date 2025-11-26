@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Image, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
   Alert,
   useWindowDimensions,
   KeyboardAvoidingView,
@@ -22,8 +22,20 @@ import { validateCPF, validateCNPJ } from '../../../utils/validation';
 export default function RegisterStep3({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const registerStepStyles = createRegisterStepStyles(width, height);
-  const { documentType, name, avatar, avatarFile, email, phone_number } = route.params;
-  const [document, setDocument] = useState('');
+  const {
+    documentType,
+    name,
+    avatar,
+    avatarFile,
+    email,
+    phone_number,
+    password = '',
+    confirmPassword = '',
+    cpf,
+    cnpj,
+  } = route.params;
+  const initialDocument = documentType === 'cpf' ? (cpf ?? '') : (cnpj ?? '');
+  const [document, setDocument] = useState(initialDocument);
   const [documentError, setDocumentError] = useState<string | undefined>();
   const [documentTouched, setDocumentTouched] = useState(false);
 
@@ -58,10 +70,10 @@ export default function RegisterStep3({ navigation, route }: any) {
   const handleDocumentChange = (text: string) => {
     const formatted = documentType === 'cpf' ? formatCPF(text) : formatCNPJ(text);
     setDocument(formatted);
-    
+
     if (documentTouched) {
-      const validation = documentType === 'cpf' 
-        ? validateCPF(formatted) 
+      const validation = documentType === 'cpf'
+        ? validateCPF(formatted)
         : validateCNPJ(formatted);
       setDocumentError(validation.isValid ? undefined : validation.error);
     }
@@ -69,25 +81,25 @@ export default function RegisterStep3({ navigation, route }: any) {
 
   const handleDocumentBlur = () => {
     setDocumentTouched(true);
-    const validation = documentType === 'cpf' 
-      ? validateCPF(document) 
+    const validation = documentType === 'cpf'
+      ? validateCPF(document)
       : validateCNPJ(document);
     setDocumentError(validation.isValid ? undefined : validation.error);
   };
 
   const handleNext = () => {
     setDocumentTouched(true);
-    const validation = documentType === 'cpf' 
-      ? validateCPF(document) 
+    const validation = documentType === 'cpf'
+      ? validateCPF(document)
       : validateCNPJ(document);
-    
+
     setDocumentError(validation.isValid ? undefined : validation.error);
-    
+
     if (!validation.isValid) {
       return;
     }
 
-    const documentData = documentType === 'cpf' 
+    const documentData = documentType === 'cpf'
       ? { cpf: document, cnpj: undefined }
       : { cpf: undefined, cnpj: document };
 
@@ -98,6 +110,8 @@ export default function RegisterStep3({ navigation, route }: any) {
       avatarFile,
       email,
       phone_number,
+      password,
+      confirmPassword,
       ...documentData,
     });
   };
@@ -106,26 +120,26 @@ export default function RegisterStep3({ navigation, route }: any) {
     navigation.goBack();
   };
 
-  const documentValidation = documentType === 'cpf' 
-    ? validateCPF(document) 
+  const documentValidation = documentType === 'cpf'
+    ? validateCPF(document)
     : validateCNPJ(document);
   const isFormValid = documentValidation.isValid;
 
   return (
     <View style={registerStepStyles.container}>
       <Image
-          source={Images.petfundo}
+        source={Images.petfundo}
         style={registerStepStyles.backgroundImage}
         resizeMode="cover"
       />
-      
+
       <SafeAreaView style={registerStepStyles.safeArea} edges={['top', 'left', 'right']}>
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <ScrollView 
+          <ScrollView
             style={{ flex: 1 }}
             contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
@@ -133,77 +147,77 @@ export default function RegisterStep3({ navigation, route }: any) {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={registerStepStyles.content}>
-          {/* Header */}
-          <View style={registerStepStyles.header}>
-            <Text style={registerStepStyles.headerTitle}>Registrar</Text>
-            <Text style={registerStepStyles.headerSubtitle}>Quase lá!</Text>
-          </View>
+                {/* Header */}
+                <View style={registerStepStyles.header}>
+                  <Text style={registerStepStyles.headerTitle}>Registrar</Text>
+                  <Text style={registerStepStyles.headerSubtitle}>Quase lá!</Text>
+                </View>
 
-          {/* Progress Indicator */}
-          <View style={registerStepStyles.progressContainer}>
-            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-              <FontAwesome name="check" size={20} color="#fff" />
-            </View>
-            <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-              <FontAwesome name="check" size={20} color="#fff" />
-            </View>
-            <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-            <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-              <FontAwesome name="id-card" size={20} color="#fff" />
-            </View>
-            <View style={registerStepStyles.progressLine} />
-            <View style={registerStepStyles.progressStep}>
-              <FontAwesome name="lock" size={20} color="#666" />
-            </View>
-          </View>
+                {/* Progress Indicator */}
+                <View style={registerStepStyles.progressContainer}>
+                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
+                    <FontAwesome name="check" size={20} color="#fff" />
+                  </View>
+                  <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
+                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
+                    <FontAwesome name="check" size={20} color="#fff" />
+                  </View>
+                  <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
+                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
+                    <FontAwesome name="id-card" size={20} color="#fff" />
+                  </View>
+                  <View style={registerStepStyles.progressLine} />
+                  <View style={registerStepStyles.progressStep}>
+                    <FontAwesome name="lock" size={20} color="#666" />
+                  </View>
+                </View>
 
-          {/* Form */}
-          <View style={registerStepStyles.formContainer}>
-            <Text style={registerStepStyles.title}>
-              Informe seu {documentType.toUpperCase()}
-            </Text>
+                {/* Form */}
+                <View style={registerStepStyles.formContainer}>
+                  <Text style={registerStepStyles.title}>
+                    Informe seu {documentType.toUpperCase()}
+                  </Text>
 
-            {/* Document Input */}
-            <View style={registerStepStyles.inputWrapper}>
-              <TextInput
-                style={[
-                  registerStepStyles.input,
-                  documentTouched && documentError && registerStepStyles.inputError
-                ]}
-                placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
-                placeholderTextColor="#999999"
-                value={document}
-                onChangeText={handleDocumentChange}
-                onBlur={handleDocumentBlur}
-                keyboardType="numeric"
-                returnKeyType="done"
-                maxLength={documentType === 'cpf' ? 14 : 18}
-                onSubmitEditing={handleNext}
-              />
-              {documentTouched && documentError && (
-                <Text style={registerStepStyles.errorText}>{documentError}</Text>
-              )}
-            </View>
-          </View>
+                  {/* Document Input */}
+                  <View style={registerStepStyles.inputWrapper}>
+                    <TextInput
+                      style={[
+                        registerStepStyles.input,
+                        documentTouched && documentError && registerStepStyles.inputError
+                      ]}
+                      placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
+                      placeholderTextColor="#999999"
+                      value={document}
+                      onChangeText={handleDocumentChange}
+                      onBlur={handleDocumentBlur}
+                      keyboardType="numeric"
+                      returnKeyType="done"
+                      maxLength={documentType === 'cpf' ? 14 : 18}
+                      onSubmitEditing={handleNext}
+                    />
+                    {documentTouched && documentError && (
+                      <Text style={registerStepStyles.errorText}>{documentError}</Text>
+                    )}
+                  </View>
+                </View>
 
-          {/* Buttons */}
-          <View style={registerStepStyles.buttonContainer}>
-            <TouchableOpacity style={registerStepStyles.backButton} onPress={handleBack}>
-              <Text style={registerStepStyles.backButtonText}>Voltar</Text>
-            </TouchableOpacity>
+                {/* Buttons */}
+                <View style={registerStepStyles.buttonContainer}>
+                  <TouchableOpacity style={registerStepStyles.backButton} onPress={handleBack}>
+                    <Text style={registerStepStyles.backButtonText}>Voltar</Text>
+                  </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={[
-                registerStepStyles.nextButton,
-                !isFormValid && registerStepStyles.nextButtonDisabled
-              ]} 
-              onPress={handleNext}
-              disabled={!isFormValid}
-            >
-              <Text style={registerStepStyles.nextButtonText}>Próximo</Text>
-            </TouchableOpacity>
-              </View>
+                  <TouchableOpacity
+                    style={[
+                      registerStepStyles.nextButton,
+                      !isFormValid && registerStepStyles.nextButtonDisabled
+                    ]}
+                    onPress={handleNext}
+                    disabled={!isFormValid}
+                  >
+                    <Text style={registerStepStyles.nextButtonText}>Próximo</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </TouchableWithoutFeedback>
           </ScrollView>

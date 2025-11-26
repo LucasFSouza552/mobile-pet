@@ -85,7 +85,6 @@ export function usePostShare({ post }: UsePostShareProps) {
 			if (error?.message?.includes('User did not share') || error?.message?.includes('cancel')) {
 				return;
 			}
-			console.error('Erro ao compartilhar:', error);
 			toast.error('Erro', 'Não foi possível compartilhar o post');
 		}
 	};
@@ -96,7 +95,6 @@ export function usePostShare({ post }: UsePostShareProps) {
 			await Clipboard.setStringAsync(url);
 			toast.success('Link copiado!', 'Link do post copiado para a área de transferência');
 		} catch (error) {
-			console.error('Erro ao copiar link:', error);
 			toast.error('Erro', 'Não foi possível copiar o link');
 		}
 	};

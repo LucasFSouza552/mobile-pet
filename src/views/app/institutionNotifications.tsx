@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import MapView, { Marker } from "react-native-maps";
+import { Linking } from "react-native";
 import { useAccount } from "../../context/AccountContext";
 import { useTheme } from "../../context/ThemeContext";
 import { notificationRemoteRepository } from "../../data/remote/repositories/notificationRemoteRepository";
@@ -93,23 +93,40 @@ export default function InstitutionNotifications({ navigation }: any) {
   };
 
   const renderNotification = ({ item }: { item: INotification }) => {
-    const senderName = item.sender?.name || "Usuário";
-    const senderEmail = item.sender?.email;
-    const senderPhone = item.sender?.phone_number;
+    const sender =
+      item.sender && typeof item.sender !== "string" ? item.sender : null;
+    const senderName = sender?.name || "Usuário";
+    const senderEmail = sender?.email;
+    const senderPhone = sender?.phone_number;
     const senderRole =
-      item.sender?.role ? ` (${item.sender.role.charAt(0).toUpperCase()}${item.sender.role.slice(1)})` : "";
+      sender?.role ? ` (${sender.role.charAt(0).toUpperCase()}${sender.role.slice(1)})` : "";
 
     const typeConfig = getTypeConfig(item.type);
 
-    const hasValidCoordinates = 
-      typeof item.latitude === 'number' && 
-      typeof item.longitude === 'number' &&
-      !isNaN(item.latitude) && 
+    const hasValidCoordinates =
+      typeof item.latitude === "number" &&
+      typeof item.longitude === "number" &&
+      !isNaN(item.latitude) &&
       !isNaN(item.longitude) &&
-      item.latitude >= -90 && 
+      item.latitude >= -90 &&
       item.latitude <= 90 &&
-      item.longitude >= -180 && 
+      item.longitude >= -180 &&
       item.longitude <= 180;
+
+    const handleOpenInMaps = async () => {
+      if (!hasValidCoordinates) return;
+      const url = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
+      try {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          await Linking.openURL(url);
+        } else {
+          toast.error("Erro", "Não foi possível abrir o mapa.");
+        }
+      } catch (error) {
+        toast.error("Erro", "Não foi possível abrir o mapa.");
+      }
+    };
 
     return (
       <View style={styles.card}>
@@ -167,56 +184,29 @@ export default function InstitutionNotifications({ navigation }: any) {
           </View>
         </View>
 
-        {hasValidCoordinates ? (
-          <View style={styles.mapSection}>
-            <View style={styles.mapHeader}>
-              <FontAwesome5 name="map-marker-alt" size={16} color={COLORS.primary} />
-              <Text style={styles.mapLabel}>Localização</Text>
-            </View>
-            <View style={styles.mapContainer}>
-              <MapView
-                style={styles.map}
-                initialRegion={{
-                  latitude: item.latitude,
-                  longitude: item.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                region={{
-                  latitude: item.latitude,
-                  longitude: item.longitude,
-                  latitudeDelta: 0.01,
-                  longitudeDelta: 0.01,
-                }}
-                scrollEnabled={false}
-                zoomEnabled={false}
-                pitchEnabled={false}
-                rotateEnabled={false}
-                liteMode={true}
-                mapType="standard"
-              >
-                <Marker
-                  coordinate={{
-                    latitude: item.latitude,
-                    longitude: item.longitude,
-                  }}
-                  title="Localização do alerta"
-                />
-              </MapView>
-            </View>
+        <View style={styles.mapSection}>
+          <View style={styles.mapHeader}>
+            <FontAwesome5 name="map-marker-alt" size={16} color={hasValidCoordinates ? COLORS.primary : COLORS.text} />
+            <Text style={styles.mapLabel}>Localização</Text>
           </View>
-        ) : (
-          <View style={styles.mapSection}>
-            <View style={styles.mapHeader}>
-              <FontAwesome5 name="map-marker-alt" size={16} color={COLORS.primary} />
-              <Text style={styles.mapLabel}>Localização</Text>
-            </View>
+          {hasValidCoordinates ? (
+            <TouchableOpacity style={styles.mapButton} onPress={handleOpenInMaps}>
+              <FontAwesome5 name="directions" size={16} color={COLORS.bg} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.mapButtonTitle}>Abrir no Google Maps</Text>
+                <Text style={styles.mapButtonSubtitle}>
+                  {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+                </Text>
+              </View>
+              <FontAwesome5 name="external-link-alt" size={14} color={COLORS.bg} />
+            </TouchableOpacity>
+          ) : (
             <View style={styles.mapErrorContainer}>
               <FontAwesome5 name="exclamation-circle" size={24} color={COLORS.text} style={{ opacity: 0.5 }} />
               <Text style={styles.mapErrorText}>Localização não disponível</Text>
             </View>
-          </View>
-        )}
+          )}
+        </View>
       </View>
     );
   };
@@ -242,7 +232,7 @@ export default function InstitutionNotifications({ navigation }: any) {
       ) : (
         <FlatList
           data={notifications}
-          keyExtractor={(item) => item._id}
+          keyExtractor={(item) => item.id}
           renderItem={renderNotification}
           refreshControl={
             <RefreshControl
@@ -449,15 +439,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       letterSpacing: 0.5,
     },
     mapContainer: {
-      height: 180,
-      borderRadius: 16,
-      overflow: "hidden",
-      borderWidth: 2,
-      borderColor: COLORS.primary + "30",
-    },
-    map: {
-      width: "100%",
-      height: "100%",
+      height: 0,
     },
     emptyContainer: {
       flex: 1,
@@ -499,6 +481,25 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       color: COLORS.text,
       opacity: 0.6,
       fontSize: 14,
+    },
+    mapButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      columnGap: 12,
+      backgroundColor: COLORS.primary,
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 16,
+    },
+    mapButtonTitle: {
+      color: COLORS.bg,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    mapButtonSubtitle: {
+      color: COLORS.bg,
+      opacity: 0.8,
+      fontSize: 12,
     },
   });
 }

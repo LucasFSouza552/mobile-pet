@@ -1,23 +1,22 @@
 import { useState, useRef } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { Animated } from 'react-native';
-import Toast from 'react-native-toast-message';
 import { IComment } from '../../../models/IComment';
 import { commentRepository } from '../../../data/remote/repositories/commentsRemoteRepository';
-import { usePostComments } from './usePostComments';
 import { useToast } from '../../../hooks/useToast';
+
 interface UseEditCommentModalProps {
 	postId?: string;
+	onCommentUpdated: (comment: IComment) => void;
 }
 
-export function useEditCommentModal({ postId }: UseEditCommentModalProps) {
+export function useEditCommentModal({ onCommentUpdated }: UseEditCommentModalProps) {
 	const { width, height } = useWindowDimensions();
 	const [isOpen, setIsOpen] = useState(false);
 	const [editingComment, setEditingComment] = useState<IComment | null>(null);
 	const [editCommentText, setEditCommentText] = useState('');
 	const [saving, setSaving] = useState(false);
 	const editSlideY = useRef(new Animated.Value(height)).current;
-	const { update } = usePostComments(postId);
 	const toast = useToast();
 	const openEditModal = (comment: IComment) => {
 		setEditingComment(comment);
@@ -59,7 +58,7 @@ export function useEditCommentModal({ postId }: UseEditCommentModalProps) {
 				updatedAt: updated.updatedAt || new Date().toISOString(),
 			};
 
-			update(updatedComment);
+			onCommentUpdated(updatedComment);
 			closeEditModal();
 
 			setTimeout(() => {

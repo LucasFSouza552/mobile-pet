@@ -45,7 +45,10 @@ function PostCardComponent({
 	const { isLiked, likeScale, handleLikePress } = usePostLike({ post, accountId, onLike });
 	const { showShareMessage, handleSharePress } = usePostShare({ post });
 	const commentsModal = usePostCommentsModal({ postId: post?.id });
-	const editCommentModal = useEditCommentModal({ postId: post?.id });
+	const editCommentModal = useEditCommentModal({
+		postId: post?.id,
+		onCommentUpdated: commentsModal.update,
+	});
 	const aboutModal = usePostAboutModal();
 	const editPostModal = usePostEditModal({ post });
 	const optionsModal = usePostOptionsModal({
