@@ -2,42 +2,62 @@ import { getLocalDb } from "../database/LocalDb";
 import { IHistory } from "../../../models/IHistory";
 import { SQLiteBindValue } from "expo-sqlite";
 import { IPet } from "../../../models/IPet";
+import { IAccount } from "../../../models/IAccount";
 import { petLocalRepository } from "./petLocalRepository";
 
-function buildSqlValues<T>(values: Partial<T>) {
-    const Interrogations = Object.keys(values).map(() => `?`).join(', ');
-    const sqlValues = Object.values(values) as SQLiteBindValue[];
-    if (Object.keys(values).length === 0) {
-        return { interrogations: "", values: [] };
-    }
-    return {
-        interrogations: Interrogations
-            .split(', ')
-            .map((q, index) => `${Object.keys(values)[index]} = ${q}`)
-            .join(', '),
-        values: sqlValues
-    }
-}
-
-
-const normalizeHistoryForDb = (history: IHistory) => {
+function normalizeHistoryForDb(history: IHistory) {
     const now = new Date().toISOString();
+
+    const accountId =
+        typeof history.account === 'string'
+            ? history.account
+            : (history.account as IAccount)?.id ?? null;
+
+    const institutionPayload =
+        typeof history.institution === 'object' && history.institution !== null
+            ? JSON.stringify(history.institution)
+            : typeof history.institution === 'string'
+                ? history.institution
+                : null;
+
+    const petId =
+        typeof history.pet === 'string'
+            ? history.pet
+            : (history.pet as IPet)?.id ?? null;
+
     return {
-        ...history,
-        account: typeof history.account === 'string' 
-            ? history.account 
-            : (history.account as any)?.id ?? history.account,
-        institution: history.institution ?? null,
-        pet: typeof history.pet === 'string' 
-            ? history.pet 
-            : (history.pet as unknown as IPet)?.id ?? null,
+        id: history.id,
+        type: history.type,
+        status: history.status ?? 'pending',
+        account: accountId,
+        institution: institutionPayload,
+        pet: petId,
         amount: history.amount ?? null,
         externalReference: history.externalReference ?? null,
         createdAt: history.createdAt ?? now,
         updatedAt: history.updatedAt ?? now,
         lastSyncedAt: history.lastSyncedAt ?? null,
     };
-};
+}
+
+function parseInstitution(value: unknown): IAccount | string | undefined {
+    if (!value) return undefined;
+    if (typeof value === 'object') {
+        return value as IAccount;
+    }
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            try {
+                return JSON.parse(trimmed) as IAccount;
+            } catch {
+                return undefined;
+            }
+        }
+        return value;
+    }
+    return undefined;
+}
 
 
 const normalizePetFromDb = (row: any): IPet | null => {
@@ -70,7 +90,7 @@ const normalizeHistory = (row: any): IHistory => {
         type: row.type,
         status: row.status ?? undefined,
         pet: row.pet_id ? normalizePetFromDb(row) : (row.pet ?? null),
-        institution: row.institution ?? undefined,
+        institution: parseInstitution(row.institution),
         account: row.account,
         amount: row.amount ?? undefined,
         externalReference: row.externalReference ?? null,
@@ -188,7 +208,7 @@ export const historyLocalRepository = {
                     clean.type,
                     clean.status ?? 'pending',
                     clean.pet,
-                    clean.institution?.id ?? null,
+                    clean.institution,
                     clean.account,
                     clean.amount,
                     clean.externalReference,
@@ -206,31 +226,50 @@ export const historyLocalRepository = {
     update: async (id: string, history: Partial<IHistory>): Promise<void> => {
         const db = await getLocalDb();
 
-        const normalized: any = {
-            ...history,
-            account: typeof history.account === 'string' 
-                ? history.account 
-                : (history.account as any)?.id ?? history.account,
-            institution: history.institution ?? null,
-            pet: typeof history.pet === 'string' 
-                ? history.pet 
-                : (history.pet as unknown as IPet)?.id ?? history.pet ?? null,
-        };
+        const updates: Record<string, SQLiteBindValue> = {};
 
-        const { interrogations, values: sqlValues } = buildSqlValues(normalized);
-        if (!interrogations || !sqlValues.length) {
-            return;
+        if (history.type !== undefined) updates.type = history.type;
+        if (history.status !== undefined) updates.status = history.status;
+        if (history.account !== undefined) {
+            updates.account =
+                typeof history.account === 'string'
+                    ? history.account
+                    : (history.account as IAccount)?.id ?? null;
+        }
+        if (history.institution !== undefined) {
+            updates.institution =
+                typeof history.institution === 'object' && history.institution !== null
+                    ? JSON.stringify(history.institution)
+                    : typeof history.institution === 'string'
+                        ? history.institution
+                        : null;
+        }
+        if (history.pet !== undefined) {
+            updates.pet =
+                typeof history.pet === 'string'
+                    ? history.pet
+                    : (history.pet as unknown as IPet)?.id ?? null;
+        }
+        if (history.amount !== undefined) updates.amount = history.amount ?? null;
+        if (history.externalReference !== undefined) {
+            updates.externalReference = history.externalReference ?? null;
+        }
+        if (history.createdAt !== undefined) updates.createdAt = history.createdAt;
+        if (history.updatedAt !== undefined) updates.updatedAt = history.updatedAt;
+        if (history.lastSyncedAt !== undefined) {
+            updates.lastSyncedAt = history.lastSyncedAt ?? null;
         }
 
-        try {
-            await db.runAsync(
-                `UPDATE history SET ${interrogations} WHERE id = ?`,
-                [...sqlValues, id]
-            );
+        const entries = Object.entries(updates);
+        if (entries.length === 0) return;
 
-        } catch (error) {
-            throw error;
-        }
+        const setClause = entries.map(([key]) => `${key} = ?`).join(', ');
+        const values = entries.map(([, value]) => value);
+
+        await db.runAsync(
+            `UPDATE history SET ${setClause} WHERE id = ?`,
+            [...values, id]
+        );
     },
 
     delete: async (id: string): Promise<void> => {

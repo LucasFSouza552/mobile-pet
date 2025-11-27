@@ -87,7 +87,7 @@ export const petLocalRepository = {
           toDbParams(clean)
         );
 
-        if (clean.images?.length > 0) {
+        if (clean.images && clean.images.length > 0) {
           await petImageLocalRepository.replaceForPet(clean.id, clean.images);
         }
         
