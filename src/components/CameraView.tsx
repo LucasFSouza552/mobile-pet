@@ -42,15 +42,15 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
         skipProcessing: false
       });
       if (!photo?.uri) return;
-      
+
       const uri = photo.uri;
       const ext = 'jpg';
       const name = `photo_${Date.now()}.${ext}`;
       const type = `image/${ext}`;
-        
+
       onCapture({ uri, name, type });
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       toast.handleApiError(error, error?.data?.message || 'Erro ao capturar foto');
     }
   };
@@ -86,7 +86,7 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
         >
           <Ionicons
             name={flash === 'off' ? 'flash-off' : 'flash'}
-            size={24} 
+            size={24}
             color={COLORS.text}
           />
         </TouchableOpacity>
@@ -101,8 +101,8 @@ export default function CameraView({ visible, onClose, onCapture }: CameraViewPr
           <MaterialIcons name="flip-camera-android" size={50} color={COLORS.text} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          onPress={capturePhoto} 
+        <TouchableOpacity
+          onPress={capturePhoto}
           accessibilityLabel="Capturar foto"
           accessibilityRole="button"
         >

@@ -15,6 +15,7 @@ export { commentRepository } from './remote/repositories/commentsRemoteRepositor
 export { postRepository } from './remote/repositories/postRemoteRepository';
 export { pictureRepository } from './remote/repositories/pictureRemoteRepository';
 export { historyRemoteRepository } from './remote/repositories/historyRemoteRepository';
+export { achievementsRemoteRepository } from './remote/repositories/achievementsRemoteRepository';
 
 // Sync
 export { accountSync } from './sync/accountSync';

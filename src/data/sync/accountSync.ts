@@ -28,24 +28,6 @@ export const accountSync = {
             }
         }
     },
-
-    // Envia para o servidor as alterações feitas localmente (WIP)
-    async syncToServer(): Promise<void> {
-        const netState = await NetInfo.fetch();
-        if (!netState.isConnected) {
-            return;
-        }
-
-        try {
-            const localAccount = await accountLocalRepository.findLocalAccount();
-
-
-
-        } catch (error) {
-            accountLocalRepository.logout();
-        }
-    },
-
     async getProfile(): Promise<IAccount | null> {
         try {
             const localAccount = await accountLocalRepository.findLocalAccount();

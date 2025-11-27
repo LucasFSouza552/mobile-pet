@@ -4,6 +4,7 @@ import { useAccount } from "../context/AccountContext";
 import { accountSync } from "../data/sync/accountSync";
 import { accountPetInteractionSync } from "../data/sync/accountPetInteractionSync";
 import { historySync } from "../data/sync/historySync";
+import { achievementsSync } from "../data/sync/achievementsSync";
 
 export function useNetworkSync() {
     const [isConnected, setIsConnected] = useState<boolean | null>(null);
@@ -22,6 +23,7 @@ export function useNetworkSync() {
                     accountSync.syncFromServer(),
                     accountPetInteractionSync.syncFromServer(account.id),
                     historySync.syncFromServer(account.id),
+                    achievementsSync.syncFromServer(account.id),
                 ]);
             } else {
                 console.log("sincronizando account");

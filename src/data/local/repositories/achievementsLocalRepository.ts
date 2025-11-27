@@ -21,7 +21,7 @@ export const achievementsLocalRepository = {
             INSERT INTO achievements (
                 id, name, description, type, createdAt, updatedAt, lastSyncedAt
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 description = excluded.description,
