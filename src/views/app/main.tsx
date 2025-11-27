@@ -3,7 +3,7 @@ import { createMaterialTopTabNavigator, } from '@react-navigation/material-top-t
 import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import Profile from './profile/profile';
 import Donate from './donation/donate';
-import FindPets from './findPets';
+import MatchPets from './matchPets';
 import Community from './community';
 import { useTheme } from '../../context/ThemeContext';
 import NewPost from './newPost';
@@ -19,7 +19,7 @@ const Tab = createMaterialTopTabNavigator();
 const Icons = {
   Profile: { name: 'user-alt', family: FontAwesome5 },
   Donate: { name: 'hands-helping', family: FontAwesome5 },
-  FindPets: { name: 'heart', family: AntDesign },
+  MatchPets: { name: 'heart', family: AntDesign },
   Community: { name: 'comments', family: FontAwesome },
   NewPost: { name: 'plus', family: FontAwesome },
 };
@@ -70,7 +70,7 @@ export default function Main() {
       })}
     >
       {!isInstitution && (
-        <Tab.Screen name="FindPets" component={FindPets} />
+        <Tab.Screen name="MatchPets" component={MatchPets} />
       )}
       <Tab.Screen name="Donate" component={Donate} />
       <Tab.Screen

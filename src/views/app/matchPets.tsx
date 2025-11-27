@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import { useToast } from '../../hooks/useToast';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export default function FindPets() {
+export default function MatchPets() {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
 
@@ -23,6 +23,10 @@ export default function FindPets() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const toast = useToast();
+  const likeScale = useRef(new Animated.Value(1)).current;
+  const dislikeScale = useRef(new Animated.Value(1)).current;
+  const reactionAnim = useRef(new Animated.Value(0)).current;
+  const [reactionType, setReactionType] = useState<'like' | 'dislike' | null>(null);
 
   const loadNextPet = useCallback(async () => {
     try {
@@ -82,17 +86,54 @@ export default function FindPets() {
       : null;
   }, [petFeed]);
 
+  const animateButton = useCallback((animatedValue: Animated.Value) => {
+    Animated.sequence([
+      Animated.timing(animatedValue, {
+        toValue: 0.9,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.spring(animatedValue, {
+        toValue: 1,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const triggerReaction = useCallback((type: 'like' | 'dislike') => {
+    setReactionType(type);
+    reactionAnim.setValue(0);
+    Animated.sequence([
+      Animated.timing(reactionAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(reactionAnim, {
+        toValue: 0,
+        duration: 200,
+        delay: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => setReactionType(null));
+  }, [reactionAnim]);
+
   const onNope = useCallback(async () => {
-    if (!petFeed) return;
+    if (!petFeed || loading) return;
+    animateButton(dislikeScale);
+    triggerReaction('dislike');
     await petRemoteRepository.dislikePet(petFeed.id);
     await loadNextPet();
-  }, [petFeed, loadNextPet]);
+  }, [petFeed, loadNextPet, animateButton, dislikeScale, loading, triggerReaction]);
 
   const onLike = useCallback(async () => {
-    if (!petFeed) return;
+    if (!petFeed || loading) return;
+    animateButton(likeScale);
+    triggerReaction('like');
+    
     await petRemoteRepository.likePet(petFeed.id);
     await loadNextPet();
-  }, [petFeed, loadNextPet]);
+  }, [petFeed, loadNextPet, animateButton, likeScale, loading, triggerReaction]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -162,6 +203,31 @@ export default function FindPets() {
               <Image source={pictureRepository.getSource(petFeed.images?.[0])} style={styles.photo} />
             )}
           </View>
+          {reactionType && (
+            <Animated.View
+              pointerEvents="none"
+              style={[
+                styles.reactionOverlay,
+                {
+                  opacity: reactionAnim,
+                  transform: [
+                    {
+                      scale: reactionAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.5, 1],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Ionicons
+                name={reactionType === 'like' ? 'heart' : 'heart-dislike'}
+                size={96}
+                color={reactionType === 'like' ? '#FF4F81' : '#E74C3C'}
+              />
+            </Animated.View>
+          )}
           <View style={styles.cardInfo}>
             <View style={styles.nameRow}>
               <Text style={styles.name}>{petFeed.name}</Text>
@@ -213,38 +279,42 @@ export default function FindPets() {
       )}
 
       <View style={styles.actions}>
-        <TouchableOpacity 
-          style={[
-            styles.circleBtn, 
-            { backgroundColor: '#E74C3C' },
-            (loading || !petFeed) && styles.buttonDisabled
-          ]} 
-          onPress={onNope} 
-          disabled={loading || !petFeed}
-          accessibilityLabel="Não curtir"
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="close" size={26} color="#fff" />
-          )}
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[
-            styles.circleBtn, 
-            { backgroundColor: COLORS.primary },
-            (loading || !petFeed) && styles.buttonDisabled
-          ]} 
-          onPress={onLike} 
-          disabled={loading || !petFeed}
-          accessibilityLabel="Curtir"
-        >
-          {loading ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Ionicons name="heart" size={26} color="#fff" />
-          )}
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: dislikeScale }] }}>
+          <TouchableOpacity 
+            style={[
+              styles.circleBtn, 
+              { backgroundColor: '#E74C3C' },
+              (loading || !petFeed) && styles.buttonDisabled
+            ]} 
+            onPress={onNope} 
+            disabled={loading || !petFeed}
+            accessibilityLabel="Não curtir"
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="close" size={26} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+        <Animated.View style={{ transform: [{ scale: likeScale }] }}>
+          <TouchableOpacity 
+            style={[
+              styles.circleBtn, 
+              { backgroundColor: COLORS.primary },
+              (loading || !petFeed) && styles.buttonDisabled
+            ]} 
+            onPress={onLike} 
+            disabled={loading || !petFeed}
+            accessibilityLabel="Curtir"
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons name="heart" size={26} color="#fff" />
+            )}
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );
@@ -381,6 +451,15 @@ function makeStyles(COLORS: any) {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 8,
+    },
+    reactionOverlay: {
+      position: 'absolute',
+      top: '40%',
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 15,
     },
     infoIcon: {
       marginRight: 8,

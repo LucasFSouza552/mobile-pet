@@ -82,15 +82,12 @@ export default function PetDetails(props: PetDetailsProps) {
   const handlePhonePress = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber) return;
 
-    // Remove caracteres não numéricos, exceto +
     const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
     
-    // Se não começar com +, adiciona código do Brasil
     const formattedNumber = cleanNumber.startsWith('+') 
       ? cleanNumber 
       : `+55${cleanNumber.replace(/^0/, '')}`;
 
-    // Remove o + para o formato do WhatsApp
     const whatsappNumber = formattedNumber.replace(/^\+/, '');
 
     Alert.alert(
@@ -107,7 +104,6 @@ export default function PetDetails(props: PetDetailsProps) {
               if (canOpen) {
                 await Linking.openURL(whatsappUrl);
               } else {
-                // Tenta abrir WhatsApp Web
                 const whatsappWebUrl = `https://wa.me/${whatsappNumber}`;
                 const canOpenWeb = await Linking.canOpenURL(whatsappWebUrl);
                 

@@ -157,7 +157,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
         ) : (
           viewAccount?.role === 'institution'
             ? (targetAccountId ? <InstitutionDesiredPetsList institutionId={targetAccountId} /> : null)
-            : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('FindPets')} /> : null)
+            : (targetAccountId ? <WishlistPetsList accountId={targetAccountId} onFindPets={() => navigation.navigate('MatchPets')} /> : null)
         )}
 
       </View>
