@@ -12,7 +12,7 @@ interface PostContextProps {
     refresh: () => Promise<void>;
     fetchMore: () => Promise<void>;
     likePost: (postId: string) => Promise<void>;
-    // Extras inspirados no PostContext web
+
     userPosts: IPost[];
     refreshUserPosts: (accountId?: string) => Promise<void>;
     loadMoreUserPosts: (accountId?: string) => Promise<void>;
@@ -36,7 +36,6 @@ function addPostsWithoutDuplicates(currentPosts: IPost[], newPosts: IPost[]): IP
 export function PostProvider({ children }: { children: ReactNode }) {
 
     const { isConnected } = useNetInfo();
-
 
     // feed geral
     const [posts, setPosts] = useState<IPost[]>([]);
@@ -63,7 +62,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     async function load(pageToLoad: number, replace: boolean) {
         try {
-            // verifica se tem internet
             if (!isConnected) {
                 throw new Error("Sem conexão com a internet");
             }
