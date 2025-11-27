@@ -29,7 +29,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
-  const [accountStatus, setAccountStatus] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist' | 'history'>('posts');
   const toast = useToast();
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
@@ -76,25 +75,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
   }, [targetAccountId, account]);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!targetAccountId) {
-        if (active) setAccountStatus(null);
-        return;
-      }
-      try {
-        const status = await accountRemoteRepository.fetchAccountStatusById(targetAccountId);
-        if (active) setAccountStatus(status);
-      } catch (error) {
-        if (active) setAccountStatus(null);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [targetAccountId]);
-
-  useEffect(() => {
     if (postsError) {
       toast.handleApiError(postsError, postsError);
       return;
@@ -112,7 +92,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
         account={viewAccount}
         COLORS={COLORS}
         isSelf={isSelf}
-        achievements={accountStatus?.achievements || []}
       />
 
       {isInstitution && isSelf && (
