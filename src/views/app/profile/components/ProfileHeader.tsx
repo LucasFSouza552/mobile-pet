@@ -14,9 +14,14 @@ interface ProfileHeaderProps {
 export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeaderProps) {
   const styles = makeStyles(COLORS);
   const navigation = useNavigation();
+  const isInstitution = account?.role === 'institution';
 
   const handleSettingsPress = () => {
     (navigation as any).getParent()?.navigate('ProfileSettings');
+  };
+
+  const handleNotificationsPress = () => {
+    (navigation as any).getParent()?.navigate('InstitutionNotifications');
   };
 
   return (
@@ -36,14 +41,25 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
         </View>
       </View>
       {isSelf ? (
-        <TouchableOpacity
-          style={styles.settingsButton}
-          onPress={handleSettingsPress}
-          activeOpacity={0.7}
-        >
-          <FontAwesome5 name="cog" size={20} color={COLORS.text} />
-        </TouchableOpacity>
+
+        <View style={styles.buttonsRow}>
+          {isInstitution && <TouchableOpacity
+            style={styles.notificationsButton}
+            onPress={handleNotificationsPress}
+            activeOpacity={0.7}
+          >
+            <FontAwesome5 name="bell" size={20} style={styles.notificationsIcon} />
+          </TouchableOpacity>}
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={handleSettingsPress}
+            activeOpacity={0.7}
+          >
+            <FontAwesome5 name="cog" size={20} style={styles.settingsIcon} />
+          </TouchableOpacity>
+        </View>
       ) : null}
+
     </View>
   );
 }
@@ -104,6 +120,25 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       padding: 8,
       borderRadius: 20,
       backgroundColor: COLORS.tertiary + '40',
+    },
+    notificationsButton: {
+      padding: 8,
+      marginLeft: 8,
+      borderRadius: 20,
+      backgroundColor: COLORS.tertiary + '40',
+    },
+    notificationsIcon: {
+      color: COLORS.text,
+    },
+    settingsIcon: {
+      color: COLORS.text,
+      width: 20,
+      height: 20,
+    },
+    buttonsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
     },
   });
 }

@@ -18,7 +18,7 @@ type TabState = {
   showHistory: boolean;
 };
 
-type TabAction = 
+type TabAction =
   | { type: 'SET_ACTIVE_TAB'; payload: TabKey }
   | { type: 'SET_IS_INSTITUTION'; payload: boolean }
   | { type: 'SET_SHOW_HISTORY'; payload: boolean };
@@ -30,15 +30,16 @@ interface TabConfig {
 }
 
 const tabsConfig: TabConfig[] = [
+
+  {
+    key: 'posts',
+    label: 'Posts',
+    shouldShow: () => true,
+  },
   {
     key: 'pets',
     label: 'Pets',
     shouldShow: (state) => state.isInstitution,
-  },
-  {
-    key: 'posts',
-    label: 'Posts',
-    shouldShow: (state) => !state.isInstitution,
   },
   {
     key: 'adopted',
@@ -48,7 +49,7 @@ const tabsConfig: TabConfig[] = [
   {
     key: 'wishlist',
     label: (isInstitution) => isInstitution ? 'Desejados' : 'Desejo adotar',
-    shouldShow: (state) => true,
+    shouldShow: () => true,
   },
   {
     key: 'history',
@@ -122,7 +123,7 @@ const useTabs = (initialState: TabState) => {
 
 export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COLORS, showHistory }: ProfileTopTabsProps) {
   const styles = makeStyles(COLORS);
-  
+
   const { visibleTabs } = useTabs({
     activeTab,
     isInstitution,
@@ -141,15 +142,16 @@ export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COL
       <View style={styles.topTabs}>
         {visibleTabs.map((tabConfig) => {
           return (
-          <TabItem
-            key={tabConfig.key}
-            tabKey={tabConfig.key}
-            label={getTabLabel(tabConfig)}
-            isActive={activeTab === tabConfig.key}
-            onPress={() => onChange(tabConfig.key)}
-            styles={styles}
-          />
-        )})}
+            <TabItem
+              key={tabConfig.key}
+              tabKey={tabConfig.key}
+              label={getTabLabel(tabConfig)}
+              isActive={activeTab === tabConfig.key}
+              onPress={() => onChange(tabConfig.key)}
+              styles={styles}
+            />
+          )
+        })}
       </View>
     </ScrollView>
   );

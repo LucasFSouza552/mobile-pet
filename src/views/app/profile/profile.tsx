@@ -94,15 +94,6 @@ export default function Profile({ navigation, route }: ProfileProps) {
         isSelf={isSelf}
       />
 
-      {isInstitution && isSelf && (
-        <TouchableOpacity
-          style={styles.notificationsButton}
-          onPress={() => navigation.getParent()?.navigate('InstitutionNotifications')}
-        >
-          <Text style={styles.notificationsButtonText}>Ver notificações de usuários</Text>
-        </TouchableOpacity>
-      )}
-
       <View style={styles.listContainer}>
         <ProfileTopTabs
           activeTab={activeTab}
