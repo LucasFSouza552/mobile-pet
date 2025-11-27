@@ -9,9 +9,9 @@ export default async function CreateAchievements() {
         name TEXT,
         description TEXT,
         type TEXT,
-        unlockedAt TEXT,
         createdAt TEXT,
-        updatedAt TEXT
+        updatedAt TEXT,
+        lastSyncedAt TEXT
         )`
     );
 }

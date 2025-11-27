@@ -7,6 +7,7 @@ import { darkTheme, lightTheme } from '../../../theme/Themes';
 import { petSync } from '../../../data/sync/petSync';
 import { accountSync } from '../../../data/sync/accountSync';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
+import { petInteractionRemoteRepository } from '../../../data/remote/repositories/petInteractionRemoteRepository';
 import { useToast } from '../../../hooks/useToast';
 
 interface PetDetailsProps {
@@ -27,6 +28,7 @@ export default function PetDetails(props: PetDetailsProps) {
   const [pet, setPet] = useState<any>(null);
   const [institution, setInstitution] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
   const loadingRef = useRef(false);
 
   const loadData = useCallback(async () => {
@@ -41,9 +43,9 @@ export default function PetDetails(props: PetDetailsProps) {
     try {
       loadingRef.current = true;
       setLoading(true);
-      
+
       const petData = await petSync.getById(petId);
-      
+
       if (!petData) {
         toast.error('Erro', 'Pet não encontrado');
         navigation.goBack();
@@ -55,9 +57,9 @@ export default function PetDetails(props: PetDetailsProps) {
       if (petData?.account) {
         try {
           const accountId = typeof petData.account === 'string'
-            ? petData.account 
+            ? petData.account
             : (petData.account as any)?.id;
-          
+
           if (accountId) {
             const institutionData = await accountSync.getAccount(accountId);
             setInstitution(institutionData);
@@ -79,13 +81,28 @@ export default function PetDetails(props: PetDetailsProps) {
     loadData();
   }, [petId]);
 
+  const handleCancelAdoption = useCallback(async () => {
+    if (!petId || cancelling) return;
+
+    try {
+      setCancelling(true);
+      await petInteractionRemoteRepository.undoInteraction(petId);
+      toast.success('Sucesso', 'Adoção cancelada com sucesso');
+      await loadData();
+    } catch (error: any) {
+      toast.handleApiError(error, error?.data?.message || 'Erro ao cancelar adoção');
+    } finally {
+      setCancelling(false);
+    }
+  }, [petId, toast, loadData, cancelling]);
+
   const handlePhonePress = useCallback(async (phoneNumber: string) => {
     if (!phoneNumber) return;
 
     const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
-    
-    const formattedNumber = cleanNumber.startsWith('+') 
-      ? cleanNumber 
+
+    const formattedNumber = cleanNumber.startsWith('+')
+      ? cleanNumber
       : `+55${cleanNumber.replace(/^0/, '')}`;
 
     const whatsappNumber = formattedNumber.replace(/^\+/, '');
@@ -100,13 +117,13 @@ export default function PetDetails(props: PetDetailsProps) {
             try {
               const whatsappUrl = `whatsapp://send?phone=${whatsappNumber}`;
               const canOpen = await Linking.canOpenURL(whatsappUrl);
-              
+
               if (canOpen) {
                 await Linking.openURL(whatsappUrl);
               } else {
                 const whatsappWebUrl = `https://wa.me/${whatsappNumber}`;
                 const canOpenWeb = await Linking.canOpenURL(whatsappWebUrl);
-                
+
                 if (canOpenWeb) {
                   await Linking.openURL(whatsappWebUrl);
                 } else {
@@ -125,7 +142,7 @@ export default function PetDetails(props: PetDetailsProps) {
             try {
               const phoneUrl = `tel:${cleanNumber}`;
               const canOpen = await Linking.canOpenURL(phoneUrl);
-              
+
               if (canOpen) {
                 await Linking.openURL(phoneUrl);
               } else {
@@ -187,7 +204,7 @@ export default function PetDetails(props: PetDetailsProps) {
 
   const firstImage = pet?.images?.[0] || pet?.avatar;
   const genderText = pet?.gender?.toLowerCase() === 'female' ? 'Fêmea' : pet?.gender?.toLowerCase() === 'male' ? 'Macho' : pet?.gender || 'Não informado';
-
+  console.log(pet);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -197,7 +214,7 @@ export default function PetDetails(props: PetDetailsProps) {
         >
           <FontAwesome5 name="chevron-left" size={20} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalhes do Pet</Text>
+        <Text style={styles.headerTitle}>Detalhes do Pet </Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -213,7 +230,7 @@ export default function PetDetails(props: PetDetailsProps) {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Informações do Pet</Text>
-          
+
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Nome:</Text>
             <Text style={styles.infoValue}>{pet?.name || 'Não informado'}</Text>
@@ -258,7 +275,7 @@ export default function PetDetails(props: PetDetailsProps) {
         {institution && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Instituição</Text>
-            
+
             <View style={styles.institutionCard}>
               {institution?.avatar && (
                 <Image
@@ -268,7 +285,7 @@ export default function PetDetails(props: PetDetailsProps) {
               )}
               <View style={styles.institutionInfo}>
                 <Text style={styles.institutionName}>{institution?.name || 'Instituição'}</Text>
-                
+
                 {institution?.address && (
                   <>
                     {institution.address.city && institution.address.state && (
@@ -279,7 +296,7 @@ export default function PetDetails(props: PetDetailsProps) {
                         </Text>
                       </View>
                     )}
-                    
+
                     {institution.address.street && (
                       <View style={styles.infoRow}>
                         <FontAwesome5 name="road" size={14} color={COLORS.primary} />
@@ -290,7 +307,7 @@ export default function PetDetails(props: PetDetailsProps) {
                         </Text>
                       </View>
                     )}
-                    
+
                     {institution.address.cep && (
                       <View style={styles.infoRow}>
                         <Text style={styles.institutionAddress}>CEP: {institution.address.cep}</Text>
@@ -330,6 +347,21 @@ export default function PetDetails(props: PetDetailsProps) {
             </View>
           </View>
         )}
+
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={[styles.cancelButton, cancelling && styles.cancelButtonDisabled]}
+            onPress={handleCancelAdoption}
+            disabled={cancelling}
+            activeOpacity={0.7}
+          >
+            {cancelling ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.cancelButtonText}>Cancelar adoção</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -485,6 +517,23 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       textDecorationLine: 'underline',
       color: COLORS.primary,
       fontWeight: '600',
+    },
+    actionsContainer: {
+      marginTop: 16,
+    },
+    cancelButton: {
+      backgroundColor: '#dc2626',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    cancelButtonDisabled: {
+      opacity: 0.6,
+    },
+    cancelButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '700',
     },
   });
 }

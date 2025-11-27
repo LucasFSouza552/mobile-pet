@@ -19,24 +19,24 @@ export const achievementsLocalRepository = {
         await db.runAsync(
             `
             INSERT INTO achievements (
-                id, name, description, type, unlockedAt, createdAt, updatedAt
+                id, name, description, type, createdAt, updatedAt, lastSyncedAt
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(id) DO UPDATE SET
                 name = excluded.name,
                 description = excluded.description,
                 type = excluded.type,
-                unlockedAt = excluded.unlockedAt,
-                updatedAt = excluded.updatedAt
+                updatedAt = excluded.updatedAt,
+                lastSyncedAt = excluded.lastSyncedAt
             `,
             [
                 achievement.id,
                 achievement.name,
                 achievement.description ?? null,
                 achievement.type,
-                achievement.unlockedAt ?? null,
                 achievement.createdAt,
-                achievement.updatedAt
+                achievement.updatedAt,
+                achievement.lastSyncedAt ?? null
             ]
         );
     },
@@ -58,9 +58,9 @@ export const achievementsLocalRepository = {
             updates.push("type = ?");
             values.push(achievement.type);
         }
-        if (achievement.unlockedAt !== undefined) {
-            updates.push("unlockedAt = ?");
-            values.push(achievement.unlockedAt);
+        if (achievement.lastSyncedAt !== undefined) {
+            updates.push("lastSyncedAt = ?");
+            values.push(achievement.lastSyncedAt);
         }
         if (achievement.updatedAt !== undefined) {
             updates.push("updatedAt = ?");

@@ -26,16 +26,16 @@ export const achievementsSync = {
     },
 
     async upsert(achievement: IAchievement): Promise<IAchievement> {
-        const nowIso = new Date().toISOString();
+        const now = new Date().toISOString();
 
         const complete: IAchievement = {
             id: achievement.id,
             name: achievement.name ?? "",
             description: achievement.description ?? "",
             type: achievement.type ?? "donation",
-            unlockedAt: achievement.unlockedAt,
-            createdAt: achievement.createdAt ?? nowIso,
-            updatedAt: nowIso,
+            lastSyncedAt: achievement.lastSyncedAt ?? now,
+            createdAt: achievement.createdAt ?? now,
+            updatedAt: now,
         };
 
         await achievementsLocalRepository.create(complete);
