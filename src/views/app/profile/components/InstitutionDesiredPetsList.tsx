@@ -3,7 +3,7 @@ import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity, Modal } from
 import { useFocusEffect } from '@react-navigation/native';
 import { petRemoteRepository } from '../../../../data/remote/repositories/petRemoteRepository';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 import { useTheme } from '../../../../context/ThemeContext';
 import { formatDateOnly } from '../../../../utils/date';
 
@@ -264,7 +264,7 @@ export default function InstitutionDesiredPetsList({ institutionId }: Institutio
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     petCard: {
       flexDirection: 'row',
@@ -279,7 +279,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: 60,
       height: 60,
       borderRadius: 10,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     petInfo: {
       flex: 1,
@@ -304,7 +304,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       marginRight: 6,
     },
     requestsBadgeText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '700',
     },
     manageBtn: {
@@ -314,7 +314,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 10,
     },
     manageBtnText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '700',
     },
     emptyText: {
@@ -357,7 +357,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: 64,
       height: 64,
       borderRadius: 12,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     modalPetName: {
       fontSize: 18,

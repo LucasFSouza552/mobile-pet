@@ -17,7 +17,7 @@ import { useTheme } from "../../context/ThemeContext";
 import { notificationRemoteRepository } from "../../data/remote/repositories/notificationRemoteRepository";
 import { pictureRepository } from "../../data/remote/repositories/pictureRemoteRepository";
 import { INotification } from "../../models/INotification";
-import { darkTheme, lightTheme } from "../../theme/Themes";
+import { ThemeColors } from "../../theme/types";
 import { formatDate } from "../../utils/date";
 import { useToast } from "../../hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -66,28 +66,28 @@ export default function InstitutionNotifications({ navigation }: any) {
           icon: "exclamation-triangle",
           label: "Alerta",
           backgroundColor: "#ef4444",
-          iconColor: COLORS.bg,
+          iconColor: COLORS.iconBackground,
         };
       case "info":
         return {
           icon: "info-circle",
           label: "Informação",
           backgroundColor: "#3b82f6",
-          iconColor: COLORS.bg,
+          iconColor: COLORS.iconBackground,
         };
       case "like":
         return {
           icon: "heart",
           label: "Curtida",
           backgroundColor: "#ec4899",
-          iconColor: COLORS.bg,
+          iconColor: COLORS.iconBackground,
         };
       default:
         return {
           icon: "bell",
           label: type.charAt(0).toUpperCase() + type.slice(1),
           backgroundColor: COLORS.primary,
-          iconColor: COLORS.bg,
+          iconColor: COLORS.iconBackground,
         };
     }
   };
@@ -138,7 +138,7 @@ export default function InstitutionNotifications({ navigation }: any) {
               <Text style={styles.alertBadgeText}>{typeConfig.label}</Text>
             </View>
             <View style={styles.timeContainer}>
-              <FontAwesome5 name="clock" size={12} color={COLORS.bg} />
+              <FontAwesome5 name="clock" size={12} color={COLORS.iconBackground} />
               <Text style={styles.cardTime}>{formatDate(item.createdAt, { style: 'compact' })}</Text>
             </View>
           </View>
@@ -191,14 +191,14 @@ export default function InstitutionNotifications({ navigation }: any) {
           </View>
           {hasValidCoordinates ? (
             <TouchableOpacity style={styles.mapButton} onPress={handleOpenInMaps}>
-              <FontAwesome5 name="directions" size={16} color={COLORS.bg} />
+              <FontAwesome5 name="directions" size={16} color={COLORS.iconBackground} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.mapButtonTitle}>Abrir no Google Maps</Text>
                 <Text style={styles.mapButtonSubtitle}>
                   {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
                 </Text>
               </View>
-              <FontAwesome5 name="external-link-alt" size={14} color={COLORS.bg} />
+              <FontAwesome5 name="external-link-alt" size={14} color={COLORS.iconBackground} />
             </TouchableOpacity>
           ) : (
             <View style={styles.mapErrorContainer}>
@@ -266,7 +266,7 @@ export default function InstitutionNotifications({ navigation }: any) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -322,7 +322,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: "100%",
       height: 280,
       position: "relative",
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     cardImage: {
       width: "100%",
@@ -357,7 +357,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       elevation: 3,
     },
     alertBadgeText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 12,
       fontWeight: "700",
       textTransform: "uppercase",
@@ -373,7 +373,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 12,
     },
     cardTime: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 12,
       fontWeight: "600",
     },
@@ -470,7 +470,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     mapErrorContainer: {
       height: 180,
       borderRadius: 16,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
       borderWidth: 2,
       borderColor: COLORS.primary + "30",
       justifyContent: 'center',
@@ -492,12 +492,12 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 16,
     },
     mapButtonTitle: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 16,
       fontWeight: '700',
     },
     mapButtonSubtitle: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       opacity: 0.8,
       fontSize: 12,
     },

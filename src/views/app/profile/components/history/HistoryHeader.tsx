@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { darkTheme, lightTheme } from '../../../../../theme/Themes';
+import { ThemeColors } from '../../../../../theme/types';
 
 interface HistoryHeaderProps {
   label: string;
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
 }
 
 export const HistoryHeader = React.memo<HistoryHeaderProps>(({ label, COLORS }) => {
@@ -21,7 +21,7 @@ export const HistoryHeader = React.memo<HistoryHeaderProps>(({ label, COLORS }) 
 
 HistoryHeader.displayName = 'HistoryHeader';
 
-const makeStyles = (COLORS: typeof lightTheme.colors | typeof darkTheme.colors) =>
+const makeStyles = (COLORS: ThemeColors) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',

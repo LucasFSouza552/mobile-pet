@@ -18,10 +18,12 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
 import { validateEmail, validatePhone } from '../../../utils/validation';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function RegisterStep2({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
-  const registerStepStyles = createRegisterStepStyles(width, height);
+  const { COLORS, FONT_SIZE } = useTheme();
+  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
   const {
     documentType,
     name,
@@ -161,7 +163,6 @@ export default function RegisterStep2({ navigation, route }: any) {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={registerStepStyles.content}>
-          {/* Header */}
           <View style={registerStepStyles.header}>
             <Text style={registerStepStyles.headerTitle}>Registrar</Text>
             <Text style={registerStepStyles.headerSubtitle}>
@@ -169,30 +170,27 @@ export default function RegisterStep2({ navigation, route }: any) {
             </Text>
           </View>
 
-          {/* Progress Indicator */}
           <View style={registerStepStyles.progressContainer}>
             <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-              <FontAwesome name="check" size={20} color="#fff" />
+              <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
             </View>
             <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
             <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-              <FontAwesome name="envelope" size={20} color="#fff" />
+              <FontAwesome name="envelope" size={FONT_SIZE.regular} color={COLORS.text} />
             </View>
             <View style={registerStepStyles.progressLine} />
             <View style={registerStepStyles.progressStep}>
-              <FontAwesome name="id-card" size={20} color="#666" />
+              <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
             </View>
             <View style={registerStepStyles.progressLine} />
             <View style={registerStepStyles.progressStep}>
-              <FontAwesome name="lock" size={20} color="#666" />
+              <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
             </View>
           </View>
 
-          {/* Form */}
           <View style={registerStepStyles.formContainer}>
             <Text style={registerStepStyles.title}>Qual é o seu{'\n'}e-mail e telefone?</Text>
 
-            {/* Email Input */}
             <View style={registerStepStyles.inputWrapper}>
               <TextInput
                 style={[
@@ -200,7 +198,7 @@ export default function RegisterStep2({ navigation, route }: any) {
                   emailTouched && emailError && registerStepStyles.inputError
                 ]}
                 placeholder="Email"
-                placeholderTextColor="#999999"
+                placeholderTextColor={COLORS.text + '80'}
                 value={email}
                 onChangeText={handleEmailChange}
                 onBlur={handleEmailBlur}
@@ -213,7 +211,6 @@ export default function RegisterStep2({ navigation, route }: any) {
               )}
             </View>
 
-            {/* Phone Input */}
             <View style={registerStepStyles.inputWrapper}>
               <TextInput
                 style={[
@@ -221,7 +218,7 @@ export default function RegisterStep2({ navigation, route }: any) {
                   phoneTouched && phoneError && registerStepStyles.inputError
                 ]}
                 placeholder="Telefone"
-                placeholderTextColor="#999999"
+                placeholderTextColor={COLORS.text + '80'}
                 value={phone}
                 onChangeText={handlePhoneChange}
                 onBlur={handlePhoneBlur}
@@ -236,7 +233,6 @@ export default function RegisterStep2({ navigation, route }: any) {
             </View>
           </View>
 
-          {/* Buttons */}
           <View style={registerStepStyles.buttonContainer}>
             <TouchableOpacity style={registerStepStyles.backButton} onPress={handleBack}>
               <Text style={registerStepStyles.backButtonText}>Voltar</Text>

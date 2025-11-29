@@ -77,8 +77,7 @@ export const achievementsSync = {
                         remoteAchievements.map(async (achievement: IAchievement) => {
                             try {
                                 await achievementsLocalRepository.create(achievement);
-                            } catch (error) {
-                                // Ignora erros
+                                } catch (error) {
                             }
                         })
                     );

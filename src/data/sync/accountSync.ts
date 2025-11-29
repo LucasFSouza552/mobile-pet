@@ -4,8 +4,6 @@ import { accountRemoteRepository } from "../remote/repositories/accountRemoteRep
 import { accountLocalRepository } from "../local/repositories/accountLocalRepository";
 
 export const accountSync = {
-
-    // Atualiza o banco local com as alterações vindas do servidor.
     async syncFromServer(): Promise<void> {
         const netState = await NetInfo.fetch();
         if (!netState.isConnected) {

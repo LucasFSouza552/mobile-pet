@@ -5,7 +5,6 @@ import { IPet } from "../../models/IPet";
 import { pictureRepository } from "../remote/repositories/pictureRemoteRepository";
 import { isNetworkConnected } from "../../utils/network";
 
-// Controle de sincronizações em andamento para evitar duplicatas
 const syncingPets = new Set<string>();
 
 export const petSync = {

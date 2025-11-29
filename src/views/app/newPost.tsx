@@ -12,7 +12,7 @@ import { useToast } from '../../hooks/useToast';
 import CameraView from '../../components/CameraView';
 
 export default function NewPost({ navigation }: any) {
-  const { COLORS } = useTheme();
+  const { COLORS, FONT_SIZE } = useTheme();
   const styles = makeStyles(COLORS);
   const { account } = useAccount();
   const isFocused = useIsFocused();
@@ -96,13 +96,11 @@ export default function NewPost({ navigation }: any) {
       const form = new FormData();
       form.append('content', content.trim());
       images.forEach((img) => {
-
-        // @ts-ignore
         form.append('images', {
           uri: img.uri,
           name: img.name,
           type: img.type,
-        });
+        } as any);
       });
       await postRepository.createPost(form);
       setContent('');
@@ -119,12 +117,6 @@ export default function NewPost({ navigation }: any) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
-        </TouchableOpacity>
         <Text style={styles.header}>Criar Post</Text>
         <View style={styles.placeholder} />
       </View>
@@ -153,7 +145,7 @@ export default function NewPost({ navigation }: any) {
           <View style={styles.imagesSection}>
             <View style={styles.imagesHeader}>
               <View style={styles.imagesHeaderLeft}>
-                <Ionicons name="images" size={20} color={COLORS.primary} />
+                <Ionicons name="images" size={FONT_SIZE.regular} color={COLORS.primary} />
                 <Text style={styles.label}>Imagens ({images.length})</Text>
               </View>
             </View>
@@ -170,8 +162,8 @@ export default function NewPost({ navigation }: any) {
 
                     return (
                       <View key={`${imageUri}-${idx}`} style={styles.imageItem}>
-                        <Image 
-                          source={{ uri: imageUri }} 
+                        <Image
+                          source={{ uri: imageUri }}
                           style={styles.preview}
                           resizeMode="cover"
                         />
@@ -180,7 +172,7 @@ export default function NewPost({ navigation }: any) {
                           onPress={() => removeImage(idx)}
                           activeOpacity={0.8}
                         >
-                          <Ionicons name="close-circle" size={24} color="#fff" />
+                          <Ionicons name="close-circle" size={FONT_SIZE.medium} color={COLORS.text} />
                         </TouchableOpacity>
                       </View>
                     );
@@ -195,7 +187,7 @@ export default function NewPost({ navigation }: any) {
                   accessibilityLabel="Abrir câmera"
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="camera" size={28} color={COLORS.primary} />
+                  <Ionicons name="camera" size={FONT_SIZE.medium} color={COLORS.primary} />
                   <Text style={styles.cameraText}>Câmera</Text>
                 </TouchableOpacity>
 
@@ -205,7 +197,7 @@ export default function NewPost({ navigation }: any) {
                   onPress={pickImages}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="images-outline" size={28} color={COLORS.primary} />
+                  <Ionicons name="images-outline" size={FONT_SIZE.medium} color={COLORS.primary} />
                   <Text style={styles.cameraText}>Galeria</Text>
                 </TouchableOpacity>
 
@@ -223,10 +215,10 @@ export default function NewPost({ navigation }: any) {
             activeOpacity={0.8}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.text} />
             ) : (
               <>
-                <Ionicons name="send" size={20} color="#fff" style={styles.buttonIcon} />
+                <Ionicons name="send" size={FONT_SIZE.regular} color={COLORS.text} style={styles.buttonIcon} />
                 <Text style={styles.buttonText}>Publicar</Text>
               </>
             )}
@@ -310,7 +302,7 @@ function makeStyles(COLORS: any) {
       paddingVertical: 14,
       fontSize: 16,
       borderWidth: 1,
-      borderColor: COLORS.quarternary,
+      borderColor: COLORS.tertiary,
     },
     textarea: {
       minHeight: 150,
@@ -337,14 +329,14 @@ function makeStyles(COLORS: any) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      shadowColor: '#000',
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 4,
       elevation: 3,
     },
     addImageText: {
-      color: '#fff',
+      color: COLORS.text,
       fontWeight: '700',
       fontSize: 14,
     },
@@ -403,13 +395,13 @@ function makeStyles(COLORS: any) {
       position: 'absolute',
       top: -8,
       right: -8,
-      backgroundColor: '#E74C3C',
+      backgroundColor: COLORS.error,
       borderRadius: 15,
       width: 30,
       height: 30,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
       shadowRadius: 4,
@@ -423,7 +415,7 @@ function makeStyles(COLORS: any) {
       alignItems: 'center',
       flexDirection: 'row',
       justifyContent: 'center',
-      shadowColor: '#000',
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
@@ -436,7 +428,7 @@ function makeStyles(COLORS: any) {
       marginRight: 8,
     },
     buttonText: {
-      color: '#fff',
+      color: COLORS.text,
       fontWeight: '700',
       fontSize: 16,
     },

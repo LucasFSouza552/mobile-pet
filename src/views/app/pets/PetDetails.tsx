@@ -5,7 +5,7 @@ const SCREEN_WIDTH = Dimensions.get('window').width;
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { petSync } from '../../../data/sync/petSync';
 import { accountSync } from '../../../data/sync/accountSync';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
@@ -553,7 +553,7 @@ export default function PetDetails(props: PetDetailsProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -609,7 +609,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 16,
       overflow: 'hidden',
       marginBottom: 24,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     carouselContainer: {
       marginBottom: 24,
@@ -818,7 +818,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: 80,
       height: 80,
       borderRadius: 12,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     institutionName: {
       fontSize: 18,

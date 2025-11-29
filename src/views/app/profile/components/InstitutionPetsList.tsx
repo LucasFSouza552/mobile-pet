@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { petRemoteRepository } from '../../../../data/remote/repositories/petRemoteRepository';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 import { useTheme } from '../../../../context/ThemeContext';
 
 const getImageSource = (imageId?: string | null): ImageSourcePropType => {
@@ -149,7 +149,7 @@ export default function InstitutionPetsList({ institutionId, canManage = false }
                 onPress={(e) => handleEditPet(item?.id, e)}
                 activeOpacity={0.7}
               >
-                <FontAwesome5 name="edit" size={14} color={COLORS.bg} />
+                <FontAwesome5 name="edit" size={14} color={COLORS.iconBackground} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -160,7 +160,7 @@ export default function InstitutionPetsList({ institutionId, canManage = false }
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     petCard: {
       flexDirection: 'row',
@@ -183,7 +183,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     imageContainer: {
       borderRadius: 14,
       overflow: 'hidden',
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
@@ -227,7 +227,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingVertical: 5,
     },
     badgeText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '600',
       fontSize: 11,
     },
@@ -244,7 +244,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       backgroundColor: '#10b981',
     },
     statusBadgeText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 10,
       fontWeight: '700',
       textTransform: 'uppercase',

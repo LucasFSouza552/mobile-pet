@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import { useAccount } from '../../../context/AccountContext';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PostList from '../../../components/Cards/PostList';
 import { usePost } from '../../../context/PostContext';
 import { useTheme } from '../../../context/ThemeContext';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { useFocusEffect } from '@react-navigation/native';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import ProfileTopTabs from './components/ProfileTopTabs';
@@ -27,15 +27,13 @@ interface ProfileProps {
 export default function Profile({ navigation, route }: ProfileProps) {
   const { account, loading } = useAccount();
   const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
-  const { COLORS } = useTheme();
+  const { COLORS, FONT_SIZE } = useTheme();
   const [viewAccount, setViewAccount] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist' | 'history'>('posts');
   const toast = useToast();
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
   const styles = makeStyles(COLORS);
-
-  const isInstitution = account?.role === 'institution';
 
   useFocusEffect(
     useCallback(() => {
@@ -91,6 +89,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
       <ProfileHeader
         account={viewAccount}
         COLORS={COLORS}
+        FONT_SIZE={FONT_SIZE}
         isSelf={isSelf}
       />
 
@@ -135,7 +134,7 @@ export default function Profile({ navigation, route }: ProfileProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -191,7 +190,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: 60,
       height: 60,
       borderRadius: 10,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     petInfo: {
       flex: 1,
@@ -225,7 +224,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 12,
     },
     findButtonText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '700',
     },
     notificationsButton: {
@@ -237,7 +236,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       alignItems: 'center',
     },
     notificationsButtonText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '700',
     },
     emptyHistoryBox: {

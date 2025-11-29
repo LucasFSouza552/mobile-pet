@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { IHistory } from '../../../../../models/IHistory';
-import { darkTheme, lightTheme } from '../../../../../theme/Themes';
+import { ThemeColors } from '../../../../../theme/types';
 import {
   getTypeMeta,
   getStatusMeta,
@@ -14,7 +14,7 @@ import { formatHour } from '../../../../../utils/date';
 
 interface HistoryCardProps {
   entry: IHistory;
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
 }
 
 export const HistoryCard = React.memo<HistoryCardProps>(({ entry, COLORS }) => {
@@ -97,7 +97,7 @@ export const HistoryCard = React.memo<HistoryCardProps>(({ entry, COLORS }) => {
 
 HistoryCard.displayName = 'HistoryCard';
 
-const makeStyles = (COLORS: typeof lightTheme.colors | typeof darkTheme.colors) =>
+const makeStyles = (COLORS: ThemeColors) =>
   StyleSheet.create({
     card: {
       flexDirection: 'row',

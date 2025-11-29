@@ -7,7 +7,6 @@ import MatchPets from './matchPets';
 import Community from './community';
 import { useTheme } from '../../context/ThemeContext';
 import NewPost from './newPost';
-import { View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccount } from '../../context/AccountContext';
 import { useCamera } from '../../context/CameraContext';
@@ -26,7 +25,7 @@ const Icons = {
 
 export default function Main() {
 
-  const { COLORS } = useTheme();
+  const { COLORS, FONT_SIZE } = useTheme();
   const insets = useSafeAreaInsets();
   const { isCameraOpen } = useCamera();
   const { account } = useAccount();
@@ -48,8 +47,8 @@ export default function Main() {
         headerShown: false,
         tabBarShowLabel: false,
         swipeEnabled: true,
-        tabBarActiveTintColor: '#f2f2f2',
-        tabBarInactiveTintColor: COLORS.primary,
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.tertiary,
         tabBarStyle: isCameraOpen ? {
           display: 'none',
           height: 0,
@@ -61,11 +60,10 @@ export default function Main() {
         tabBarItemStyle: { paddingVertical: 20 },
         tabBarIndicatorStyle: { backgroundColor: 'transparent' },
         tabBarIcon: ({ color }) => {
-
           const { name, family: IconFamily } =
             Icons[route?.name as keyof typeof Icons] || { name: 'question-circle', family: FontAwesome };
 
-          return <IconFamily name={name} size={30} color={color} />
+          return <IconFamily name={name} size={FONT_SIZE.large} color={color} />
         },
       })}
     >

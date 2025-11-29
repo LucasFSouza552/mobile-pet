@@ -1,13 +1,19 @@
 import { StyleSheet } from 'react-native';
+import { ThemeColors } from '../../theme/types';
 
-export const createRegisterStepStyles = (width: number, height: number) => {
+export const createRegisterStepStyles = (
+  width: number, 
+  height: number, 
+  COLORS: ThemeColors,
+  FONT_SIZE: { regular: number; medium: number; large: number }
+) => {
   const scale = (size: number) => (width / 375) * size;
   const verticalScale = (size: number) => (height / 812) * size;
   
   return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#332630',
+    backgroundColor: COLORS.quarternary,
   },
   backgroundImage: {
     position: 'absolute',
@@ -28,14 +34,15 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     marginBottom: verticalScale(20),
   },
   headerTitle: {
-    fontSize: scale(32),
+    fontSize: FONT_SIZE.large,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.text,
     marginBottom: verticalScale(5),
   },
   headerSubtitle: {
-    fontSize: scale(14),
-    color: '#ddd',
+    fontSize: FONT_SIZE.regular,
+    color: COLORS.text,
+    opacity: 0.8,
     textAlign: 'center',
   },
   
@@ -50,27 +57,27 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     width: scale(50),
     height: scale(50),
     borderRadius: scale(25),
-    backgroundColor: '#4A3A46',
+    backgroundColor: COLORS.quinary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#666',
+    borderColor: COLORS.tertiary,
   },
   progressStepActive: {
-    backgroundColor: '#B648A0',
-    borderColor: '#B648A0',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   progressStepCompleted: {
-    backgroundColor: '#B648A0',
-    borderColor: '#B648A0',
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
   },
   progressLine: {
     width: scale(30),
     height: 2,
-    backgroundColor: '#666',
+    backgroundColor: COLORS.tertiary,
   },
   progressLineActive: {
-    backgroundColor: '#B648A0',
+    backgroundColor: COLORS.primary,
   },
 
   formContainer: {
@@ -79,9 +86,9 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     marginTop: verticalScale(20),
   },
   title: {
-    fontSize: scale(24),
+    fontSize: FONT_SIZE.medium,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.text,
     textAlign: 'center',
     marginBottom: verticalScale(40),
     lineHeight: scale(32),
@@ -94,7 +101,7 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     marginBottom: verticalScale(30),
     overflow: 'hidden',
     borderWidth: 3,
-    borderColor: '#B648A0',
+    borderColor: COLORS.primary,
   },
   avatarImage: {
     width: '100%',
@@ -103,7 +110,7 @@ export const createRegisterStepStyles = (width: number, height: number) => {
   avatarPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(182, 72, 160, 0.2)',
+    backgroundColor: COLORS.primary + '33',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -117,20 +124,20 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     height: verticalScale(55),
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#B648A0',
+    borderColor: COLORS.primary,
     borderRadius: scale(10),
     paddingHorizontal: scale(20),
-    fontSize: scale(16),
-    color: '#fff',
+    fontSize: FONT_SIZE.regular,
+    color: COLORS.text,
     marginBottom: verticalScale(5),
   },
   inputError: {
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.error,
     borderWidth: 2,
   },
   errorText: {
-    fontSize: scale(12),
-    color: '#FF6B6B',
+    fontSize: FONT_SIZE.small,
+    color: COLORS.error,
     marginTop: verticalScale(-5),
     marginBottom: verticalScale(10),
     marginLeft: scale(5),
@@ -141,22 +148,22 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#B648A0',
+    borderColor: COLORS.primary,
     borderRadius: scale(10),
     marginBottom: verticalScale(5),
     backgroundColor: 'transparent',
     height: verticalScale(55),
   },
   passwordContainerError: {
-    borderColor: '#FF6B6B',
+    borderColor: COLORS.error,
     borderWidth: 2,
   },
   passwordInput: {
     flex: 1,
     height: '100%',
     paddingHorizontal: scale(20),
-    fontSize: scale(16),
-    color: '#fff',
+    fontSize: FONT_SIZE.regular,
+    color: COLORS.text,
   },
   eyeButton: {
     paddingHorizontal: scale(15),
@@ -165,15 +172,15 @@ export const createRegisterStepStyles = (width: number, height: number) => {
   },
 
   hintText: {
-    fontSize: scale(12),
-    color: '#FFD700',
+    fontSize: FONT_SIZE.small,
+    color: COLORS.warning,
     marginTop: verticalScale(-10),
     marginBottom: verticalScale(10),
     alignSelf: 'flex-start',
   },
   errorHintText: {
-    fontSize: scale(12),
-    color: '#FF6B6B',
+    fontSize: FONT_SIZE.small,
+    color: COLORS.error,
     marginTop: verticalScale(-10),
     marginBottom: verticalScale(10),
     alignSelf: 'flex-start',
@@ -189,32 +196,35 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     width: '100%',
     paddingVertical: verticalScale(20),
     paddingHorizontal: scale(20),
-    backgroundColor: 'rgba(74, 58, 70, 0.5)',
+    backgroundColor: COLORS.quinary + '80',
     borderWidth: 2,
-    borderColor: '#666',
+    borderColor: COLORS.tertiary,
     borderRadius: scale(15),
     gap: scale(15),
   },
   documentTypeButtonActive: {
-    backgroundColor: 'rgba(182, 72, 160, 0.2)',
-    borderColor: '#B648A0',
+    backgroundColor: COLORS.primary + '33',
+    borderColor: COLORS.primary,
     borderWidth: 3,
   },
   documentTypeTextContainer: {
     flex: 1,
   },
   documentTypeTitle: {
-    fontSize: scale(20),
+    fontSize: FONT_SIZE.medium,
     fontWeight: 'bold',
-    color: '#ddd',
+    color: COLORS.text,
+    opacity: 0.8,
     marginBottom: verticalScale(4),
   },
   documentTypeTitleActive: {
-    color: '#fff',
+    color: COLORS.text,
+    opacity: 1,
   },
   documentTypeSubtitle: {
-    fontSize: scale(14),
-    color: '#999',
+    fontSize: FONT_SIZE.regular,
+    color: COLORS.text,
+    opacity: 0.6,
   },
 
   buttonContainer: {
@@ -229,12 +239,12 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     paddingHorizontal: scale(30),
   },
   backButtonText: {
-    fontSize: scale(18),
+    fontSize: FONT_SIZE.medium,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.text,
   },
   nextButton: {
-    backgroundColor: '#B648A0',
+    backgroundColor: COLORS.primary,
     paddingVertical: verticalScale(15),
     paddingHorizontal: scale(40),
     borderRadius: scale(25),
@@ -242,13 +252,13 @@ export const createRegisterStepStyles = (width: number, height: number) => {
     alignItems: 'center',
   },
   nextButtonDisabled: {
-    backgroundColor: '#666',
+    backgroundColor: COLORS.tertiary,
     opacity: 0.5,
   },
   nextButtonText: {
-    fontSize: scale(18),
+    fontSize: FONT_SIZE.medium,
     fontWeight: 'bold',
-    color: '#fff',
+    color: COLORS.text,
   },
   });
 };

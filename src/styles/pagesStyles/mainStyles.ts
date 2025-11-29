@@ -7,7 +7,7 @@ export const mainStyles = () => {
     return StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: COLORS.bg,
+            backgroundColor: COLORS.iconBackground,
         },
         safeArea: {
             flex: 1,

@@ -6,7 +6,7 @@ import { IComment } from '../../models/IComment';
 import { useTheme } from '../../context/ThemeContext';
 import { useAccount } from '../../context/AccountContext';
 import { formatDate } from '../../utils/date';
-import { darkTheme, lightTheme } from '../../theme/Themes';
+import { ThemeColors } from '../../theme/types';
 import { usePostLike } from './hooks/usePostLike';
 import { usePostCommentsModal } from './hooks/usePostCommentsModal';
 import { useEditCommentModal } from './hooks/useEditCommentModal';
@@ -30,8 +30,8 @@ function PostCardComponent({
 	accountId,
 	onLike,
 }: PostCardProps) {
-	const { COLORS } = useTheme();
-	const styles = makeStyles(COLORS);
+	const { COLORS, GAP, PADDING, getShadow } = useTheme();
+	const styles = makeStyles(COLORS, GAP, PADDING, getShadow);
 	const { account } = useAccount();
 	const { width } = useWindowDimensions();
 	const navigation = useNavigation<any>();
@@ -74,18 +74,16 @@ function PostCardComponent({
 		<>
 			<View style={styles.postContainer}>
 				<View style={styles.postContent}>
-					<PostHeaderView
-						post={post}
-						styles={styles}
-						formatDate={formatDate}
-						onPressProfile={() => navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } })}
-						onOpenOptions={optionsModal.openOptionsSheet}
-					/>
+				<PostHeaderView
+					post={post}
+					formatDate={formatDate}
+					onPressProfile={() => navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } })}
+					onOpenOptions={optionsModal.openOptionsSheet}
+				/>
 					<PostContent post={post} styles={styles} />
 				</View>
 				<OptionsBarView
 					post={post}
-					styles={styles}
 					isLiked={isLiked}
 					hideMetaText={hideMetaText}
 					onPressLike={handleLikePress}
@@ -139,7 +137,19 @@ function areEqual(prev: PostCardProps, next: PostCardProps) {
 	);
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(
+	COLORS: ThemeColors,
+	GAP: { xs: number; sm: number; md: number; lg: number; xl: number; xxl: number },
+	PADDING: { xs: number; sm: number; md: number; lg: number; xl: number; xxl: number },
+	getShadow: (level: 'sm' | 'md' | 'lg' | 'xl') => {
+		shadowColor: string;
+		shadowOffset: { width: number; height: number };
+		shadowOpacity: number;
+		shadowRadius: number;
+		elevation: number;
+	}
+) {
+	const shadowSm = getShadow('sm');
 	return StyleSheet.create({
 		postContainer: {
 			backgroundColor: COLORS.quarternary,
@@ -147,14 +157,10 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			flexDirection: 'column',
 			maxWidth: '100%',
 			width: '100%',
-			gap: 8,
+			gap: GAP.sm,
 			borderRadius: 16,
-			padding: 5,
-			shadowColor: '#000',
-			shadowOffset: { width: 0, height: 2 },
-			shadowOpacity: 0.2,
-			shadowRadius: 3,
-			elevation: 2,
+			padding: PADDING.xs,
+			...shadowSm,
 		},
 		postContent: {
 			display: 'flex',
@@ -162,101 +168,11 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			backgroundColor: COLORS.tertiary,
 			width: '100%',
 			borderRadius: 16,
-			padding: 12,
-			gap: 8,
-		},
-		postHeader: {
-			display: 'flex',
-			alignItems: 'center',
-			flexDirection: 'row',
-			justifyContent: 'space-between',
-		},
-		postProfileContainer: {
-			display: 'flex',
-			alignItems: 'center',
-			flexDirection: 'row',
-			gap: 10,
-			paddingVertical: 6,
-			paddingHorizontal: 4,
-			borderRadius: 50,
-		},
-		profileInfo: {
-			display: 'flex',
-			flexDirection: 'column',
-			gap: 2,
-		},
-		profileName: {
-			fontWeight: 'bold',
-			fontSize: 16,
-			color: COLORS.text,
-		},
-		postDate: {
-			fontSize: 12,
-			color: COLORS.text,
-			opacity: 0.7,
-		},
-		postOptions: {
-			display: 'flex',
-			alignItems: 'center',
-			backgroundColor: COLORS.quarternary,
-			padding: 6,
-			borderRadius: 999,
-			justifyContent: 'center',
+			padding: PADDING.md,
+			gap: GAP.sm,
 		},
 		postText: {
 			color: COLORS.text,
-		},
-		avatar: {
-			width: 40,
-			height: 40,
-			borderRadius: 20,
-			borderWidth: 1.5,
-			borderColor: COLORS.text,
-			backgroundColor: COLORS.bg,
-		},
-		optionsContainer: {
-			display: 'flex',
-			flexDirection: 'row',
-			alignItems: 'center',
-			justifyContent: 'center',
-			paddingBottom: 5,
-			gap: 6,
-		},
-		itemOptionsContainer: {
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			gap: 4,
-		},
-		metaText: {
-			color: COLORS.text,
-		},
-		circleIcon: {
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-			backgroundColor: COLORS.tertiary,
-			minWidth: 30,
-			height: 30,
-			borderRadius: 15,
-		},
-		shareIconContainer: {
-			position: 'relative',
-			display: 'flex',
-			alignItems: 'center',
-			justifyContent: 'center',
-		},
-		shareMessage: {
-			position: 'absolute',
-			bottom: -24,
-			left: '50%',
-			transform: [{ translateX: -50 }],
-			backgroundColor: COLORS.primary,
-			color: COLORS.text,
-			paddingHorizontal: 8,
-			paddingVertical: 4,
-			borderRadius: 6,
-			fontSize: 12,
 		},
 		modalOverlay: {
 			flex: 1,
@@ -276,7 +192,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		},
 		sheetHandleContainer: {
 			alignItems: 'center',
-			paddingTop: 8,
+			paddingTop: PADDING.sm,
 		},
 		sheetHandle: {
 			width: 40,
@@ -289,8 +205,8 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			flexDirection: 'row',
 			alignItems: 'center',
 			justifyContent: 'space-between',
-			paddingHorizontal: 12,
-			paddingVertical: 10,
+			paddingHorizontal: PADDING.md,
+			paddingVertical: PADDING.sm,
 		},
 		sheetTitle: {
 			color: COLORS.text,
@@ -298,22 +214,22 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			fontSize: 16,
 		},
 		closeBtn: {
-			padding: 6,
+			padding: PADDING.xs,
 			borderRadius: 20,
 		},
 		sheetContent: {
-			paddingHorizontal: 12,
-			paddingBottom: 20,
-			gap: 8,
+			paddingHorizontal: PADDING.md,
+			paddingBottom: PADDING.lg,
+			gap: GAP.sm,
 		},
 		commentItem: {
 			backgroundColor: COLORS.quarternary,
-			padding: 10,
+			padding: PADDING.sm,
 			borderRadius: 10,
 			flexDirection: 'row',
 			justifyContent: 'space-between',
 			alignItems: 'flex-start',
-			gap: 8,
+			gap: GAP.sm,
 		},
 		commentContent: {
 			flex: 1,
@@ -329,17 +245,17 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		},
 		commentActions: {
 			flexDirection: 'row',
-			gap: 8,
+			gap: GAP.sm,
 		},
 		commentActionButton: {
-			padding: 6,
+			padding: PADDING.xs,
 			borderRadius: 6,
 			backgroundColor: COLORS.tertiary,
 		},
 		editActions: {
 			flexDirection: 'row',
-			gap: 8,
-			marginTop: 12,
+			gap: GAP.sm,
+			marginTop: PADDING.md,
 		},
 		cancelButton: {
 			backgroundColor: COLORS.tertiary,
@@ -354,10 +270,10 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		loadMoreBtn: {
 			alignSelf: 'center',
 			backgroundColor: COLORS.tertiary,
-			paddingHorizontal: 12,
-			paddingVertical: 8,
+			paddingHorizontal: PADDING.md,
+			paddingVertical: PADDING.sm,
 			borderRadius: 8,
-			marginTop: 8,
+			marginTop: PADDING.sm,
 		},
 		loadMoreText: {
 			color: COLORS.text,
@@ -366,8 +282,8 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		commentBar: {
 			flexDirection: 'row',
 			alignItems: 'center',
-			gap: 8,
-			padding: 12,
+			gap: GAP.sm,
+			padding: PADDING.md,
 			borderTopColor: COLORS.quarternary,
 			borderTopWidth: 1,
 			backgroundColor: COLORS.secondary,
@@ -377,13 +293,13 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			backgroundColor: COLORS.quarternary,
 			color: COLORS.text,
 			borderRadius: 10,
-			paddingHorizontal: 12,
-			paddingVertical: 8,
+			paddingHorizontal: PADDING.md,
+			paddingVertical: PADDING.sm,
 		},
 		commentButton: {
 			backgroundColor: COLORS.primary,
-			paddingHorizontal: 14,
-			paddingVertical: 10,
+			paddingHorizontal: PADDING.md,
+			paddingVertical: PADDING.sm,
 			borderRadius: 10,
 		},
 		commentButtonText: {
@@ -393,9 +309,9 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 		optItem: {
 			flexDirection: 'row',
 			alignItems: 'center',
-			gap: 10,
-			paddingVertical: 10,
-			paddingHorizontal: 6,
+			gap: GAP.md,
+			paddingVertical: PADDING.sm,
+			paddingHorizontal: PADDING.xs,
 			borderRadius: 10,
 		},
 		optText: {
@@ -458,7 +374,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
 			opacity: 0.6,
 		},
 		modalPrimaryButtonText: {
-			color: COLORS.bg,
+			color: COLORS.iconBackground,
 			fontWeight: '700',
 		},
 	});

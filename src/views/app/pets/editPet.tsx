@@ -25,7 +25,7 @@ import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import CameraView from '../../../components/CameraView';
 import { IPet } from '../../../models/IPet';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { useToast } from '../../../hooks/useToast';
 
 type PetFormState = {
@@ -335,7 +335,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                     <FontAwesome5
                       name={isRemoved ? 'undo' : 'times'}
                       size={14}
-                      color={COLORS.bg}
+                      color={COLORS.iconBackground}
                     />
                   </TouchableOpacity>
                 )}
@@ -362,7 +362,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                   <FontAwesome5
                     name="times"
                     size={14}
-                    color={COLORS.bg}
+                    color={COLORS.iconBackground}
                   />
                 </TouchableOpacity>
               )}
@@ -572,7 +572,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -663,7 +663,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontWeight: '600',
     },
     optionChipTextActive: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
     },
     row: {
       flexDirection: 'row',
@@ -737,7 +737,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingHorizontal: 8,
     },
     removedText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 10,
       fontWeight: '700',
       textAlign: 'center',
@@ -793,7 +793,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       paddingHorizontal: 8,
     },
     newImageText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontSize: 10,
       fontWeight: '700',
       textAlign: 'center',

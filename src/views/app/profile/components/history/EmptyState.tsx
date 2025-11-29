@@ -1,10 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { darkTheme, lightTheme } from '../../../../../theme/Themes';
+import { ThemeColors } from '../../../../../theme/types';
 
 interface EmptyStateProps {
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
 }
 
 export const EmptyState = React.memo<EmptyStateProps>(({ COLORS }) => {
@@ -26,7 +26,7 @@ export const EmptyState = React.memo<EmptyStateProps>(({ COLORS }) => {
 
 EmptyState.displayName = 'EmptyState';
 
-const makeStyles = (COLORS: typeof lightTheme.colors | typeof darkTheme.colors) =>
+const makeStyles = (COLORS: ThemeColors) =>
   StyleSheet.create({
     container: {
       alignItems: 'center',

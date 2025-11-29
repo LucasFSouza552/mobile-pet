@@ -37,7 +37,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
     const { isConnected } = useNetInfo();
 
-    // feed geral
     const [posts, setPosts] = useState<IPost[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
@@ -47,13 +46,11 @@ export function PostProvider({ children }: { children: ReactNode }) {
     const [order] = useState<Order>("desc");
     const [hasMore, setHasMore] = useState<boolean>(true);
 
-    // feed por usuário
     const [userPosts, setUserPosts] = useState<IPost[]>([]);
     const [userPage, setUserPage] = useState<number>(1);
     const [hasMoreUser, setHasMoreUser] = useState<boolean>(true);
     const [currentUserFilter, setCurrentUserFilter] = useState<string | undefined>(undefined);
 
-    // busca
     const [searchResults, setSearchResults] = useState<IPost[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>("");
     const [loadingSearchResults, setLoadingSearchResults] = useState(false);
@@ -149,7 +146,6 @@ export function PostProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // busca
     const searchPosts = useCallback(async (query: string) => {
         if (!query.trim()) {
             setSearchResults([]);

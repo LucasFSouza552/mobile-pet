@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Image, ScrollView, Dimensions, StyleSheet, Text } from 'react-native';
 import { Images } from '../../../assets';
 import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
-import { darkTheme, lightTheme } from '../../theme/Themes';
+import { ThemeColors } from '../../theme/types';
 import { useTheme } from '../../context/ThemeContext';
 
 const screenWidth = Dimensions.get('window').width;
@@ -71,7 +71,7 @@ export default function PostPictureContainer({
 }
 
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
 	return StyleSheet.create({
 		picturesScroll: {
 			position: 'relative',

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors, ThemeFontSize } from '../../../../theme/types';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { IAccount } from '../../../../models/IAccount';
 import { achievementsSync } from '../../../../data/sync/achievementsSync';
@@ -10,11 +10,12 @@ import { IAchievement } from '../../../../models/IAchievement';
 
 interface ProfileHeaderProps {
   account: IAccount;
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
+  FONT_SIZE: ThemeFontSize;
   isSelf: boolean;
 }
 
-export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeaderProps) {
+export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: ProfileHeaderProps) {
   const styles = makeStyles(COLORS);
   const navigation = useNavigation();
   const isInstitution = account?.role === 'institution';
@@ -93,7 +94,7 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
       <View style={styles.headerInfo}>
         <View style={styles.nameRow}>
           {account?.verified && (
-            <MaterialIcons name="verified" size={18} color="#34D399" style={styles.verifiedIcon} />
+            <MaterialIcons name="verified" size={FONT_SIZE.regular} color="#34D399" style={styles.verifiedIcon} />
           )}
           <Text style={styles.name}>{account?.name}</Text>
         </View>
@@ -112,7 +113,7 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
                 >
                   <FontAwesome6
                     name={achievementConfig.icon}
-                    size={16}
+                    size={FONT_SIZE.small}
                     color={achievementConfig.iconColor}
                   />
                 </View>
@@ -134,14 +135,14 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
             onPress={handleNotificationsPress}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="bell" size={20} style={styles.notificationsIcon} />
+            <FontAwesome5 name="bell" size={FONT_SIZE.regular} style={styles.notificationsIcon} />
           </TouchableOpacity>}
           <TouchableOpacity
             style={styles.settingsButton}
             onPress={handleSettingsPress}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="cog" size={20} style={styles.settingsIcon} />
+            <FontAwesome5 name="cog" size={FONT_SIZE.regular} style={styles.settingsIcon} />
           </TouchableOpacity>
         </View>
       ) : null}
@@ -150,7 +151,7 @@ export default function ProfileHeader({ account, COLORS, isSelf }: ProfileHeader
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     header: {
       flexDirection: 'row',
@@ -164,7 +165,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     },
     avatarWrapper: {
       borderWidth: 2,
-      borderColor: COLORS.bg,
+      borderColor: COLORS.iconBackground,
       borderRadius: 44,
       marginRight: 10,
     },
@@ -172,7 +173,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       width: 70,
       height: 70,
       borderRadius: 100,
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     headerInfo: {
       flex: 1,
@@ -237,7 +238,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     },
     posts: {
       fontSize: 14,
-      color: COLORS.bg,
+      color: COLORS.text,
       backgroundColor: COLORS.tertiary,
       paddingHorizontal: 8,
       paddingVertical: 4,

@@ -14,12 +14,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
+import { useTheme } from '../../../context/ThemeContext';
 
 type DocumentType = 'cpf' | 'cnpj' | null;
 
 export default function Register({ navigation }: any) {
   const { width, height } = useWindowDimensions();
-  const registerStepStyles = createRegisterStepStyles(width, height);
+  const { COLORS, FONT_SIZE } = useTheme();
+  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType>(null);
 
   const handleDocumentTypeSelect = (type: DocumentType) => {
@@ -53,7 +55,6 @@ export default function Register({ navigation }: any) {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
               <View style={registerStepStyles.content}>
-              {/* Header */}
               <View style={registerStepStyles.header}>
                 <Text style={registerStepStyles.headerTitle}>Registrar</Text>
                 <Text style={registerStepStyles.headerSubtitle}>
@@ -61,32 +62,29 @@ export default function Register({ navigation }: any) {
                 </Text>
               </View>
 
-              {/* Progress Indicator */}
               <View style={registerStepStyles.progressContainer}>
                 <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                  <FontAwesome name="user" size={20} color="#fff" />
+                  <FontAwesome name="user" size={FONT_SIZE.regular} color={COLORS.text} />
                 </View>
                 <View style={registerStepStyles.progressLine} />
                 <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="envelope" size={20} color="#666" />
+                  <FontAwesome name="envelope" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                 </View>
                 <View style={registerStepStyles.progressLine} />
                 <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="id-card" size={20} color="#666" />
+                  <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                 </View>
                 <View style={registerStepStyles.progressLine} />
                 <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="lock" size={20} color="#666" />
+                  <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                 </View>
               </View>
 
-              {/* Form */}
               <View style={registerStepStyles.formContainer}>
                 <Text style={registerStepStyles.title}>
                   Como você deseja{'\n'}se cadastrar?
                 </Text>
 
-                {/* Document Type Selection */}
                 <View style={registerStepStyles.documentTypeContainer}>
                   <TouchableOpacity
                     style={[
@@ -98,8 +96,9 @@ export default function Register({ navigation }: any) {
                   >
                     <FontAwesome 
                       name={selectedDocumentType === 'cpf' ? 'check-circle' : 'circle-o'} 
-                      size={24} 
-                      color={selectedDocumentType === 'cpf' ? '#B648A0' : '#999'} 
+                      size={FONT_SIZE.medium} 
+                      color={selectedDocumentType === 'cpf' ? COLORS.primary : COLORS.text} 
+                      style={{ opacity: selectedDocumentType === 'cpf' ? 1 : 0.6 }}
                     />
                     <View style={registerStepStyles.documentTypeTextContainer}>
                       <Text style={[
@@ -124,8 +123,9 @@ export default function Register({ navigation }: any) {
                   >
                     <FontAwesome 
                       name={selectedDocumentType === 'cnpj' ? 'check-circle' : 'circle-o'} 
-                      size={24} 
-                      color={selectedDocumentType === 'cnpj' ? '#B648A0' : '#999'} 
+                      size={FONT_SIZE.medium} 
+                      color={selectedDocumentType === 'cnpj' ? COLORS.primary : COLORS.text} 
+                      style={{ opacity: selectedDocumentType === 'cnpj' ? 1 : 0.6 }}
                     />
                     <View style={registerStepStyles.documentTypeTextContainer}>
                       <Text style={[
@@ -142,7 +142,6 @@ export default function Register({ navigation }: any) {
                 </View>
               </View>
 
-              {/* Buttons */}
               <View style={registerStepStyles.buttonContainer}>
                 <TouchableOpacity 
                   style={registerStepStyles.backButton} 

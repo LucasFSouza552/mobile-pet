@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import { FlatList, StyleSheet, View, RefreshControl, ActivityIndicator } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTheme } from '../../../../context/ThemeContext';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 
 import { useHistoryList } from './history/useHistoryList';
 import { buildTimelineRows, TimelineRow } from './history/buildTimelineRows';
@@ -87,7 +87,7 @@ export default function UserHistoryList({ accountId }: UserHistoryListProps) {
   );
 }
 
-const makeStyles = (COLORS: typeof lightTheme.colors | typeof darkTheme.colors) =>
+const makeStyles = (COLORS: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,

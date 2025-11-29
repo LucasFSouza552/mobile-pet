@@ -9,20 +9,23 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  useWindowDimensions
+  useWindowDimensions,
+  StyleSheet
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { createLoginStyles } from '../../styles/pagesStyles/loginStyles';
 import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
 import { useAccount } from '../../context/AccountContext';
 import { accountSync } from '../../data/sync/accountSync';
 import { Images } from '../../../assets';
 import { useToast } from '../../hooks/useToast';
+import { useTheme } from '../../context/ThemeContext';
+import { ThemeColors } from '../../theme/types';
 
 export default function Login({ navigation }: any) {
   const { width, height } = useWindowDimensions();
-  const loginStepStyles = createLoginStyles(width, height);
+  const { COLORS, scale, verticalScale, FONT_SIZE } = useTheme();
+  const loginStepStyles = makeStyles(COLORS, scale, verticalScale, FONT_SIZE);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -71,7 +74,6 @@ export default function Login({ navigation }: any) {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
               <View style={loginStepStyles.content}>
-                {/* Header */}
                 <View style={loginStepStyles.header}>
                   <Text style={loginStepStyles.headerTitle}>Entrar</Text>
                   <Text style={loginStepStyles.headerSubtitle}>
@@ -79,13 +81,12 @@ export default function Login({ navigation }: any) {
                   </Text>
                 </View>
 
-                {/* Form */}
                 <View style={loginStepStyles.formContainer}>
                   <View style={loginStepStyles.inputContainer}>
                     <TextInput
                       style={loginStepStyles.input}
                       placeholder="Email"
-                      placeholderTextColor="#999"
+                      placeholderTextColor={COLORS.text}
                       value={email}
                       onChangeText={setEmail}
                       keyboardType="email-address"
@@ -98,7 +99,7 @@ export default function Login({ navigation }: any) {
                       <TextInput
                         style={loginStepStyles.passwordInput}
                         placeholder="Senha"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={COLORS.text}
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!showPassword}
@@ -111,14 +112,14 @@ export default function Login({ navigation }: any) {
                       >
                         <FontAwesome
                           name={showPassword ? 'eye' : 'eye-slash'}
-                          size={20}
-                          color="#999"
+                          size={FONT_SIZE.regular}
+                          color={COLORS.text}
+                          style={{ opacity: 0.6 }}
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
                     
-                  {/* Forgot Password Link */}
                   <TouchableOpacity
                     style={loginStepStyles.forgotPasswordLink}
                     onPress={() => navigation.navigate('ForgotPassword')}
@@ -129,7 +130,6 @@ export default function Login({ navigation }: any) {
                   </TouchableOpacity>
                 </View>
 
-                {/* Buttons */}
                 <View style={loginStepStyles.buttonContainer}>
                   <TouchableOpacity 
                     style={loginStepStyles.backButton} 
@@ -152,5 +152,126 @@ export default function Login({ navigation }: any) {
       </SafeAreaView>
     </View>
   );
-} 
+}
+
+function makeStyles(COLORS: ThemeColors, scale: (size: number) => number, verticalScale: (size: number) => number, FONT_SIZE: { regular: number; medium: number; large: number }) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.quarternary,
+    },
+    backgroundImage: {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      opacity: 0.3,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: scale(30),
+      paddingTop: verticalScale(20),
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: verticalScale(20),
+    },
+    headerTitle: {
+      fontSize: FONT_SIZE.large,
+      fontWeight: 'bold',
+      color: COLORS.text,
+      marginBottom: verticalScale(5),
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+      opacity: 0.8,
+      textAlign: 'center',
+    },
+    formContainer: {
+      flex: 1,
+      alignItems: 'center',
+      marginTop: verticalScale(40),
+    },
+    inputContainer: {
+      width: '100%',
+    },
+    input: {
+      width: '100%',
+      height: verticalScale(55),
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderRadius: scale(10),
+      paddingHorizontal: scale(20),
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+      marginBottom: verticalScale(20),
+    },
+    passwordContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderRadius: scale(10),
+      marginBottom: verticalScale(20),
+      backgroundColor: 'transparent',
+      height: verticalScale(55),
+    },
+    passwordInput: {
+      flex: 1,
+      height: '100%',
+      paddingHorizontal: scale(20),
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+    },
+    eyeButton: {
+      paddingHorizontal: scale(15),
+      height: '100%',
+      justifyContent: 'center',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingBottom: verticalScale(30),
+      width: '100%',
+    },
+    backButton: {
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(30),
+    },
+    backButtonText: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+    },
+    loginButton: {
+      backgroundColor: COLORS.primary,
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(40),
+      borderRadius: scale(25),
+      minWidth: scale(140),
+      alignItems: 'center',
+    },
+    loginButtonText: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+    },
+    forgotPasswordLink: {
+      alignSelf: 'flex-end',
+      marginTop: verticalScale(-10),
+      marginBottom: verticalScale(10),
+    },
+    forgotPasswordText: {
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.primary,
+      fontWeight: '600',
+    },
+  });
+}
 

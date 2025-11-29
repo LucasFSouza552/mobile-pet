@@ -8,7 +8,6 @@ import { petSync } from "./petSync";
 import { isNetworkConnected } from "../../utils/network";
 
 export const historySync = {
-    // Atualiza o banco local com as alterações vindas do servidor.
     async syncFromServer(accountId: string): Promise<void> {
         if (!await isNetworkConnected()) {
             return;
@@ -82,10 +81,9 @@ export const historySync = {
         try {
             const localHistory = await historyLocalRepository.getByAccount(accountId);
             if (!await isNetworkConnected()) {
-                return localHistory;
-            }
+            return localHistory;
+        }
 
-            // ✅ Só chama callback se fornecido
             this.syncFromServer(accountId).then(async () => {
                 if (onRemoteLoaded) {
                     onRemoteLoaded();

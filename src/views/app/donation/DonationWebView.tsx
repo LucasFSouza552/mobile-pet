@@ -23,7 +23,7 @@ export default function DonationWebView({ navigation, route }: DonationWebViewPr
         >
           <FontAwesome name="chevron-left" size={18} color={COLORS.text} />
         </TouchableOpacity>
-        <Text style={[styles.title, { color: COLORS.bg }]}>Pagamento</Text>
+        <Text style={[styles.title, { color: COLORS.iconBackground }]}>Pagamento</Text>
         <View style={{ width: 36 }} />
       </View>
       <WebView source={{ uri: url }} />

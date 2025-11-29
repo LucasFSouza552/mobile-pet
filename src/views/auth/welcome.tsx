@@ -36,7 +36,7 @@ export default function Welcome({ navigation }: any) {
         <View style={styles.buttonContainer}>
           <PrimaryButton text="Entrar" onPress={handleLogin} />
 
-          <SecondaryButton text="Criar conta" onPress={handleRegister} />
+          <SecondaryButton text="Criar conta"  onPress={handleRegister} />
         </View>
       </View>
     </SafeAreaView>

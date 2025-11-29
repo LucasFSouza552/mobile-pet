@@ -36,7 +36,6 @@ export const useWishPetsList = (accountId: string): UseWishPetsListReturn => {
         };
     }, []);
 
-    // ✅ Função auxiliar para processar interações e atualizar estado
     const processInteractions = useCallback((interactions: any[]) => {
         const petsMap = new Map<string, any>();
 

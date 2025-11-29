@@ -1,6 +1,6 @@
 import React, { useReducer, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 
 type TabKey = 'posts' | 'pets' | 'adopted' | 'wishlist' | 'history';
 
@@ -8,7 +8,7 @@ interface ProfileTopTabsProps {
   activeTab: TabKey;
   onChange: (tab: TabKey) => void;
   isInstitution: boolean;
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
   showHistory: boolean;
 }
 
@@ -157,7 +157,7 @@ export default function ProfileTopTabs({ activeTab, onChange, isInstitution, COL
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     scrollView: {
       flex: 1,
@@ -185,8 +185,9 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       backgroundColor: COLORS.primary,
     },
     tabText: {
-      color: COLORS.bg,
+      color: COLORS.text,
       fontWeight: '600',
+
     },
   });
 }

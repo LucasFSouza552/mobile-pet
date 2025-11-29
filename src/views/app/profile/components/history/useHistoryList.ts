@@ -34,9 +34,8 @@ export const useHistoryList = (accountId: string): UseHistoryListReturn => {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+    }, []);
 
-  // ✅ Função auxiliar para processar e ordenar histórico
   const processHistory = useCallback((historyList: IHistory[]) => {
     const uniqueMap = new Map<string, IHistory>();
     (historyList || []).forEach(item => {
@@ -70,15 +69,12 @@ export const useHistoryList = (accountId: string): UseHistoryListReturn => {
         return;
       }
 
-      // ✅ Callback que busca dados atualizados após sync
       const historyList = await historySync.getHistory(accountId, async () => {
-        // ✅ Evita múltiplos syncs simultâneos
         if (isProcessingSyncRef.current || !isMountedRef.current) return;
         
         isProcessingSyncRef.current = true;
         
         try {
-          // ✅ Busca dados atualizados do local após sync
           const updatedHistory = await historySync.getHistory(accountId);
           const ordered = processHistory(updatedHistory);
 

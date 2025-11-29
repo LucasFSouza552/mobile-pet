@@ -19,7 +19,7 @@ import { useAccount } from '../../../context/AccountContext';
 import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { useToast } from '../../../hooks/useToast';
 import { validateRequired, validateWeight, validateAge } from '../../../utils/validation';
 
@@ -247,7 +247,7 @@ export default function NewPet({ navigation }: any) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -340,7 +340,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontWeight: '600',
     },
     chipTextActive: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
     },
     row: {
       flexDirection: 'row',

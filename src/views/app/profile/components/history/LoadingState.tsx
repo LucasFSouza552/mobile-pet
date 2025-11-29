@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { darkTheme, lightTheme } from '../../../../../theme/Themes';
+import { ThemeColors } from '../../../../../theme/types';
 
 interface LoadingStateProps {
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
   message?: string;
 }
 
@@ -20,7 +20,7 @@ export const LoadingState = React.memo<LoadingStateProps>(({ COLORS, message = '
 
 LoadingState.displayName = 'LoadingState';
 
-const makeStyles = (COLORS: typeof lightTheme.colors | typeof darkTheme.colors) =>
+const makeStyles = (COLORS: ThemeColors) =>
   StyleSheet.create({
     container: {
       flex: 1,

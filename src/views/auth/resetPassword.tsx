@@ -10,18 +10,21 @@ import {
   KeyboardAvoidingView,
   Platform,
   useWindowDimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  StyleSheet
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
-import { createLoginStyles } from '../../styles/pagesStyles/loginStyles';
 import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
 import { Images } from '../../../assets';
 import { useToast } from '../../hooks/useToast';
+import { useTheme } from '../../context/ThemeContext';
+import { ThemeColors } from '../../theme/types';
 
 export default function ResetPassword({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
-  const loginStepStyles = createLoginStyles(width, height);
+  const { COLORS, scale, verticalScale, FONT_SIZE } = useTheme();
+  const loginStepStyles = makeStyles(COLORS, scale, verticalScale, FONT_SIZE);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -136,15 +139,13 @@ export default function ResetPassword({ navigation, route }: any) {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={{ flex: 1 }}>
               <View style={loginStepStyles.content}>
-                {/* Back Button */}
                 <TouchableOpacity
                   style={loginStepStyles.backButtonTop}
                   onPress={handleBackToLogin}
                 >
-                  <FontAwesome5 name="arrow-left" size={20} color="#fff" />
+                  <FontAwesome5 name="arrow-left" size={FONT_SIZE.regular} color={COLORS.text} />
                 </TouchableOpacity>
 
-                {/* Header */}
                 <View style={loginStepStyles.header}>
                   <Text style={loginStepStyles.headerTitle}>Redefinir senha</Text>
                   <Text style={loginStepStyles.headerSubtitle}>
@@ -152,14 +153,13 @@ export default function ResetPassword({ navigation, route }: any) {
                   </Text>
                 </View>
 
-                {/* Form */}
                 <View style={loginStepStyles.formContainer}>
                   <View style={loginStepStyles.inputContainer}>
                     <View style={loginStepStyles.passwordContainer}>
                       <TextInput
                         style={loginStepStyles.passwordInput}
                         placeholder="Nova senha"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={COLORS.text}
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!showPassword}
@@ -173,8 +173,9 @@ export default function ResetPassword({ navigation, route }: any) {
                       >
                         <FontAwesome
                           name={showPassword ? 'eye' : 'eye-slash'}
-                          size={20}
-                          color="#999"
+                          size={FONT_SIZE.regular}
+                          color={COLORS.text}
+                          style={{ opacity: 0.6 }}
                         />
                       </TouchableOpacity>
                     </View>
@@ -183,7 +184,7 @@ export default function ResetPassword({ navigation, route }: any) {
                       <TextInput
                         style={loginStepStyles.passwordInput}
                         placeholder="Confirmar senha"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={COLORS.text}
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
                         secureTextEntry={!showConfirmPassword}
@@ -198,15 +199,15 @@ export default function ResetPassword({ navigation, route }: any) {
                       >
                         <FontAwesome
                           name={showConfirmPassword ? 'eye' : 'eye-slash'}
-                          size={20}
-                          color="#999"
+                          size={FONT_SIZE.regular}
+                          color={COLORS.text}
+                          style={{ opacity: 0.6 }}
                         />
                       </TouchableOpacity>
                     </View>
                   </View>
                 </View>
 
-                {/* Button */}
                 <View style={loginStepStyles.buttonContainer}>
                   <TouchableOpacity
                     style={[
@@ -218,7 +219,7 @@ export default function ResetPassword({ navigation, route }: any) {
                     disabled={loading}
                   >
                     {loading ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={COLORS.text} />
                     ) : (
                       <Text style={loginStepStyles.loginButtonText}>Redefinir senha</Text>
                     )}
@@ -231,4 +232,99 @@ export default function ResetPassword({ navigation, route }: any) {
       </SafeAreaView>
     </View>
   );
+}
+
+function makeStyles(COLORS: ThemeColors, scale: (size: number) => number, verticalScale: (size: number) => number, FONT_SIZE: { regular: number; medium: number; large: number }) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.quarternary,
+    },
+    backgroundImage: {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      opacity: 0.3,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: scale(30),
+      paddingTop: verticalScale(20),
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: verticalScale(20),
+    },
+    headerTitle: {
+      fontSize: FONT_SIZE.large,
+      fontWeight: 'bold',
+      color: COLORS.text,
+      marginBottom: verticalScale(5),
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+      opacity: 0.8,
+      textAlign: 'center',
+    },
+    formContainer: {
+      flex: 1,
+      alignItems: 'center',
+      marginTop: verticalScale(40),
+    },
+    inputContainer: {
+      width: '100%',
+    },
+    passwordContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderRadius: scale(10),
+      marginBottom: verticalScale(20),
+      backgroundColor: 'transparent',
+      height: verticalScale(55),
+    },
+    passwordInput: {
+      flex: 1,
+      height: '100%',
+      paddingHorizontal: scale(20),
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+    },
+    eyeButton: {
+      paddingHorizontal: scale(15),
+      height: '100%',
+      justifyContent: 'center',
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingBottom: verticalScale(30),
+      width: '100%',
+    },
+    loginButton: {
+      backgroundColor: COLORS.primary,
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(40),
+      borderRadius: scale(25),
+      minWidth: scale(140),
+      alignItems: 'center',
+    },
+    loginButtonText: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+    },
+    backButtonTop: {
+      padding: scale(10),
+      marginBottom: verticalScale(10),
+      alignSelf: 'flex-start',
+    },
+  });
 }

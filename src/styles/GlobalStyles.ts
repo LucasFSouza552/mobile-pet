@@ -1,31 +1,21 @@
 import { StyleSheet } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
-export const GlobalStyles = StyleSheet.create({
+export const createGlobalStyles = (COLORS: any) => StyleSheet.create({
   fill: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: COLORS.bg,
   },
   center: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
-    color: '#333',
+    color: COLORS.text,
   },
 });
 
-export const theme = {
-  colors: {
-    background: '#f8f9fa',
-    textPrimary: '#333333',
-    primary: '#1565c0',
-    white: '#ffffff',
-  },
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
+export const useGlobalStyles = () => {
+  const { COLORS } = useTheme();
+  return createGlobalStyles(COLORS);
 };

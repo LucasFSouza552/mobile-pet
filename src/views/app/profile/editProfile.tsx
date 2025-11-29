@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccount } from '../../../context/AccountContext';
 import { useTheme } from '../../../context/ThemeContext';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
@@ -129,14 +129,12 @@ export default function EditProfile({ navigation }: EditProfileProps) {
     setLoading(true);
 
     try {
-      // Validações de campos obrigatórios
       const nameValidation = validateName(displayFormData.name || '');
       if (!nameValidation.isValid) {
         toast.error('Validação', nameValidation.error || 'Nome é obrigatório');
         return;
       }
 
-      // Validar telefone se fornecido
       if (displayFormData.phone_number) {
         const phoneValidation = validatePhone(displayFormData.phone_number);
         if (!phoneValidation.isValid) {
@@ -145,7 +143,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
         }
       }
 
-      // Validar CEP se fornecido
       if (address.cep) {
         const cepValidation = validateCEP(address.cep);
         if (!cepValidation.isValid) {
@@ -154,7 +151,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
         }
       }
 
-      // Validar senha se fornecida
       if (password.new || password.current || password.confirm) {
         if (!password.current) {
           toast.error('Senha atual obrigatória', 'Digite sua senha atual para alterar a senha');
@@ -184,7 +180,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
         }
       }
 
-      // Upload de avatar se houver
       if (avatarFile) {
         try {
           const formDataAvatar = new FormData();
@@ -254,7 +249,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
     );
   }
 
-  // Se formData ainda não foi inicializado, usar account diretamente
   const displayFormData = formData || account;
 
   return (
@@ -270,7 +264,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
@@ -282,7 +275,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             <Text style={styles.title}>Editar Perfil</Text>
           </View>
 
-          {/* Avatar Section */}
           <View style={styles.avatarSection}>
             <TouchableOpacity
               style={styles.avatarContainer}
@@ -307,7 +299,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             </TouchableOpacity>
           </View>
 
-          {/* Form Sections */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Informações Pessoais</Text>
 
@@ -349,7 +340,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             </View>
           </View>
 
-          {/* Address Section */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Endereço</Text>
 
@@ -438,7 +428,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             </View>
           </View>
 
-          {/* Password Section */}
           <View style={styles.formSection}>
             <Text style={styles.sectionTitle}>Alterar Senha (opcional)</Text>
 
@@ -530,7 +519,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             </View>
           </View>
 
-          {/* Buttons */}
           <View style={styles.buttonContainer}>
             <PrimaryButton
               text={loading ? 'Salvando...' : 'Salvar Alterações'}
@@ -547,7 +535,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -609,7 +597,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     avatarImage: {
       width: '100%',
       height: '100%',
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
     },
     avatarOverlay: {
       position: 'absolute',

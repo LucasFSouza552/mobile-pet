@@ -4,7 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { petRemoteRepository } from '../../../../data/remote/repositories/petRemoteRepository';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 import { useTheme } from '../../../../context/ThemeContext';
 import { formatDateOnly } from '../../../../utils/date';
 
@@ -72,7 +72,7 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
             <View style={styles.imageContainer}>
               <Image source={imageSource} style={styles.petImage} />
               <View style={styles.adoptedBadge}>
-                <FontAwesome5 name="check-circle" size={16} color={COLORS.bg} />
+                <FontAwesome5 name="check-circle" size={16} color={COLORS.iconBackground} />
               </View>
             </View>
             <View style={styles.petInfo}>
@@ -122,7 +122,7 @@ export default function AdoptedPetsList({ accountId }: AdoptedPetsListProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     petCard: {
       flexDirection: 'row',
@@ -145,7 +145,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     imageContainer: {
       borderRadius: 14,
       overflow: 'hidden',
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
@@ -172,7 +172,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       justifyContent: 'center',
       alignItems: 'center',
       borderWidth: 2,
-      borderColor: COLORS.bg,
+      borderColor: COLORS.iconBackground,
     },
     petInfo: {
       flex: 1,

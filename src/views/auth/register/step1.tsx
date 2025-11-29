@@ -19,10 +19,12 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
 import { validateName } from '../../../utils/validation';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function RegisterStep1({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
-  const registerStepStyles = createRegisterStepStyles(width, height);
+  const { COLORS, FONT_SIZE } = useTheme();
+  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
   const { documentType, name: initialName = '', avatar: initialAvatar = null, avatarFile: initialAvatarFile = null } = route.params || {};
   const [name, setName] = useState(initialName);
   const [avatar, setAvatar] = useState<string | null>(initialAvatar);
@@ -138,19 +140,19 @@ export default function RegisterStep1({ navigation, route }: any) {
 
                 <View style={registerStepStyles.progressContainer}>
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                    <FontAwesome name="user" size={20} color="#fff" />
+                    <FontAwesome name="user" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={registerStepStyles.progressLine} />
                   <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="envelope" size={20} color="#666" />
+                    <FontAwesome name="envelope" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                   </View>
                   <View style={registerStepStyles.progressLine} />
                   <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="id-card" size={20} color="#666" />
+                    <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                   </View>
                   <View style={registerStepStyles.progressLine} />
                   <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="lock" size={20} color="#666" />
+                    <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                   </View>
                 </View>
 
@@ -165,7 +167,7 @@ export default function RegisterStep1({ navigation, route }: any) {
                       <Image source={{ uri: avatar }} style={registerStepStyles.avatarImage} />
                     ) : (
                       <View style={registerStepStyles.avatarPlaceholder}>
-                        <FontAwesome name="camera" size={50} color="#B648A0" />
+                        <FontAwesome name="camera" size={FONT_SIZE.xlarge} color={COLORS.primary} />
                       </View>
                     )}
                   </TouchableOpacity>
@@ -177,7 +179,7 @@ export default function RegisterStep1({ navigation, route }: any) {
                         nameTouched && nameError && registerStepStyles.inputError
                       ]}
                       placeholder="Nome"
-                      placeholderTextColor="#999999"
+                      placeholderTextColor={COLORS.text + '80'}
                       value={name}
                       onChangeText={handleNameChange}
                       onBlur={handleNameBlur}

@@ -27,11 +27,12 @@ import ResetPasswordScreen from './src/views/auth/resetPassword';
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
 import { ThemeProvider } from './src/context/ThemeContext';
 import { useTheme as useAppTheme } from './src/context/ThemeContext';
-import Toast, { BaseToast, ErrorToast } from 'react-native-toast-message';
+import Toast from 'react-native-toast-message';
 import { AccountProvider } from './src/context/AccountContext';
 import { PostProvider } from './src/context/PostContext';
 import { CameraProvider } from './src/context/CameraContext';
 import { runMigrations } from './src/data';
+import { SuccessToast, ErrorToast as ThemedErrorToast, InfoToast } from './src/components/Toast/ThemedToast';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -93,12 +94,7 @@ export default function App() {
                 </Stack.Navigator>
 
 
-                <Toast
-                  config={toastConfig}
-                  position="top"
-                  topOffset={60}
-                  visibilityTime={2500}
-                />
+                <ThemedToastWrapper />
 
               </NavigationContainer>
             </PostProvider>
@@ -122,69 +118,19 @@ function ThemedStatusBar() {
   );
 }
 
+function ThemedToastWrapper() {
+  const toastConfig = {
+    success: (props: any) => <SuccessToast {...props} />,
+    error: (props: any) => <ThemedErrorToast {...props} />,
+    info: (props: any) => <InfoToast {...props} />,
+  };
 
-const toastConfig = {
-  success: (props: any) => (
-    <BaseToast
-      {...props}
-      style={{
-        borderLeftColor: '#2ECC71',
-        borderRadius: 10,
-        minHeight: 70,
-        width: '90%',
-        alignSelf: 'center',
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#2ECC71',
-      }}
-      text2Style={{
-        fontSize: 14,
-        color: '#333',
-      }}
+  return (
+    <Toast
+      config={toastConfig}
+      position="top"
+      topOffset={60}
+      visibilityTime={2500}
     />
-  ),
-  error: (props: any) => (
-    <ErrorToast
-      {...props}
-      style={{
-        borderLeftColor: '#E74C3C',
-        borderRadius: 10,
-        minHeight: 70,
-        width: '90%',
-        alignSelf: 'center',
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#E74C3C',
-      }}
-      text2Style={{
-        fontSize: 14,
-        color: '#555',
-      }}
-    />
-  ),
-  info: (props: any) => (
-    <BaseToast
-      {...props}
-      style={{
-        borderLeftColor: '#3498DB',
-        borderRadius: 10,
-        minHeight: 70,
-        width: '90%',
-        alignSelf: 'center',
-      }}
-      text1Style={{
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#3498DB',
-      }}
-      text2Style={{
-        fontSize: 14,
-        color: '#333',
-      }}
-    />
-  ),
-};
+  );
+}

@@ -18,10 +18,12 @@ import { FontAwesome } from '@expo/vector-icons';
 import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { Images } from '../../../../assets';
 import { validateCPF, validateCNPJ } from '../../../utils/validation';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function RegisterStep3({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
-  const registerStepStyles = createRegisterStepStyles(width, height);
+  const { COLORS, FONT_SIZE } = useTheme();
+  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
   const {
     documentType,
     name,
@@ -158,38 +160,34 @@ export default function RegisterStep3({ navigation, route }: any) {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={registerStepStyles.content}>
-                {/* Header */}
                 <View style={registerStepStyles.header}>
                   <Text style={registerStepStyles.headerTitle}>Registrar</Text>
                   <Text style={registerStepStyles.headerSubtitle}>Quase lá!</Text>
                 </View>
 
-                {/* Progress Indicator */}
                 <View style={registerStepStyles.progressContainer}>
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={20} color="#fff" />
+                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={20} color="#fff" />
+                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                    <FontAwesome name="id-card" size={20} color="#fff" />
+                    <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={registerStepStyles.progressLine} />
                   <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="lock" size={20} color="#666" />
+                    <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
                   </View>
                 </View>
 
-                {/* Form */}
                 <View style={registerStepStyles.formContainer}>
                   <Text style={registerStepStyles.title}>
                     Informe seu {documentType.toUpperCase()}
                   </Text>
 
-                  {/* Document Input */}
                   <View style={registerStepStyles.inputWrapper}>
                     <TextInput
                       style={[
@@ -197,7 +195,7 @@ export default function RegisterStep3({ navigation, route }: any) {
                         documentTouched && documentError && registerStepStyles.inputError
                       ]}
                       placeholder={documentType === 'cpf' ? 'CPF' : 'CNPJ'}
-                      placeholderTextColor="#999999"
+                      placeholderTextColor={COLORS.text + '80'}
                       value={document}
                       onChangeText={handleDocumentChange}
                       onBlur={handleDocumentBlur}
@@ -212,7 +210,6 @@ export default function RegisterStep3({ navigation, route }: any) {
                   </View>
                 </View>
 
-                {/* Buttons */}
                 <View style={registerStepStyles.buttonContainer}>
                   <TouchableOpacity style={registerStepStyles.backButton} onPress={handleBack}>
                     <Text style={registerStepStyles.backButtonText}>Voltar</Text>

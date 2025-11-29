@@ -10,12 +10,13 @@ import { IPet } from '../../models/IPet';
 import { IAccount } from '../../models/IAccount';
 import { petRemoteRepository } from '../../data/remote/repositories/petRemoteRepository';
 import { useToast } from '../../hooks/useToast';
+import { ThemeColors, ThemeFontSize, ThemeGap, ThemePadding } from '../../theme/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function MatchPets() {
-  const { COLORS } = useTheme();
-  const styles = makeStyles(COLORS);
+  const { COLORS, FONT_SIZE, PADDING, GAP, getShadow, scale } = useTheme();
+  const styles = makeStyles(COLORS, FONT_SIZE, PADDING, GAP, getShadow, scale);
   const navigation = useNavigation<any>();
 
   const isFocused = useIsFocused();
@@ -57,45 +58,38 @@ export default function MatchPets() {
 
   const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / (SCREEN_WIDTH - 32));
+    const cardPadding = PADDING.md * 2;
+    const index = Math.round(contentOffsetX / (SCREEN_WIDTH - cardPadding));
     setCurrentImageIndex(index);
-  }, []);
+  }, [PADDING]);
 
   const goToPreviousImage = useCallback(() => {
     if (!petFeed?.images || currentImageIndex === 0) return;
+    const cardPadding = PADDING.md * 2;
     const newIndex = currentImageIndex - 1;
     scrollViewRef.current?.scrollTo({
-      x: newIndex * (SCREEN_WIDTH - 32),
+      x: newIndex * (SCREEN_WIDTH - cardPadding),
       animated: true,
     });
     setCurrentImageIndex(newIndex);
-  }, [petFeed?.images, currentImageIndex]);
+  }, [petFeed?.images, currentImageIndex, PADDING]);
 
   const goToNextImage = useCallback(() => {
     if (!petFeed?.images || currentImageIndex === petFeed.images.length - 1) return;
+    const cardPadding = PADDING.md * 2;
     const newIndex = currentImageIndex + 1;
     scrollViewRef.current?.scrollTo({
-      x: newIndex * (SCREEN_WIDTH - 32),
+      x: newIndex * (SCREEN_WIDTH - cardPadding),
       animated: true,
     });
     setCurrentImageIndex(newIndex);
-  }, [petFeed?.images, currentImageIndex]);
+  }, [petFeed?.images, currentImageIndex, PADDING]);
 
   const owner: IAccount | null = useMemo(() => {
     return petFeed && typeof (petFeed as any).account === 'object'
       ? ((petFeed as any).account as IAccount)
       : null;
   }, [petFeed]);
-
-  const recommendationText = useMemo(() => {
-    if (!petFeed) return 'A comunidade recomenda este pet para você';
-
-    if (owner?.name) {
-      return `${owner.name} e voluntários recomendam ${petFeed.name || 'este pet'} para você`;
-    }
-
-    return 'A comunidade recomenda este pet para você';
-  }, [owner?.name, petFeed?.name]);
 
   const infoChips = useMemo(() => {
     if (!petFeed) return [];
@@ -119,13 +113,6 @@ export default function MatchPets() {
 
     return chips;
   }, [petFeed]);
-
-  const displayAge = useMemo(() => {
-    if (typeof petFeed?.age === 'number') {
-      return `${petFeed.age} ano${petFeed.age === 1 ? '' : 's'}`;
-    }
-    return null;
-  }, [petFeed?.age]);
 
   const isOwnerVerified = useMemo(() => Boolean((owner as any)?.verified), [owner]);
 
@@ -206,7 +193,7 @@ export default function MatchPets() {
                     onScroll={handleScroll}
                     scrollEventThrottle={16}
                     decelerationRate="fast"
-                    snapToInterval={SCREEN_WIDTH - 32}
+                    snapToInterval={SCREEN_WIDTH - (PADDING.md * 2)}
                     snapToAlignment="center"
                   >
                     {petFeed.images.map((imgId, i) => (
@@ -272,8 +259,8 @@ export default function MatchPets() {
               >
                 <Ionicons
                   name={reactionType === 'like' ? 'heart' : 'heart-dislike'}
-                  size={96}
-                  color={reactionType === 'like' ? '#FF4F81' : '#E74C3C'}
+                  size={FONT_SIZE.xxlarge * 3}
+                  color={reactionType === 'like' ? COLORS.primary : COLORS.error}
                 />
               </Animated.View>
             )}
@@ -295,7 +282,7 @@ export default function MatchPets() {
                       >
                         <FontAwesome5
                           name={petFeed.gender === 'female' ? 'venus' : 'mars'}
-                          size={20}
+                          size={FONT_SIZE.regular}
                           color="#fff"
                         />
                       </View>
@@ -306,7 +293,7 @@ export default function MatchPets() {
                     <View style={styles.chipRow}>
                       {infoChips.slice(0, 2).map((chip, index) => (
                         <View style={styles.chip} key={`chip-${chip.label}-${index}`}>
-                          <Ionicons name={chip.icon} size={14} color="#fff" />
+                          <Ionicons name={chip.icon} size={FONT_SIZE.small} color="#fff" />
                           <Text style={styles.chipText}>{chip.label}</Text>
                         </View>
                       ))}
@@ -316,7 +303,7 @@ export default function MatchPets() {
 
                 {isOwnerVerified && (
                   <View style={styles.verifiedPill}>
-                    <Ionicons name="checkmark-circle" size={18} color="#34D399" />
+                    <Ionicons name="checkmark-circle" size={FONT_SIZE.regular} color={COLORS.success} />
                   </View>
                 )}
               </View>
@@ -350,7 +337,7 @@ export default function MatchPets() {
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="close" size={30} color="#fff" />
+              <Ionicons name="close" size={FONT_SIZE.xlarge} color="#fff" />
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -361,7 +348,7 @@ export default function MatchPets() {
           disabled={!petFeed}
           accessibilityLabel="Ver detalhes"
         >
-          <Ionicons name="information-circle" size={26} color="#60A5FA" />
+          <Ionicons name="information-circle" size={FONT_SIZE.xlarge} color={COLORS.info} />
         </TouchableOpacity>
 
         <Animated.View style={{ transform: [{ scale: likeScale }] }}>
@@ -378,7 +365,7 @@ export default function MatchPets() {
             {loading ? (
               <ActivityIndicator size="small" color="#fff" />
             ) : (
-              <Ionicons name="heart" size={30} color="#fff" />
+              <Ionicons name="heart" size={FONT_SIZE.xlarge} color="#fff" />
             )}
           </TouchableOpacity>
         </Animated.View>
@@ -387,34 +374,45 @@ export default function MatchPets() {
   );
 }
 
-function makeStyles(COLORS: any) {
+function makeStyles(
+  COLORS: ThemeColors,
+  FONT_SIZE: ThemeFontSize,
+  PADDING: ThemePadding,
+  GAP: ThemeGap,
+  getShadow: (level: 'sm' | 'md' | 'lg' | 'xl') => {
+    shadowColor: string;
+    shadowOffset: { width: number; height: number };
+    shadowOpacity: number;
+    shadowRadius: number;
+    elevation: number;
+  },
+  scale: (size: number) => number
+) {
+  const shadowLg = getShadow('lg');
+  
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: COLORS.secondary,
-      padding: 16,
+      padding: PADDING.md,
     },
     header: {
       color: COLORS.text,
-      fontSize: 20,
+      fontSize: FONT_SIZE.large,
       fontWeight: 'bold',
-      marginBottom: 12,
+      marginBottom: GAP.md,
     },
     card: {
       flex: 1,
-      borderRadius: 28,
+      borderRadius: scale(28),
       overflow: 'hidden',
-      padding: 2,
+      padding: scale(2),
       backgroundColor: `${COLORS.primary}25`,
-      shadowColor: COLORS.primary,
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.25,
-      shadowRadius: 24,
-      elevation: 12,
+      ...shadowLg,
     },
     cardGradient: {
       flex: 1,
-      borderRadius: 26,
+      borderRadius: scale(26),
       overflow: 'hidden',
     },
     imageContainer: {
@@ -430,42 +428,42 @@ function makeStyles(COLORS: any) {
       resizeMode: 'cover',
     },
     photoMulti: {
-      width: SCREEN_WIDTH - 32,
-      minHeight: 400,
+      width: SCREEN_WIDTH - (PADDING.md * 2),
+      minHeight: scale(400),
     },
     imageIndicators: {
       position: 'absolute',
-      top: 12,
-      left: 16,
-      right: 16,
+      top: PADDING.sm,
+      left: PADDING.md,
+      right: PADDING.md,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 16,
+      gap: GAP.sm,
+      paddingHorizontal: PADDING.md,
     },
     indicatorDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
+      width: scale(8),
+      height: scale(8),
+      borderRadius: scale(4),
       backgroundColor: 'rgba(255, 255, 255, 0.4)',
     },
     indicatorDotActive: {
-      width: 24,
-      backgroundColor: '#B648A0',
+      width: scale(24),
+      backgroundColor: COLORS.primary,
     },
     imageCounter: {
       position: 'absolute',
-      top: 16,
-      right: 16,
+      top: PADDING.md,
+      right: PADDING.md,
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 16,
+      paddingHorizontal: PADDING.sm,
+      paddingVertical: PADDING.xs,
+      borderRadius: scale(16),
     },
     imageCounterText: {
       color: '#fff',
-      fontSize: 12,
+      fontSize: FONT_SIZE.small,
       fontWeight: '600',
     },
     touchAreas: {
@@ -490,39 +488,39 @@ function makeStyles(COLORS: any) {
       left: 0,
       right: 0,
       bottom: 0,
-      paddingHorizontal: 20,
-      paddingVertical: 24,
+      paddingHorizontal: PADDING.lg,
+      paddingVertical: PADDING.xl,
       backgroundColor: 'rgba(0,0,0,0.55)',
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      gap: 12,
+      borderBottomLeftRadius: scale(24),
+      borderBottomRightRadius: scale(24),
+      gap: GAP.md,
     },
     nameRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: 12,
+      gap: GAP.md,
     },
     name: {
       color: '#fff',
-      fontSize: 26,
+      fontSize: FONT_SIZE.xlarge,
       fontWeight: '800',
     },
     ageText: {
       color: '#fff',
-      fontSize: 18,
+      fontSize: FONT_SIZE.medium,
       opacity: 0.8,
       fontWeight: '600',
     },
     genderBadge: {
-      width: 40,
-      height: 40,
-      borderRadius: 30,
-      backgroundColor: 'rgba(182, 72, 160, 0.2)',
+      width: scale(40),
+      height: scale(40),
+      borderRadius: scale(30),
+      backgroundColor: `${COLORS.primary}33`,
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 1.5,
-      borderColor: '#B648A0',
+      borderWidth: scale(1.5),
+      borderColor: COLORS.primary,
     },
     genderBadgeFemale: {
       backgroundColor: '#d946ef',
@@ -533,51 +531,51 @@ function makeStyles(COLORS: any) {
       borderColor: '#60a5fa',
     },
     verifiedPill: {
-      paddingHorizontal: 12,
-      paddingVertical: 4,
+      paddingHorizontal: PADDING.sm,
+      paddingVertical: PADDING.xs,
       borderRadius: 999,
-      backgroundColor: 'rgba(52, 211, 153, 0.15)',
+      backgroundColor: `${COLORS.success}26`,
       borderWidth: 1,
-      borderColor: 'rgba(52, 211, 153, 0.4)',
+      borderColor: `${COLORS.success}66`,
     },
     description: {
       color: '#fff',
-      fontSize: 14,
-      lineHeight: 20,
+      fontSize: FONT_SIZE.small,
+      lineHeight: FONT_SIZE.regular + 4,
       opacity: 0.95,
     },
     matchMetaRow: {
-      gap: 6,
+      gap: GAP.sm,
     },
     matchLabelRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: GAP.sm,
     },
     matchLabel: {
       color: '#FDE68A',
       fontWeight: '700',
-      fontSize: 13,
+      fontSize: FONT_SIZE.small,
       textTransform: 'uppercase',
     },
     matchDescription: {
       color: '#fff',
       opacity: 0.85,
-      fontSize: 13,
-      lineHeight: 18,
+      fontSize: FONT_SIZE.small,
+      lineHeight: FONT_SIZE.regular,
     },
     chipRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: 10,
-      marginTop: 8,
+      gap: GAP.sm,
+      marginTop: GAP.sm,
     },
     chip: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 14,
-      paddingVertical: 6,
+      gap: GAP.sm,
+      paddingHorizontal: PADDING.md,
+      paddingVertical: PADDING.xs,
       borderRadius: 999,
       backgroundColor: 'rgba(255,255,255,0.12)',
       borderWidth: 1,
@@ -585,7 +583,7 @@ function makeStyles(COLORS: any) {
     },
     chipText: {
       color: '#fff',
-      fontSize: 12,
+      fontSize: FONT_SIZE.small,
       fontWeight: '600',
       textTransform: 'uppercase',
       letterSpacing: 0.5,
@@ -601,41 +599,32 @@ function makeStyles(COLORS: any) {
     },
     actions: {
       flexDirection: 'row',
-      gap: 12,
+      gap: GAP.md,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 16,
+      paddingVertical: PADDING.md,
     },
     actionButton: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      borderWidth: 2,
+      width: scale(52),
+      height: scale(52),
+      borderRadius: scale(26),
+      borderWidth: scale(2),
       borderColor: 'rgba(255,255,255,0.2)',
       backgroundColor: 'rgba(0,0,0,0.2)',
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOpacity: 0.12,
-      shadowOffset: { width: 0, height: 6 },
-      shadowRadius: 8,
-      elevation: 4,
     },
     circleBtnLarge: {
-      width: 76,
-      height: 76,
-      borderRadius: 38,
+      width: scale(76),
+      height: scale(76),
+      borderRadius: scale(38),
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOpacity: 0.25,
-      shadowOffset: { width: 0, height: 12 },
-      shadowRadius: 14,
-      elevation: 8,
+      ...shadowLg,
       backgroundColor: '#000',
     },
     circleBtnLeft: {
-      backgroundColor: '#E74C3C',
+      backgroundColor: COLORS.error,
     },
     circleBtnRight: {
       backgroundColor: COLORS.primary,
@@ -645,14 +634,14 @@ function makeStyles(COLORS: any) {
     },
     emptyBox: {
       flex: 1,
-      borderRadius: 16,
+      borderRadius: scale(16),
       backgroundColor: COLORS.quarternary,
       alignItems: 'center',
       justifyContent: 'center',
     },
     emptyText: {
       color: COLORS.text,
-      fontSize: 16,
+      fontSize: FONT_SIZE.regular,
       opacity: 0.8,
     },
   });

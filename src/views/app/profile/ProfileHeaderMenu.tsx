@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 
 interface ProfileHeaderMenuProps {
-  COLORS: typeof lightTheme.colors | typeof darkTheme.colors;
+  COLORS: ThemeColors;
   onEdit: () => void | Promise<void>;
   onLogout: () => void | Promise<void>;
 }
@@ -42,7 +42,7 @@ export default function ProfileHeaderMenu({ COLORS, onEdit, onLogout }: ProfileH
                 onEdit();
               }}
             >
-              <Text style={[styles.menuItemText, { color: COLORS.bg }]}>Editar perfil</Text>
+              <Text style={[styles.menuItemText, { color: COLORS.iconBackground }]}>Editar perfil</Text>
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityLabel="Sair da conta"
@@ -52,7 +52,7 @@ export default function ProfileHeaderMenu({ COLORS, onEdit, onLogout }: ProfileH
                 onLogout();
               }}
             >
-              <Text style={[styles.menuItemText, { color: COLORS.bg }]}>Sair</Text>
+              <Text style={[styles.menuItemText, { color: COLORS.iconBackground }]}>Sair</Text>
             </TouchableOpacity>
           </View>
         </View>

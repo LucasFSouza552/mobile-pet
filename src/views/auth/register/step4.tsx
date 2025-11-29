@@ -26,10 +26,12 @@ import { useAccount } from '../../../context/AccountContext';
 import { Images } from '../../../../assets';
 import { useToast } from '../../../hooks/useToast';
 import { validatePassword, validatePasswordConfirmation } from '../../../utils/validation';
+import { useTheme } from '../../../context/ThemeContext';
 
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
-  const registerStepStyles = createRegisterStepStyles(width, height);
+  const { COLORS, FONT_SIZE } = useTheme();
+  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
   const {
     documentType,
     name,
@@ -194,7 +196,6 @@ export default function RegisterStep4({ navigation, route }: any) {
           >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
               <View style={registerStepStyles.content}>
-                {/* Header */}
                 <View style={registerStepStyles.header}>
                   <Text style={registerStepStyles.headerTitle}>Registrar</Text>
                   <Text style={registerStepStyles.headerSubtitle}>
@@ -202,32 +203,29 @@ export default function RegisterStep4({ navigation, route }: any) {
                   </Text>
                 </View>
 
-                {/* Progress Indicator */}
                 <View style={registerStepStyles.progressContainer}>
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={20} color="#fff" />
+                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={20} color="#fff" />
+                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={20} color="#fff" />
+                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                   <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
                   <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                    <FontAwesome name="lock" size={20} color="#fff" />
+                    <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} />
                   </View>
                 </View>
 
-                {/* Form */}
                 <View style={registerStepStyles.formContainer}>
                   <Text style={registerStepStyles.title}>
                     Crie uma senha{'\n'}forte
                   </Text>
 
-                  {/* Password Input */}
                   <View style={registerStepStyles.inputWrapper}>
                     <View style={[
                       registerStepStyles.passwordContainer,
@@ -236,7 +234,7 @@ export default function RegisterStep4({ navigation, route }: any) {
                       <TextInput
                         style={registerStepStyles.passwordInput}
                         placeholder="Senha"
-                        placeholderTextColor="#999999"
+                        placeholderTextColor={COLORS.text + '80'}
                         value={password}
                         onChangeText={handlePasswordChange}
                         onBlur={handlePasswordBlur}
@@ -249,8 +247,9 @@ export default function RegisterStep4({ navigation, route }: any) {
                       >
                         <FontAwesome
                           name={showPassword ? "eye" : "eye-slash"}
-                          size={20}
-                          color="#999"
+                          size={FONT_SIZE.regular}
+                          color={COLORS.text}
+                          style={{ opacity: 0.6 }}
                         />
                       </TouchableOpacity>
                     </View>
@@ -264,7 +263,6 @@ export default function RegisterStep4({ navigation, route }: any) {
                     )}
                   </View>
 
-                  {/* Confirm Password Input */}
                   <View style={registerStepStyles.inputWrapper}>
                     <View style={[
                       registerStepStyles.passwordContainer,
@@ -273,7 +271,7 @@ export default function RegisterStep4({ navigation, route }: any) {
                       <TextInput
                         style={registerStepStyles.passwordInput}
                         placeholder="Confirme sua senha"
-                        placeholderTextColor="#999999"
+                        placeholderTextColor={COLORS.text + '80'}
                         value={confirmPassword}
                         onChangeText={handleConfirmPasswordChange}
                         onBlur={handleConfirmPasswordBlur}
@@ -287,8 +285,9 @@ export default function RegisterStep4({ navigation, route }: any) {
                       >
                         <FontAwesome
                           name={showConfirmPassword ? "eye" : "eye-slash"}
-                          size={20}
-                          color="#999"
+                          size={FONT_SIZE.regular}
+                          color={COLORS.text}
+                          style={{ opacity: 0.6 }}
                         />
                       </TouchableOpacity>
                     </View>
@@ -298,7 +297,6 @@ export default function RegisterStep4({ navigation, route }: any) {
                   </View>
                 </View>
 
-                {/* Buttons */}
                 <View style={registerStepStyles.buttonContainer}>
                   <TouchableOpacity
                     style={registerStepStyles.backButton}
@@ -317,7 +315,7 @@ export default function RegisterStep4({ navigation, route }: any) {
                     disabled={!isFormValid || loading}
                   >
                     {loading ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={COLORS.text} />
                     ) : (
                       <Text style={registerStepStyles.nextButtonText}>Próximo</Text>
                     )}

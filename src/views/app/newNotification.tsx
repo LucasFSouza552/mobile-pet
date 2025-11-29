@@ -24,7 +24,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
 
 export default function NewNotification({ navigation }: any) {
-  const { COLORS } = useTheme();
+  const { COLORS, FONT_SIZE } = useTheme();
   const styles = makeStyles(COLORS);
   const { account, loading } = useAccount();
   const toast = useToast();
@@ -156,7 +156,7 @@ export default function NewNotification({ navigation }: any) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={COLORS.text} />
+          <Ionicons name="arrow-back" size={FONT_SIZE.medium} color={COLORS.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Nova Notificação</Text>
         <View style={styles.headerPlaceholder} />
@@ -167,7 +167,7 @@ export default function NewNotification({ navigation }: any) {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.infoCard}>
-          <Ionicons name="information-circle" size={24} color={COLORS.primary} />
+          <Ionicons name="information-circle" size={FONT_SIZE.medium} color={COLORS.primary} />
           <Text style={styles.helperText}>
             Avise a instituição sobre um animal em risco. Tire uma foto, descreva o cenário e envie.
             A localização é capturada automaticamente.
@@ -177,7 +177,7 @@ export default function NewNotification({ navigation }: any) {
         <View style={styles.form}>
           <View style={styles.section}>
             <View style={styles.labelContainer}>
-              <Ionicons name="text" size={20} color={COLORS.primary} />
+              <Ionicons name="text" size={FONT_SIZE.regular} color={COLORS.primary} />
               <Text style={styles.label}>Descrição do caso</Text>
             </View>
             <TextInput
@@ -194,7 +194,7 @@ export default function NewNotification({ navigation }: any) {
 
           <View style={styles.section}>
             <View style={styles.labelContainer}>
-              <Ionicons name="camera" size={20} color={COLORS.primary} />
+              <Ionicons name="camera" size={FONT_SIZE.regular} color={COLORS.primary} />
               <Text style={styles.label}>Foto do animal</Text>
             </View>
 
@@ -210,14 +210,14 @@ export default function NewNotification({ navigation }: any) {
                   onPress={() => setImage(null)}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="close-circle" size={28} color="#fff" />
+                  <Ionicons name="close-circle" size={FONT_SIZE.medium} color={COLORS.text} />
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.changeImageButton}
                   onPress={openCamera}
                   activeOpacity={0.8}
                 >
-                  <Ionicons name="camera" size={20} color="#fff" />
+                  <Ionicons name="camera" size={FONT_SIZE.regular} color={COLORS.text} />
                   <Text style={styles.changeImageText}>Trocar foto</Text>
                 </TouchableOpacity>
               </View>
@@ -227,7 +227,7 @@ export default function NewNotification({ navigation }: any) {
                 onPress={openCamera}
                 activeOpacity={0.8}
               >
-                <Ionicons name="camera-outline" size={48} color={COLORS.primary} />
+                <Ionicons name="camera-outline" size={FONT_SIZE.xlarge} color={COLORS.primary} />
                 <Text style={styles.cameraButtonText}>Tirar foto</Text>
                 <Text style={styles.cameraButtonSubtext}>Toque para abrir a câmera</Text>
               </TouchableOpacity>
@@ -241,10 +241,10 @@ export default function NewNotification({ navigation }: any) {
             activeOpacity={0.8}
           >
             {submitting ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={COLORS.text} />
             ) : (
               <>
-                <Ionicons name="send" size={20} color="#fff" style={styles.buttonIcon} />
+                <Ionicons name="send" size={FONT_SIZE.regular} color={COLORS.text} style={styles.buttonIcon} />
                 <Text style={styles.primaryButtonText}>Enviar para a instituição</Text>
               </>
             )}
@@ -304,7 +304,7 @@ function makeStyles(COLORS: any) {
       marginBottom: 24,
       borderLeftWidth: 4,
       borderLeftColor: COLORS.primary,
-      shadowColor: "#000",
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
       shadowRadius: 4,
@@ -383,7 +383,7 @@ function makeStyles(COLORS: any) {
       overflow: "hidden",
       position: "relative",
       backgroundColor: COLORS.quarternary,
-      shadowColor: "#000",
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.2,
       shadowRadius: 4,
@@ -397,10 +397,10 @@ function makeStyles(COLORS: any) {
       position: "absolute",
       top: 12,
       right: 12,
-      backgroundColor: "rgba(231, 76, 60, 0.9)",
+      backgroundColor: COLORS.error + 'E6',
       borderRadius: 20,
       padding: 4,
-      shadowColor: "#000",
+      shadowColor: COLORS.text,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.3,
       shadowRadius: 4,
@@ -410,7 +410,7 @@ function makeStyles(COLORS: any) {
       position: "absolute",
       bottom: 12,
       right: 12,
-      backgroundColor: "rgba(0,0,0,0.7)",
+      backgroundColor: COLORS.quarternary + 'B3',
       borderRadius: 20,
       paddingHorizontal: 16,
       paddingVertical: 10,
@@ -419,7 +419,7 @@ function makeStyles(COLORS: any) {
       gap: 8,
     },
     changeImageText: {
-      color: "#fff",
+      color: COLORS.text,
       fontSize: 14,
       fontWeight: "600",
     },
@@ -444,7 +444,7 @@ function makeStyles(COLORS: any) {
       marginRight: 8,
     },
     primaryButtonText: {
-      color: COLORS.bg,
+      color: COLORS.text,
       fontWeight: "700",
       fontSize: 16,
     },

@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { FlatList, Image, Text, View, StyleSheet, TouchableOpacity, ImageSourcePropType } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
-import { darkTheme, lightTheme } from '../../../../theme/Themes';
+import { ThemeColors } from '../../../../theme/types';
 import { useTheme } from '../../../../context/ThemeContext';
 import { useWishPetsList } from './hooks/useWishPetsList';
 
@@ -36,7 +36,7 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
   );
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <FlatList
         data={items}
         keyExtractor={(item: any, index) => {
@@ -119,8 +119,11 @@ export default function WishlistPetsList({ accountId, onFindPets }: WishlistPets
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
     petCard: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -142,7 +145,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
     imageContainer: {
       borderRadius: 14,
       overflow: 'hidden',
-      backgroundColor: COLORS.bg,
+      backgroundColor: COLORS.iconBackground,
       shadowColor: '#000',
       shadowOffset: {
         width: 0,
@@ -212,7 +215,7 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       borderRadius: 12,
     },
     findButtonText: {
-      color: COLORS.bg,
+      color: COLORS.iconBackground,
       fontWeight: '700',
     },
   });

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
-import { darkTheme, lightTheme } from '../../../theme/Themes';
+import { ThemeColors } from '../../../theme/types';
 import { useAccount } from '../../../context/AccountContext';
 import { usePost } from '../../../context/PostContext';
 
@@ -12,7 +12,7 @@ interface ProfileSettingsProps {
 }
 
 export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
-  const { COLORS } = useTheme();
+  const { COLORS, theme, toggleTheme } = useTheme();
   const { logout, account } = useAccount();
   const { cleanPosts } = usePost();
   const styles = makeStyles(COLORS);
@@ -90,6 +90,32 @@ export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
         )}
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Aparência</Text>
+
+          <TouchableOpacity
+            style={styles.option}
+            onPress={toggleTheme}
+            activeOpacity={0.7}
+          >
+            <View style={styles.optionLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: COLORS.primary + '20' }]}>
+                <FontAwesome5 
+                  name={theme === 'dark' ? 'moon' : 'sun'} 
+                  size={18} 
+                  color={COLORS.primary} 
+                />
+              </View>
+              <View style={styles.themeOptionContent}>
+                <Text style={styles.optionText}>Tema</Text>
+                <Text style={styles.themeSubtext}>
+                  {theme === 'dark' ? 'Escuro' : 'Claro'}
+                </Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
           <TouchableOpacity
             style={[styles.option, styles.logoutOption]}
             onPress={handleLogout}
@@ -108,7 +134,7 @@ export default function ProfileSettings({ navigation }: ProfileSettingsProps) {
   );
 }
 
-function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) {
+function makeStyles(COLORS: ThemeColors) {
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -173,6 +199,15 @@ function makeStyles(COLORS: typeof lightTheme.colors | typeof darkTheme.colors) 
       fontSize: 16,
       fontWeight: '600',
       color: COLORS.text,
+    },
+    themeOptionContent: {
+      flexDirection: 'column',
+      gap: 2,
+    },
+    themeSubtext: {
+      fontSize: 12,
+      color: COLORS.text,
+      opacity: 0.6,
     },
     logoutOption: {
       backgroundColor: '#E74C3C15',
