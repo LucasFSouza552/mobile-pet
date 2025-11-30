@@ -47,24 +47,30 @@ export function useEditCommentModal({ onCommentUpdated }: UseEditCommentModalPro
 	const saveEditedComment = async () => {
 		if (!editingComment || !editCommentText.trim() || saving) return;
 
+		const optimisticUpdatedComment: IComment = {
+			...editingComment,
+			content: editCommentText.trim(),
+			updatedAt: new Date().toISOString(),
+		};
+
+		onCommentUpdated(optimisticUpdatedComment);
+		closeEditModal();
+
 		try {
 			setSaving(true);
 			const updated = await commentRepository.updateComment(editingComment.id, editCommentText.trim());
 
-			const updatedComment: IComment = {
-				...editingComment,
+			const finalUpdatedComment: IComment = {
+				...optimisticUpdatedComment,
 				...updated,
+				account: editingComment.account,
 				content: editCommentText.trim(),
-				updatedAt: updated.updatedAt || new Date().toISOString(),
+				updatedAt: updated.updatedAt || optimisticUpdatedComment.updatedAt,
 			};
 
-			onCommentUpdated(updatedComment);
-			closeEditModal();
-
-			setTimeout(() => {
-				toast.success('Comentário editado com sucesso');
-			}, 300);
+			onCommentUpdated(finalUpdatedComment);
 		} catch (error: any) {
+			onCommentUpdated(editingComment);
 			toast.handleApiError(error, error?.data?.message || 'Erro ao editar comentário');
 		} finally {
 			setSaving(false);

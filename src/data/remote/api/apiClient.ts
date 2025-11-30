@@ -9,34 +9,35 @@ const BASE_URL = (API_URL && API_URL.trim().length > 0)
 
 
 export const apiClient = axios.create({
-    baseURL: BASE_URL,
-    timeout: 8000,
-    headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-    },
+  baseURL: BASE_URL,
+  timeout: 8000,
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+  },
 });
 
 apiClient.interceptors.request.use(
-    async config => {
-        const token = await getStorage("@token");
-        const headers = new AxiosHeaders(config.headers as any);
+  async config => {
+    const token = await getStorage("@token");
+    const headers = new AxiosHeaders(config.headers as any);
 
 
-        if (token) {
-            headers.set("Authorization", `Bearer ${token}`);
-        }
-        if (!headers.has("Accept")) {
-            headers.set("Accept", "application/json");
-        }
-        config.headers = headers;
-        try {
-            const method = String(config.method || 'GET').toUpperCase();
-            const url = apiClient.getUri(config);
-            console.log(`[API REQUEST] ${method} ${url}`);
-        } catch {}
-        return config;
-    },
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    if (!headers.has("Accept")) {
+      headers.set("Accept", "application/json");
+    }
+    config.headers = headers;
+    try {
+      const method = String(config.method || 'GET').toUpperCase();
+      const url = apiClient.getUri(config);
+      if (__DEV__)
+        console.log(`[API REQUEST] ${method} ${url}`);
+    } catch { }
+    return config;
+  },
 );
 
 apiClient.interceptors.response.use(
@@ -47,7 +48,8 @@ apiClient.interceptors.response.use(
     if (error?.response) {
       return Promise.reject(error.response);
     } else {
-      console.log("[NETWORK ERROR]", error?.message ?? error);
+      if (__DEV__)
+        console.log("[NETWORK ERROR]", error?.message ?? error);
       return Promise.reject(error);
     }
   }

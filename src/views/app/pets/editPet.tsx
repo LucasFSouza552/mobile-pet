@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -27,15 +27,7 @@ import CameraView from '../../../components/CameraView';
 import { IPet } from '../../../models/IPet';
 import { ThemeColors } from '../../../theme/types';
 import { useToast } from '../../../hooks/useToast';
-
-type PetFormState = {
-  name: string;
-  description: string;
-  type: IPet['type'];
-  gender: 'Male' | 'Female';
-  age: string;
-  weight: string;
-};
+import { useEditPetReducer } from './useEditPetReducer';
 
 const PET_TYPES: IPet['type'][] = ['Cachorro', 'Gato', 'Pássaro', 'Outro'];
 const GENDERS: Array<{ value: 'Male' | 'Female'; label: string }> = [
@@ -56,21 +48,23 @@ export default function EditPet({ navigation, route }: EditPetProps) {
   const toast = useToast();
   const petId = route?.params?.petId;
 
-  const [form, setForm] = useState<PetFormState>({
-    name: '',
-    description: '',
-    type: 'Cachorro',
-    gender: 'Male',
-    age: '',
-    weight: '',
-  });
-  const [pet, setPet] = useState<IPet | null>(null);
-  const [petImages, setPetImages] = useState<string[]>([]);
-  const [newImages, setNewImages] = useState<Array<{ uri: string; name: string; type: string }>>([]);
-  const [removedImageIndices, setRemovedImageIndices] = useState<Set<number>>(new Set());
-  const [isCameraOpen, setIsCameraOpenLocal] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const {
+    state,
+    setForm,
+    updateFormField,
+    setPet,
+    setPetImages,
+    addNewImages,
+    removeNewImage,
+    removeImageIndex,
+    restoreImageIndex,
+    setCameraOpen,
+    setLoading,
+    setSaving,
+    resetImages,
+  } = useEditPetReducer();
+
+  const { form, pet, petImages, newImages, removedImageIndices, isCameraOpen, loading, saving } = state;
 
   const loadPet = useCallback(async () => {
     if (!petId) return;
@@ -87,8 +81,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
         weight: typeof data?.weight === 'number' ? String(data.weight) : '',
       });
       setPetImages(Array.isArray(data?.images) ? data.images : []);
-      setNewImages([]);
-      setRemovedImageIndices(new Set());
+      resetImages();
     } catch (error: any) {
       toast.handleApiError(error, error?.data?.message || 'Não foi possível carregar o pet');
       navigation.goBack();
@@ -96,7 +89,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     } finally {
       setLoading(false);
     }
-  }, [petId, navigation]);
+  }, [petId, navigation, setLoading, setPet, setForm, setPetImages, resetImages, toast]);
 
   useEffect(() => {
     if (!petId) {
@@ -120,25 +113,6 @@ export default function EditPet({ navigation, route }: EditPetProps) {
     return ownerId === account.id;
   }, [account?.id, ownerId, pet?.adopted]);
 
-  const updateForm = (key: keyof PetFormState, value: string) => {
-    setForm(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleRemoveImage = (index: number) => {
-    setRemovedImageIndices(prev => {
-      const newSet = new Set(prev);
-      newSet.add(index);
-      return newSet;
-    });
-  };
-
-  const handleRestoreImage = (index: number) => {
-    setRemovedImageIndices(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(index);
-      return newSet;
-    });
-  };
 
   const pickImages = async () => {
     try {
@@ -185,7 +159,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
         return;
       }
       setIsCameraOpen(true);
-      setIsCameraOpenLocal(true);
+      setCameraOpen(true);
     } catch (error: any) {
       toast.handleApiError(error, error?.data?.message || 'Não foi possível acessar a câmera.');
     }
@@ -197,13 +171,10 @@ export default function EditPet({ navigation, route }: EditPetProps) {
       toast.info('Limite de imagens', 'Você pode adicionar no máximo 6 imagens.');
       return;
     }
-    setNewImages(prev => [...prev, photo]);
-    setIsCameraOpenLocal(false);
+    addNewImages([photo]);
+    setCameraOpen(false);
   };
 
-  const removeNewImage = (index: number) => {
-    setNewImages(prev => prev.filter((_, i) => i !== index));
-  };
 
   const handleSave = async () => {
     if (!petId || !canEdit || saving) return;
@@ -329,7 +300,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                 {canEdit && (
                   <TouchableOpacity
                     style={isRemoved ? styles.restoreImageButton : styles.removeImageButton}
-                    onPress={() => isRemoved ? handleRestoreImage(item.index) : handleRemoveImage(item.index)}
+                    onPress={() => isRemoved ? restoreImageIndex(item.index) : removeImageIndex(item.index)}
                     activeOpacity={0.7}
                   >
                     <FontAwesome5
@@ -458,7 +429,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
               placeholder="Nome do pet"
               placeholderTextColor={COLORS.text + '66'}
               value={form.name}
-              onChangeText={value => updateForm('name', value)}
+              onChangeText={value => updateFormField('name', value)}
             />
 
             <Text style={styles.label}>Descrição</Text>
@@ -470,7 +441,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
               multiline
               numberOfLines={4}
               textAlignVertical="top"
-              onChangeText={value => updateForm('description', value)}
+              onChangeText={value => updateFormField('description', value)}
             />
 
             <Text style={styles.label}>Tipo</Text>
@@ -482,7 +453,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                     styles.optionChip,
                     form.type === type && styles.optionChipActive,
                   ]}
-                  onPress={() => updateForm('type', type)}
+                  onPress={() => updateFormField('type', type)}
                 >
                   <Text
                     style={[
@@ -505,7 +476,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                     styles.optionChip,
                     form.gender === gender.value && styles.optionChipActive,
                   ]}
-                  onPress={() => updateForm('gender', gender.value)}
+                  onPress={() => updateFormField('gender', gender.value)}
                 >
                   <Text
                     style={[
@@ -527,7 +498,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                   placeholder="Ex.: 2"
                   placeholderTextColor={COLORS.text + '66'}
                   value={form.age}
-                  onChangeText={value => updateForm('age', value)}
+                  onChangeText={value => updateFormField('age', value)}
                   keyboardType="numeric"
                 />
               </View>
@@ -538,7 +509,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
                   placeholder="Ex.: 12.5"
                   placeholderTextColor={COLORS.text + '66'}
                   value={form.weight}
-                  onChangeText={value => updateForm('weight', value)}
+                  onChangeText={value => updateFormField('weight', value)}
                   keyboardType="decimal-pad"
                 />
               </View>
@@ -563,7 +534,7 @@ export default function EditPet({ navigation, route }: EditPetProps) {
       <CameraView
         visible={isCameraOpen}
         onClose={() => {
-          setIsCameraOpenLocal(false);
+          setCameraOpen(false);
           setIsCameraOpen(false);
         }}
         onCapture={handleCameraCapture}

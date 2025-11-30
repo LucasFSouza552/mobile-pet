@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { IPost } from '../../models/IPost';
 import { Images } from '../../../assets';
@@ -22,6 +22,15 @@ export default function PostHeaderView({
 }: PostHeaderViewProps) {
 	const { COLORS } = useTheme();
 	const styles = makeStyles(COLORS);
+	const [imageError, setImageError] = useState(false);
+
+	useEffect(() => {
+		setImageError(false);
+	}, [post.account?.avatar]);
+
+	const imageSource = imageError || !post.account?.avatar 
+		? Images.avatarDefault 
+		: pictureRepository.getSource(post.account.avatar);
 
 	return (
 		<View style={styles.postHeader}>
@@ -31,8 +40,10 @@ export default function PostHeaderView({
 				onPress={onPressProfile}
 			>
 				<Image
-					source={pictureRepository.getSource(post.account?.avatar)}
+					key={post.account?.avatar || 'default-avatar'}
+					source={imageSource}
 					style={styles.avatar}
+					onError={() => setImageError(true)}
 					defaultSource={Images.avatarDefault as unknown as number}
 				/>
 				<View style={styles.profileInfo}>

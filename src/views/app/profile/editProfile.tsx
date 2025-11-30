@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,13 +19,13 @@ import { pictureRepository } from '../../../data/remote/repositories/pictureRemo
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useToast } from '../../../hooks/useToast';
 import { IAccount } from '../../../models/IAccount';
 import IAddress from '../../../models/IAddress';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import { validateName, validatePhone, validatePassword, validatePasswordConfirmation, validateCEP } from '../../../utils/validation';
+import { useEditProfileReducer } from './useEditProfileReducer';
 
 interface EditProfileProps {
   navigation: any;
@@ -36,29 +36,20 @@ export default function EditProfile({ navigation }: EditProfileProps) {
   const { COLORS } = useTheme();
   const toast = useToast();
 
-  const [formData, setFormData] = useState<IAccount | null>(null);
-  const [address, setAddress] = useState<IAddress>({
-    street: '',
-    number: '',
-    complement: '',
-    city: '',
-    cep: '',
-    state: '',
-    neighborhood: '',
-  });
-  const [password, setPassword] = useState({
-    current: '',
-    new: '',
-    confirm: '',
-  });
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
+  const {
+    state,
+    setFormData,
+    updateFormField,
+    setAddress,
+    updateAddressField,
+    updatePasswordField,
+    setAvatarPreview,
+    setLoading,
+    toggleShowPassword,
+    handleAvatarChange,
+  } = useEditProfileReducer();
+
+  const { formData, address, password, avatarPreview, avatarFile, loading, showPassword } = state;
 
   useEffect(() => {
     if (account) {
@@ -79,51 +70,10 @@ export default function EditProfile({ navigation }: EditProfileProps) {
         setAvatarPreview(avatarSource.uri || null);
       }
     }
-  }, [account]);
-
-  const handleInputChange = (key: string, value: string) => {
-    if (!formData) return;
-
-    if (key.startsWith('address.')) {
-      const addressKey = key.split('.')[1] as keyof IAddress;
-      setAddress((prev) => ({ ...prev, [addressKey]: value }));
-    } else {
-      setFormData((prev) => (prev ? { ...prev, [key]: value } : null));
-    }
-  };
-
-  const handlePasswordChange = (
-    field: 'current' | 'new' | 'confirm',
-    value: string
-  ) => {
-    setPassword((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleAvatarChange = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (status !== 'granted') {
-      toast.error(
-        'Permissão necessária',
-        'Precisamos de acesso à sua galeria de fotos.'
-      );
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setAvatarPreview(result.assets[0].uri);
-      setAvatarFile(result.assets[0]);
-    }
-  };
+  }, [account, setFormData, setAddress, setAvatarPreview]);
 
   const handleSubmit = async () => {
+    const displayFormData = formData || account;
     if (!displayFormData) return;
 
     setLoading(true);
@@ -156,13 +106,13 @@ export default function EditProfile({ navigation }: EditProfileProps) {
           toast.error('Senha atual obrigatória', 'Digite sua senha atual para alterar a senha');
           return;
         }
-        
+
         const passwordValidation = validatePassword(password.new, 6);
         if (!passwordValidation.isValid) {
           toast.error('Validação', passwordValidation.error || 'Senha inválida');
           return;
         }
-        
+
         const confirmValidation = validatePasswordConfirmation(password.new, password.confirm);
         if (!confirmValidation.isValid) {
           toast.error('Validação', confirmValidation.error || 'As senhas não coincidem');
@@ -188,10 +138,10 @@ export default function EditProfile({ navigation }: EditProfileProps) {
             type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
             name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
           } as any);
-          
+
           await accountRemoteRepository.uploadAvatar(formDataAvatar);
         } catch (error: any) {
-          
+
           toast.handleApiError(error, error?.data?.message || 'Erro ao fazer upload da foto');
           return;
         }
@@ -309,7 +259,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 placeholder="Seu nome completo"
                 placeholderTextColor={COLORS.text + '80'}
                 value={displayFormData.name || ''}
-                onChangeText={(value) => handleInputChange('name', value)}
+                onChangeText={(value) => updateFormField('name', value)}
               />
             </View>
 
@@ -334,7 +284,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 placeholder="(00) 00000-0000"
                 placeholderTextColor={COLORS.text + '80'}
                 value={displayFormData.phone_number || ''}
-                onChangeText={(value) => handleInputChange('phone_number', value)}
+                onChangeText={(value) => updateFormField('phone_number', value)}
                 keyboardType="phone-pad"
               />
             </View>
@@ -351,7 +301,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="00000-000"
                   placeholderTextColor={COLORS.text + '80'}
                   value={address.cep || ''}
-                  onChangeText={(value) => handleInputChange('address.cep', value)}
+                  onChangeText={(value) => updateAddressField('cep', value)}
                 />
               </View>
               <View style={[styles.inputWrapper, { flex: 0.5 }]}>
@@ -361,7 +311,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="UF"
                   placeholderTextColor={COLORS.text + '80'}
                   value={address.state || ''}
-                  onChangeText={(value) => handleInputChange('address.state', value)}
+                  onChangeText={(value) => updateAddressField('state', value)}
                   maxLength={2}
                 />
               </View>
@@ -374,7 +324,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 placeholder="Sua cidade"
                 placeholderTextColor={COLORS.text + '80'}
                 value={address.city || ''}
-                onChangeText={(value) => handleInputChange('address.city', value)}
+                onChangeText={(value) => updateAddressField('city', value)}
               />
             </View>
 
@@ -385,9 +335,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 placeholder="Seu bairro"
                 placeholderTextColor={COLORS.text + '80'}
                 value={address.neighborhood || ''}
-                onChangeText={(value) =>
-                  handleInputChange('address.neighborhood', value)
-                }
+                onChangeText={(value) => updateAddressField('neighborhood', value)}
               />
             </View>
 
@@ -399,7 +347,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="Nome da rua"
                   placeholderTextColor={COLORS.text + '80'}
                   value={address.street || ''}
-                  onChangeText={(value) => handleInputChange('address.street', value)}
+                  onChangeText={(value) => updateAddressField('street', value)}
                 />
               </View>
               <View style={[styles.inputWrapper, { flex: 0.5 }]}>
@@ -409,7 +357,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="000"
                   placeholderTextColor={COLORS.text + '80'}
                   value={address.number || ''}
-                  onChangeText={(value) => handleInputChange('address.number', value)}
+                  onChangeText={(value) => updateAddressField('number', value)}
                 />
               </View>
             </View>
@@ -421,9 +369,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 placeholder="Apartamento, bloco, etc. (opcional)"
                 placeholderTextColor={COLORS.text + '80'}
                 value={address.complement || ''}
-                onChangeText={(value) =>
-                  handleInputChange('address.complement', value)
-                }
+                onChangeText={(value) => updateAddressField('complement', value)}
               />
             </View>
           </View>
@@ -439,16 +385,11 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="Digite sua senha atual"
                   placeholderTextColor={COLORS.text + '80'}
                   value={password.current}
-                  onChangeText={(value) => handlePasswordChange('current', value)}
+                  onChangeText={(value) => updatePasswordField('current', value)}
                   secureTextEntry={!showPassword.current}
                 />
                 <TouchableOpacity
-                  onPress={() =>
-                    setShowPassword((prev) => ({
-                      ...prev,
-                      current: !prev.current,
-                    }))
-                  }
+                  onPress={() => toggleShowPassword('current')}
                   style={styles.eyeIcon}
                 >
                   <FontAwesome
@@ -468,16 +409,11 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="Digite sua nova senha"
                   placeholderTextColor={COLORS.text + '80'}
                   value={password.new}
-                  onChangeText={(value) => handlePasswordChange('new', value)}
+                  onChangeText={(value) => updatePasswordField('new', value)}
                   secureTextEntry={!showPassword.new}
                 />
                 <TouchableOpacity
-                  onPress={() =>
-                    setShowPassword((prev) => ({
-                      ...prev,
-                      new: !prev.new,
-                    }))
-                  }
+                  onPress={() => toggleShowPassword('new')}
                   style={styles.eyeIcon}
                 >
                   <FontAwesome
@@ -497,16 +433,11 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                   placeholder="Confirme sua nova senha"
                   placeholderTextColor={COLORS.text + '80'}
                   value={password.confirm}
-                  onChangeText={(value) => handlePasswordChange('confirm', value)}
+                  onChangeText={(value) => updatePasswordField('confirm', value)}
                   secureTextEntry={!showPassword.confirm}
                 />
                 <TouchableOpacity
-                  onPress={() =>
-                    setShowPassword((prev) => ({
-                      ...prev,
-                      confirm: !prev.confirm,
-                    }))
-                  }
+                  onPress={() => toggleShowPassword('confirm')}
                   style={styles.eyeIcon}
                 >
                   <FontAwesome
@@ -605,7 +536,7 @@ function makeStyles(COLORS: ThemeColors) {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      backgroundColor: COLORS.iconBackground + '20',
       justifyContent: 'center',
       alignItems: 'center',
     },

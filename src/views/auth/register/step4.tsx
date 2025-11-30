@@ -10,13 +10,13 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
-  ScrollView
+  ScrollView,
+  StyleSheet
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { createRegisterStepStyles } from '../../../styles/pagesStyles/registerStepStyles';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
 import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { IAccount } from '../../../models/IAccount';
@@ -27,11 +27,12 @@ import { Images } from '../../../../assets';
 import { useToast } from '../../../hooks/useToast';
 import { validatePassword, validatePasswordConfirmation } from '../../../utils/validation';
 import { useTheme } from '../../../context/ThemeContext';
+import { ThemeColors } from '../../../theme/types';
 
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, FONT_SIZE } = useTheme();
-  const registerStepStyles = createRegisterStepStyles(width, height, COLORS, FONT_SIZE);
+  const registerStepStyles = makeStyles(width, height, COLORS, FONT_SIZE);
   const {
     documentType,
     name,
@@ -328,5 +329,183 @@ export default function RegisterStep4({ navigation, route }: any) {
       </SafeAreaView>
     </View>
   );
+}
+
+function makeStyles(
+  width: number,
+  height: number,
+  COLORS: ThemeColors,
+  FONT_SIZE: { regular: number; medium: number; large: number }
+) {
+  const scale = (size: number) => (width / 375) * size;
+  const verticalScale = (size: number) => (height / 812) * size;
+
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLORS.quarternary,
+    },
+    backgroundImage: {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+      opacity: 0.3,
+    },
+    safeArea: {
+      flex: 1,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: scale(30),
+      paddingTop: verticalScale(20),
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: verticalScale(20),
+    },
+    headerTitle: {
+      fontSize: FONT_SIZE.large,
+      fontWeight: 'bold',
+      color: COLORS.text,
+      marginBottom: verticalScale(5),
+    },
+    headerSubtitle: {
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+      opacity: 0.8,
+      textAlign: 'center',
+    },
+    progressContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: verticalScale(40),
+      paddingHorizontal: scale(20),
+    },
+    progressStep: {
+      width: scale(50),
+      height: scale(50),
+      borderRadius: scale(25),
+      backgroundColor: COLORS.quinary,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.tertiary,
+    },
+    progressStepActive: {
+      backgroundColor: COLORS.primary,
+      borderColor: COLORS.primary,
+    },
+    progressStepCompleted: {
+      backgroundColor: COLORS.primary,
+      borderColor: COLORS.primary,
+    },
+    progressLine: {
+      width: scale(30),
+      height: 2,
+      backgroundColor: COLORS.tertiary,
+    },
+    progressLineActive: {
+      backgroundColor: COLORS.primary,
+    },
+    formContainer: {
+      flex: 1,
+      alignItems: 'center',
+      marginTop: verticalScale(20),
+    },
+    title: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+      textAlign: 'center',
+      marginBottom: verticalScale(40),
+      lineHeight: scale(32),
+    },
+    inputWrapper: {
+      width: '100%',
+      marginBottom: verticalScale(5),
+    },
+    passwordContainer: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: COLORS.primary,
+      borderRadius: scale(10),
+      marginBottom: verticalScale(5),
+      backgroundColor: 'transparent',
+      height: verticalScale(55),
+    },
+    passwordContainerError: {
+      borderColor: COLORS.error,
+      borderWidth: 2,
+    },
+    passwordInput: {
+      flex: 1,
+      height: '100%',
+      paddingHorizontal: scale(20),
+      fontSize: FONT_SIZE.regular,
+      color: COLORS.text,
+    },
+    eyeButton: {
+      paddingHorizontal: scale(15),
+      height: '100%',
+      justifyContent: 'center',
+    },
+    hintText: {
+      fontSize: FONT_SIZE.small,
+      color: COLORS.warning,
+      marginTop: verticalScale(-10),
+      marginBottom: verticalScale(10),
+      alignSelf: 'flex-start',
+    },
+    errorHintText: {
+      fontSize: FONT_SIZE.small,
+      color: COLORS.error,
+      marginTop: verticalScale(-10),
+      marginBottom: verticalScale(10),
+      alignSelf: 'flex-start',
+    },
+    errorText: {
+      fontSize: FONT_SIZE.small,
+      color: COLORS.error,
+      marginTop: verticalScale(-5),
+      marginBottom: verticalScale(10),
+      marginLeft: scale(5),
+    },
+    buttonContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingBottom: verticalScale(30),
+      width: '100%',
+    },
+    backButton: {
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(30),
+    },
+    backButtonText: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+    },
+    nextButton: {
+      backgroundColor: COLORS.primary,
+      paddingVertical: verticalScale(15),
+      paddingHorizontal: scale(40),
+      borderRadius: scale(25),
+      minWidth: scale(140),
+      alignItems: 'center',
+    },
+    nextButtonDisabled: {
+      backgroundColor: COLORS.tertiary,
+      opacity: 0.5,
+    },
+    nextButtonText: {
+      fontSize: FONT_SIZE.medium,
+      fontWeight: 'bold',
+      color: COLORS.text,
+    },
+  });
 }
 

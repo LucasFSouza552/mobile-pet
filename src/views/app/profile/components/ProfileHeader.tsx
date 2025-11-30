@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
+import { FontAwesome, FontAwesome5, FontAwesome6, MaterialIcons } from '@expo/vector-icons';
 import { ThemeColors, ThemeFontSize } from '../../../../theme/types';
 import { pictureRepository } from '../../../../data/remote/repositories/pictureRemoteRepository';
 import { IAccount } from '../../../../models/IAccount';
@@ -13,20 +13,34 @@ interface ProfileHeaderProps {
   COLORS: ThemeColors;
   FONT_SIZE: ThemeFontSize;
   isSelf: boolean;
+  showBackButton?: boolean;
+  onBackPress?: () => void;
 }
 
-export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: ProfileHeaderProps) {
+export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf, showBackButton, onBackPress }: ProfileHeaderProps) {
   const styles = makeStyles(COLORS);
   const navigation = useNavigation();
   const isInstitution = account?.role === 'institution';
   const [achievements, setAchievements] = useState<IAchievement[]>([]);
+  
+  const handleBackPress = () => {
+    if (onBackPress) {
+      onBackPress();
+    } else {
+      navigation.goBack();
+    }
+  };
 
   const handleSettingsPress = () => {
-    (navigation as any).getParent()?.navigate('ProfileSettings');
+    const parent = (navigation as any).getParent();
+    const nav = parent || navigation;
+    (nav as any).navigate('ProfileSettings');
   };
 
   const handleNotificationsPress = () => {
-    (navigation as any).getParent()?.navigate('InstitutionNotifications');
+    const parent = (navigation as any).getParent();
+    const nav = parent || navigation;
+    (nav as any).navigate('InstitutionNotifications');
   };
 
   useEffect(() => {
@@ -85,9 +99,17 @@ export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: Pr
 
   return (
     <View style={styles.header}>
+      {showBackButton && (
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={handleBackPress}
+        >
+          <FontAwesome name="arrow-left" size={20} color={COLORS.text} />
+        </TouchableOpacity>
+      )}
       <View style={styles.avatarWrapper}>
         <Image
-          source={pictureRepository.getSource(account?.avatar)}
+          source={pictureRepository.getSource(account?.avatar || "")}
           style={styles.avatar}
         />
       </View>
@@ -96,7 +118,7 @@ export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: Pr
           {account?.verified && (
             <MaterialIcons name="verified" size={FONT_SIZE.regular} color="#34D399" style={styles.verifiedIcon} />
           )}
-          <Text style={styles.name}>{account?.name}</Text>
+          <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{account?.name}</Text>
         </View>
         {achievements.length > 0 && (
           <View style={styles.achievementsRow}>
@@ -104,7 +126,7 @@ export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: Pr
               const achievementConfig = getAchievementConfig(achievement?.type);
               return (
                 <View
-                  key={achievement?.id || index}
+                  key={achievement?.id ? `achievement-${achievement.id}` : `achievement-${index}-${achievement?.type || 'unknown'}`}
                   style={[
                     styles.achievementBadge,
                     { backgroundColor: achievementConfig.bgColor },
@@ -130,19 +152,23 @@ export default function ProfileHeader({ account, COLORS, FONT_SIZE, isSelf }: Pr
       </View>
       {isSelf ? (
         <View style={styles.buttonsRow}>
-          {isInstitution && <TouchableOpacity
-            style={styles.notificationsButton}
-            onPress={handleNotificationsPress}
-            activeOpacity={0.7}
-          >
-            <FontAwesome5 name="bell" size={FONT_SIZE.regular} style={styles.notificationsIcon} />
-          </TouchableOpacity>}
+          {isInstitution && (
+            <TouchableOpacity
+              key="notifications-button"
+              style={styles.notificationsButton}
+              onPress={handleNotificationsPress}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5 name="bell" size={FONT_SIZE.regular} style={styles.notificationsIcon} />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
+            key="settings-button"
             style={styles.settingsButton}
             onPress={handleSettingsPress}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="cog" size={FONT_SIZE.regular} style={styles.settingsIcon} />
+            <FontAwesome name="gear" size={FONT_SIZE.medium} style={styles.settingsIcon}  />
           </TouchableOpacity>
         </View>
       ) : null}
@@ -162,6 +188,16 @@ function makeStyles(COLORS: ThemeColors) {
       paddingHorizontal: 12,
       paddingVertical: 10,
       width: '100%',
+    },
+    backButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: COLORS.tertiary,
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 8,
     },
     avatarWrapper: {
       borderWidth: 2,
@@ -192,6 +228,9 @@ function makeStyles(COLORS: ThemeColors) {
       fontSize: 22,
       fontWeight: 'bold',
       color: COLORS.text,
+      flex: 1,
+      textAlign: 'left',
+      maxWidth: '80%',
     },
     achievementsRow: {
       flexDirection: 'row',
@@ -246,11 +285,21 @@ function makeStyles(COLORS: ThemeColors) {
       marginRight: 6,
     },
     settingsButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 40,
+      height: 40,
+      display: 'flex',
       padding: 8,
       borderRadius: 20,
       backgroundColor: COLORS.tertiary + '40',
     },
     notificationsButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 40,
+      height: 40,
+      display: 'flex',
       padding: 8,
       marginLeft: 8,
       borderRadius: 20,
@@ -261,8 +310,7 @@ function makeStyles(COLORS: ThemeColors) {
     },
     settingsIcon: {
       color: COLORS.text,
-      width: 20,
-      height: 20,
+      textAlign: 'center',
     },
     buttonsRow: {
       flexDirection: 'row',

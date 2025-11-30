@@ -9,7 +9,7 @@ export const SuccessToast = (props: any) => {
   
   return (
     <View style={[styles.container, { 
-      backgroundColor: COLORS.quinary || COLORS.surface, 
+      backgroundColor: COLORS.quarternary || COLORS.quinary || COLORS.surface, 
       borderLeftColor: COLORS.success,
       paddingHorizontal: PADDING.lg,
       paddingVertical: PADDING.md,
@@ -17,7 +17,7 @@ export const SuccessToast = (props: any) => {
       borderLeftWidth: scale(5),
     }, shadow]}>
       <View style={[styles.iconContainer, { 
-        backgroundColor: COLORS.success + '15',
+        backgroundColor: COLORS.success + '20',
         width: scale(44),
         height: scale(44),
         borderRadius: scale(22),
@@ -54,7 +54,7 @@ export const ErrorToast = (props: any) => {
   
   return (
     <View style={[styles.container, { 
-      backgroundColor: COLORS.quinary || COLORS.surface, 
+      backgroundColor: COLORS.quarternary || COLORS.quinary || COLORS.surface, 
       borderLeftColor: COLORS.error,
       paddingHorizontal: PADDING.lg,
       paddingVertical: PADDING.md,
@@ -62,7 +62,7 @@ export const ErrorToast = (props: any) => {
       borderLeftWidth: scale(5),
     }, shadow]}>
       <View style={[styles.iconContainer, { 
-        backgroundColor: COLORS.error + '15',
+        backgroundColor: COLORS.error + '20',
         width: scale(44),
         height: scale(44),
         borderRadius: scale(22),
@@ -99,7 +99,7 @@ export const InfoToast = (props: any) => {
   
   return (
     <View style={[styles.container, { 
-      backgroundColor: COLORS.quinary || COLORS.surface, 
+      backgroundColor: COLORS.quarternary || COLORS.quinary || COLORS.surface, 
       borderLeftColor: COLORS.info,
       paddingHorizontal: PADDING.lg,
       paddingVertical: PADDING.md,
@@ -107,7 +107,7 @@ export const InfoToast = (props: any) => {
       borderLeftWidth: scale(5),
     }, shadow]}>
       <View style={[styles.iconContainer, { 
-        backgroundColor: COLORS.info + '15',
+        backgroundColor: COLORS.info + '20',
         width: scale(44),
         height: scale(44),
         borderRadius: scale(22),

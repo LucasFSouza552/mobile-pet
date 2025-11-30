@@ -40,9 +40,10 @@ export default function PostPictureContainer({
 					if (idx !== activeIndex) setActiveIndex(idx);
 				}}
 			>
-				{images.map((imageId) => (
-					<View key={imageId} style={[styles.postPicture, { width: containerWidth }]}>
+				{images.map((imageId, index) => (
+					<View key={`${imageId}-${index}`} style={[styles.postPicture, { width: containerWidth }]}>
 						<Image
+							key={imageId}
 							source={pictureRepository.getSource(imageId)}
 							style={styles.postPictureImage}
 							defaultSource={Images.avatarDefault as unknown as number}

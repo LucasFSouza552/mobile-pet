@@ -91,10 +91,11 @@ export default function Main() {
         component={Profile}
         listeners={({ navigation }) => ({
           tabPress: () => {
-            navigation.setParams({ accountId: undefined });
+            navigation.setParams({});
           },
         })}
       />
+
     </Tab.Navigator>
   );
 }

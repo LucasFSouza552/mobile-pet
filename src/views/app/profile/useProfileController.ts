@@ -22,7 +22,6 @@ export function useProfileController({ route, navigation }: UseProfileController
   
   const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
   const isSelf = !!account?.id && targetAccountId === account.id;
-
   useFocusEffect(
     useCallback(() => {
       if (targetAccountId) {

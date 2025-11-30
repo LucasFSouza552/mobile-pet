@@ -107,23 +107,26 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    const toggleTheme = () => {
+    const toggleTheme = async () => {
+        const newMode = theme === "light" ? "dark" : "light";
+            await setThemeMode(newMode);
         Animated.timing(fadeAnim, {
             toValue: 0,
-            duration: 200,
-            easing: Easing.inOut(Easing.ease),
+            duration: 550,
+            easing: Easing.inOut(Easing.linear),
             useNativeDriver: true,
-        }).start(() => {
-            const newMode = theme === "light" ? "dark" : "light";
-            setThemeMode(newMode);
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 250,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }).start();
+        }).start(async () => {
+            requestAnimationFrame(() => {
+                Animated.timing(fadeAnim, {
+                    toValue: 1,
+                    duration: 350,
+                    easing: Easing.out(Easing.linear),
+                    useNativeDriver: true,
+                }).start();
+            });
         });
     };
+    
 
     const { width, height } = useWindowDimensions();
     const BASE_WIDTH = 375;

@@ -34,7 +34,7 @@ const createDarkColors = (): ThemeColors => ({
   secondary: "#363135",
   tertiary: "#61475C",
   quarternary: "#332630",
-  quinary: "#4A3A46",
+  quinary: "#FFF",
   border: "rgba(0, 0, 0, 0.12)",
   textShadow: "rgba(0, 0, 0, 0.1)",
   surface: "#FFFFFF",

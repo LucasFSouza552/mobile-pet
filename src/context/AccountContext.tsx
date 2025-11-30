@@ -25,7 +25,7 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
             if (localAccount) {
                 setAccount(localAccount);
             }
-        } catch (error) {
+        } catch (error: any) {
             toast.handleApiError(error, error?.data?.message || 'Erro ao carregar conta');
         } finally {
             setLoading(false);

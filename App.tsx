@@ -22,6 +22,7 @@ import DonationWebView from './src/views/app/donation/DonationWebView';
 import NewPetScreen from './src/views/app/pets/newPet';
 import ForgotPasswordScreen from './src/views/auth/forgotPassword';
 import ResetPasswordScreen from './src/views/auth/resetPassword';
+import ProfileScreen from './src/views/app/profile/profile';
 
 
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context";
@@ -91,6 +92,7 @@ export default function App() {
                   <Stack.Screen name="DonationWebView" component={DonationWebView} />
                   <Stack.Screen name="NewPet" component={NewPetScreen} />
                   <Stack.Screen name="PetDetails" component={PetDetailsScreen} />
+                  <Stack.Screen name="ProfileView" component={ProfileScreen} />
                 </Stack.Navigator>
 
 

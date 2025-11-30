@@ -51,7 +51,7 @@ export default function UserHistoryList({ accountId }: UserHistoryListProps) {
   if (loading && !refreshing && items.length === 0) {
     return <LoadingState COLORS={COLORS} />;
   }
-  console.log(timelineRows);
+
   return (
     <View style={styles.container}>
     <FlatList

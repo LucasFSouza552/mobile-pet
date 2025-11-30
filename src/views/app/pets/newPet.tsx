@@ -1,6 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,7 +10,6 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 
 import { useTheme } from '../../../context/ThemeContext';
@@ -22,6 +20,7 @@ import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import { ThemeColors } from '../../../theme/types';
 import { useToast } from '../../../hooks/useToast';
 import { validateRequired, validateWeight, validateAge } from '../../../utils/validation';
+import { useNewPetReducer } from './useNewPetReducer';
 
 const PET_TYPES = ['Cachorro', 'Gato', 'Pássaro', 'Outro'] as const;
 const GENDERS = [
@@ -34,36 +33,21 @@ export default function NewPet({ navigation }: any) {
   const { account } = useAccount();
   const styles = useMemo(() => makeStyles(COLORS), [COLORS]);
   const toast = useToast();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [type, setType] = useState<typeof PET_TYPES[number]>('Cachorro');
-  const [gender, setGender] = useState<'male' | 'female'>('male');
-  const [age, setAge] = useState('');
-  const [weight, setWeight] = useState('');
-  const [image, setImage] = useState<{ uri: string; name: string; type: string } | null>(null);
-  const [loading, setLoading] = useState(false);
+  
+  const {
+    state,
+    setName,
+    setDescription,
+    setType,
+    setGender,
+    setAge,
+    setWeight,
+    setLoading,
+    pickImage,
+  } = useNewPetReducer();
 
+  const { name, description, type, gender, age, weight, image, loading } = state;
   const isInstitution = account?.role === 'institution';
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos de acesso à galeria para adicionar foto do pet.');
-      return;
-    }
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets?.length) return;
-    const asset = result.assets[0];
-    setImage({
-      uri: asset.uri,
-      name: asset.fileName || `pet-${Date.now()}.jpg`,
-      type: asset.mimeType || 'image/jpeg',
-    });
-  };
 
   const validate = () => {
     if (!isInstitution) {

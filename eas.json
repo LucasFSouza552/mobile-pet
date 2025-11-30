@@ -7,18 +7,27 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "API_URL": "https://backend-pet-beta.vercel.app/api"
       }
     },
     "preview": {
       "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "API_URL": "https://backend-pet-beta.vercel.app/api"
       }
     },
     "production": {
       "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
       "env": {
         "API_URL": "https://backend-pet-beta.vercel.app/api"
       }

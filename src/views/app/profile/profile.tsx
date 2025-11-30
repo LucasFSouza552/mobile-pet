@@ -33,13 +33,14 @@ export default function Profile({ navigation, route }: ProfileProps) {
     handleLoadMorePosts,
     handleRefreshPosts,
   } = useProfileController({ route, navigation });
-  
+
   const styles = makeStyles(COLORS);
+
+  const isInStackNavigator = !!route?.params?.accountId && !isSelf;
 
   if (!viewAccount) {
     return null;
   }
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -48,6 +49,10 @@ export default function Profile({ navigation, route }: ProfileProps) {
         COLORS={COLORS}
         FONT_SIZE={FONT_SIZE}
         isSelf={isSelf}
+        showBackButton={isInStackNavigator}
+        onBackPress={() => {
+          navigation.goBack()
+        }}
       />
 
       <View style={styles.listContainer}>

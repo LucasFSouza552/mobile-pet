@@ -77,7 +77,7 @@ function PostCardComponent({
 				<PostHeaderView
 					post={post}
 					formatDate={formatDate}
-					onPressProfile={() => navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } })}
+					onPressProfile={() => navigation.navigate('ProfileView', { accountId: post?.account?.id })}
 					onOpenOptions={optionsModal.openOptionsSheet}
 				/>
 					<PostContent post={post} styles={styles} />
@@ -114,7 +114,7 @@ function PostCardComponent({
 					...aboutModal,
 					onPressViewProfile: () => {
 						try {
-							navigation.navigate('Main', { screen: 'Profile', params: { accountId: post?.account?.id } });
+							navigation.navigate('ProfileView', { accountId: post?.account?.id });
 						} finally {
 							aboutModal.closeAboutModal();
 						}
@@ -129,11 +129,26 @@ function PostCardComponent({
 function areEqual(prev: PostCardProps, next: PostCardProps) {
 	const prevLikes = prev.post?.likes?.length || 0;
 	const nextLikes = next.post?.likes?.length || 0;
+	
+	// Compara avatar do usuário
+	const prevAvatar = prev.post?.account?.avatar;
+	const nextAvatar = next.post?.account?.avatar;
+	const avatarEqual = prevAvatar === nextAvatar;
+	
+	// Compara imagens do post
+	const prevImages = prev.post?.image || [];
+	const nextImages = next.post?.image || [];
+	const imagesEqual = 
+		prevImages.length === nextImages.length &&
+		prevImages.every((img, idx) => img === nextImages[idx]);
+	
 	return (
 		prev.post.id === next.post.id &&
 		prev.post.updatedAt === next.post.updatedAt &&
 		prevLikes === nextLikes &&
-		prev.accountId === next.accountId
+		prev.accountId === next.accountId &&
+		avatarEqual &&
+		imagesEqual
 	);
 }
 

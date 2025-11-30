@@ -18,7 +18,6 @@ export function useNetworkSync() {
         isSyncing.current = true;
         try {
             if (account?.id) {
-                console.log("sincronizando tudo do account");
                 await Promise.allSettled([
                     accountSync.syncFromServer(),
                     accountPetInteractionSync.syncFromServer(account.id),
@@ -26,7 +25,6 @@ export function useNetworkSync() {
                     achievementsSync.syncFromServer(account.id),
                 ]);
             } else {
-                console.log("sincronizando account");
                 await accountSync.syncFromServer();
             }
         } catch (error) {
