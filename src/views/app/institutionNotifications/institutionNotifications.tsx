@@ -12,14 +12,14 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Linking } from "react-native";
-import { useAccount } from "../../context/AccountContext";
-import { useTheme } from "../../context/ThemeContext";
-import { notificationRemoteRepository } from "../../data/remote/repositories/notificationRemoteRepository";
-import { pictureRepository } from "../../data/remote/repositories/pictureRemoteRepository";
-import { INotification } from "../../models/INotification";
-import { ThemeColors } from "../../theme/types";
-import { formatDate } from "../../utils/date";
-import { useToast } from "../../hooks/useToast";
+import { useAccount } from "../../../context/AccountContext";
+import { useTheme } from "../../../context/ThemeContext";
+import { notificationRemoteRepository } from "../../../data/remote/repositories/notificationRemoteRepository";
+import { pictureRepository } from "../../../data/remote/repositories/pictureRemoteRepository";
+import { INotification } from "../../../models/INotification";
+import { ThemeColors } from "../../../theme/types";
+import { formatDate } from "../../../utils/date";
+import { useToast } from "../../../hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
 export default function InstitutionNotifications({ navigation }: any) {
   const { COLORS } = useTheme();
@@ -503,4 +503,3 @@ function makeStyles(COLORS: ThemeColors) {
     },
   });
 }
-

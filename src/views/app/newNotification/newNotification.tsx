@@ -11,14 +11,14 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import * as ExpoCamera from "expo-camera";
-import { useToast } from "../../hooks/useToast";
-import { useAccount } from "../../context/AccountContext";
-import { useTheme } from "../../context/ThemeContext";
-import CameraView from "../../components/CameraView";
+import { useToast } from "../../../hooks/useToast";
+import { useAccount } from "../../../context/AccountContext";
+import { useTheme } from "../../../context/ThemeContext";
+import CameraView from "../../../components/CameraView";
 import {
   NotificationPayload,
   notificationRemoteRepository,
-} from "../../data/remote/repositories/notificationRemoteRepository";
+} from "../../../data/remote/repositories/notificationRemoteRepository";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
@@ -103,7 +103,7 @@ export default function NewNotification({ navigation }: any) {
     } else {
       setIsCameraOpen(false);
     }
-  }, [isFocused]);
+  }, [isFocused, openCamera]);
 
 
   const handleCameraCapture = useCallback((photo: { uri: string; name: string; type: string }) => {
@@ -450,4 +450,3 @@ function makeStyles(COLORS: any) {
     },
   });
 }
-

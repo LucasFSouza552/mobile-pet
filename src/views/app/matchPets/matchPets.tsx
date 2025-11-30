@@ -1,174 +1,37 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, NativeSyntheticEvent, NativeScrollEvent, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Dimensions, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
-import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
-import { pictureRepository } from '../../data/remote/repositories/pictureRemoteRepository';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { IPet } from '../../models/IPet';
-import { IAccount } from '../../models/IAccount';
-import { petRemoteRepository } from '../../data/remote/repositories/petRemoteRepository';
-import { useToast } from '../../hooks/useToast';
-import { ThemeColors, ThemeFontSize, ThemeGap, ThemePadding } from '../../theme/types';
+import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
+import { ThemeColors, ThemeFontSize, ThemeGap, ThemePadding } from '../../../theme/types';
+import { useMatchPetsController } from './useMatchPetsController';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export default function MatchPets() {
   const { COLORS, FONT_SIZE, PADDING, GAP, getShadow, scale } = useTheme();
   const styles = makeStyles(COLORS, FONT_SIZE, PADDING, GAP, getShadow, scale);
-  const navigation = useNavigation<any>();
-
-  const isFocused = useIsFocused();
-  const [petFeed, setPetFeed] = useState<IPet | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const scrollViewRef = useRef<ScrollView>(null);
-  const toast = useToast();
-  const likeScale = useRef(new Animated.Value(1)).current;
-  const dislikeScale = useRef(new Animated.Value(1)).current;
-  const reactionAnim = useRef(new Animated.Value(0)).current;
-  const [reactionType, setReactionType] = useState<'like' | 'dislike' | null>(null);
-
-  const loadNextPet = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await accountRemoteRepository.fetchFeed();
-      setPetFeed(data || null);
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Erro ao carregar feed');
-      return;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isFocused) {
-      loadNextPet();
-    }
-  }, [isFocused]);
-
-  useEffect(() => {
-    if (petFeed) {
-      setCurrentImageIndex(0);
-      scrollViewRef.current?.scrollTo({ x: 0, animated: false });
-    }
-  }, [petFeed?.id]);
-
-  const handleScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const cardPadding = PADDING.md * 2;
-    const index = Math.round(contentOffsetX / (SCREEN_WIDTH - cardPadding));
-    setCurrentImageIndex(index);
-  }, [PADDING]);
-
-  const goToPreviousImage = useCallback(() => {
-    if (!petFeed?.images || currentImageIndex === 0) return;
-    const cardPadding = PADDING.md * 2;
-    const newIndex = currentImageIndex - 1;
-    scrollViewRef.current?.scrollTo({
-      x: newIndex * (SCREEN_WIDTH - cardPadding),
-      animated: true,
-    });
-    setCurrentImageIndex(newIndex);
-  }, [petFeed?.images, currentImageIndex, PADDING]);
-
-  const goToNextImage = useCallback(() => {
-    if (!petFeed?.images || currentImageIndex === petFeed.images.length - 1) return;
-    const cardPadding = PADDING.md * 2;
-    const newIndex = currentImageIndex + 1;
-    scrollViewRef.current?.scrollTo({
-      x: newIndex * (SCREEN_WIDTH - cardPadding),
-      animated: true,
-    });
-    setCurrentImageIndex(newIndex);
-  }, [petFeed?.images, currentImageIndex, PADDING]);
-
-  const owner: IAccount | null = useMemo(() => {
-    return petFeed && typeof (petFeed as any).account === 'object'
-      ? ((petFeed as any).account as IAccount)
-      : null;
-  }, [petFeed]);
-
-  const infoChips = useMemo(() => {
-    if (!petFeed) return [];
-
-    const chips: Array<{ icon: keyof typeof Ionicons.glyphMap; label: string }> = [];
-
-    if (petFeed.type) {
-      chips.push({ icon: 'paw-outline', label: petFeed.type });
-    }
-
-    if (typeof petFeed.age === 'number') {
-      chips.push({ icon: 'time-outline', label: `${petFeed.age} ano${petFeed.age === 1 ? '' : 's'}` });
-    }
-
-    if (petFeed.gender) {
-      chips.push({
-        icon: String(petFeed.gender).toLowerCase() === 'male' ? 'male-outline' : 'female-outline',
-        label: String(petFeed.gender).toLowerCase() === 'male' ? 'Macho' : 'Fêmea',
-      });
-    }
-
-    return chips;
-  }, [petFeed]);
-
-  const isOwnerVerified = useMemo(() => Boolean((owner as any)?.verified), [owner]);
-
-  const animateButton = useCallback((animatedValue: Animated.Value) => {
-    Animated.sequence([
-      Animated.timing(animatedValue, {
-        toValue: 0.9,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(animatedValue, {
-        toValue: 1,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  const triggerReaction = useCallback((type: 'like' | 'dislike') => {
-    setReactionType(type);
-    reactionAnim.setValue(0);
-    Animated.sequence([
-      Animated.timing(reactionAnim, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(reactionAnim, {
-        toValue: 0,
-        duration: 200,
-        delay: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => setReactionType(null));
-  }, [reactionAnim]);
-
-  const onNope = useCallback(async () => {
-    if (!petFeed || loading) return;
-    animateButton(dislikeScale);
-    triggerReaction('dislike');
-    await petRemoteRepository.dislikePet(petFeed.id);
-    await loadNextPet();
-  }, [petFeed, loadNextPet, animateButton, dislikeScale, loading, triggerReaction]);
-
-  const onLike = useCallback(async () => {
-    if (!petFeed || loading) return;
-    animateButton(likeScale);
-    triggerReaction('like');
-
-    await petRemoteRepository.likePet(petFeed.id);
-    await loadNextPet();
-  }, [petFeed, loadNextPet, animateButton, likeScale, loading, triggerReaction]);
-
-  const handleShowDetails = useCallback(() => {
-    if (!petFeed?.id) return;
-    (navigation as any)?.getParent?.()?.navigate('PetDetails', { petId: petFeed.id });
-  }, [navigation, petFeed?.id]);
+  
+  const {
+    petFeed,
+    loading,
+    currentImageIndex,
+    reactionType,
+    reactionAnim,
+    scrollViewRef,
+    likeScale,
+    dislikeScale,
+    owner,
+    infoChips,
+    isOwnerVerified,
+    handleScroll,
+    goToPreviousImage,
+    goToNextImage,
+    onNope,
+    onLike,
+    handleShowDetails,
+  } = useMatchPetsController({ PADDING });
 
   return (
     <SafeAreaView style={styles.container}>

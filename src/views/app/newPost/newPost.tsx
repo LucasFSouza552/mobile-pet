@@ -1,118 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, Image, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '../../context/ThemeContext';
-import { useAccount } from '../../context/AccountContext';
-import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
-import * as ImagePicker from 'expo-image-picker';
-import * as ExpoCamera from 'expo-camera';
-import { useIsFocused } from '@react-navigation/native';
+import { useTheme } from '../../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-import { useToast } from '../../hooks/useToast';
-import CameraView from '../../components/CameraView';
+import CameraView from '../../../components/CameraView';
+import { useNewPostController } from './useNewPostController';
 
 export default function NewPost({ navigation }: any) {
   const { COLORS, FONT_SIZE } = useTheme();
   const styles = makeStyles(COLORS);
-  const { account } = useAccount();
-  const isFocused = useIsFocused();
-  const toast = useToast();
-
-  const [content, setContent] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [images, setImages] = useState<Array<{ uri: string; name: string; type: string }>>([]);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-
-  useEffect(() => {
-    if (isFocused) {
-      setImages([]);
-      setContent('');
-      setSubmitting(false);
-    }
-  }, [isFocused]);
-
-
-  const pickImages = async () => {
-    try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        toast.info('Permissão necessária', 'Precisamos de acesso às suas fotos para anexar imagens.');
-        return;
-      }
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsMultipleSelection: true,
-        quality: 0.8,
-      });
-      if (result.canceled) return;
-      const picked = (result.assets || []).map((a, idx) => {
-        const uri = a.uri;
-        const ext = (a.fileName?.split('.').pop() || 'jpg').toLowerCase();
-        const name = a.fileName || `image_${Date.now()}_${idx}.${ext}`;
-        const type = a.mimeType || `image/${ext}`;
-        return { uri, name, type };
-      });
-      setImages(prev => [...prev, ...picked]);
-    } catch (e) {
-      toast.handleError(e, 'Não foi possível abrir a galeria');
-    }
-  };
-
-  const openCamera = async () => {
-    try {
-      const request =
-        (ExpoCamera as any).requestCameraPermissionsAsync ||
-        (ExpoCamera as any).Camera?.requestCameraPermissionsAsync;
-      const { status } = await (request ? request() : Promise.resolve({ status: 'denied' }));
-      if (status !== 'granted') {
-        toast.info('Permissão necessária', 'Precisamos de acesso à câmera para tirar fotos.');
-        return;
-      }
-      setIsCameraOpen(true);
-    } catch (e) {
-      toast.handleError(e, 'Não foi possível acessar a câmera');
-    }
-  };
-
-  const handleCameraCapture = (photo: { uri: string; name: string; type: string }) => {
-    setImages(prev => [...prev, photo]);
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmit = async () => {
-    if (!account) {
-      toast.error('Sessão expirada', 'Você precisa estar logado para postar.');
-      return;
-    }
-    if (!content.trim() && images.length === 0) {
-      toast.error('Validação', 'Adicione conteúdo ou ao menos uma imagem.');
-      return;
-    }
-    try {
-      setSubmitting(true);
-      const form = new FormData();
-      form.append('content', content.trim());
-      images.forEach((img) => {
-        form.append('images', {
-          uri: img.uri,
-          name: img.name,
-          type: img.type,
-        } as any);
-      });
-      await postRepository.createPost(form);
-      setContent('');
-      setImages([]);
-      toast.success('Sucesso', 'Post criado!');
-      navigation.navigate('Community');
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Erro ao criar post');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  
+  const {
+    content,
+    submitting,
+    images,
+    isCameraOpen,
+    setContent,
+    pickImages,
+    openCamera,
+    handleCameraCapture,
+    removeImage,
+    handleSubmit,
+    closeCamera,
+  } = useNewPostController();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -228,7 +138,7 @@ export default function NewPost({ navigation }: any) {
 
       <CameraView
         visible={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
+        onClose={closeCamera}
         onCapture={handleCameraCapture}
       />
     </SafeAreaView>

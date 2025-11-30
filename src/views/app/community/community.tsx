@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import PostList from '../../components/Cards/PostList';
-import TopPostCard from '../../components/Cards/TopPostCard';
-import { useAccount } from '../../context/AccountContext';
-import { useTheme } from '../../context/ThemeContext';
-import { ThemeColors } from '../../theme/types';
-import { useCommunityController } from './community/useCommunityController';
+import PostList from '../../../components/Cards/PostList';
+import TopPostCard from '../../../components/Cards/TopPostCard';
+import { useAccount } from '../../../context/AccountContext';
+import { useTheme } from '../../../context/ThemeContext';
+import { ThemeColors } from '../../../theme/types';
+import { useCommunityController } from './useCommunityController';
 
 interface CommunityPageProps {
   navigation: any;
@@ -496,4 +496,3 @@ function makeStyles(COLORS: ThemeColors, FONT_SIZE: { regular: number; medium: n
     },
   });
 }
-

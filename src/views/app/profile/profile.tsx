@@ -1,13 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
-import { useAccount } from '../../../context/AccountContext';
+import React from 'react';
+import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import PostList from '../../../components/Cards/PostList';
-import { usePost } from '../../../context/PostContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
-import { useFocusEffect } from '@react-navigation/native';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import ProfileTopTabs from './components/ProfileTopTabs';
 import AdoptedPetsList from './components/AdoptedPetsList';
 import WishlistPetsList from './components/WishlistPetsList';
@@ -15,7 +11,7 @@ import InstitutionPetsList from './components/InstitutionPetsList';
 import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
 import UserHistoryList from './components/UserHistoryList';
 import ProfileHeader from './components/ProfileHeader';
-import { useToast } from '../../../hooks/useToast';
+import { useProfileController } from './useProfileController';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -25,59 +21,20 @@ interface ProfileProps {
 }
 
 export default function Profile({ navigation, route }: ProfileProps) {
-  const { account, loading } = useAccount();
-  const { userPosts, loadMoreUserPosts, refreshUserPosts, loading: postsLoading, error: postsError } = usePost();
   const { COLORS, FONT_SIZE } = useTheme();
-  const [viewAccount, setViewAccount] = useState<any | null>(null);
-  const [activeTab, setActiveTab] = useState<'posts' | 'pets' | 'adopted' | 'wishlist' | 'history'>('posts');
-  const toast = useToast();
-  const targetAccountId = route?.params?.accountId ?? account?.id ?? null;
-  const isSelf = !!account?.id && targetAccountId === account.id;
+  const {
+    viewAccount,
+    activeTab,
+    postsLoading,
+    targetAccountId,
+    isSelf,
+    userPosts,
+    setActiveTab,
+    handleLoadMorePosts,
+    handleRefreshPosts,
+  } = useProfileController({ route, navigation });
+  
   const styles = makeStyles(COLORS);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (targetAccountId) {
-        refreshUserPosts(targetAccountId);
-      }
-    }, [targetAccountId])
-  );
-
-  useEffect(() => {
-    if (!loading && !account && !route?.params?.accountId) {
-      navigation.navigate('Welcome');
-    }
-  }, [loading, account, navigation, route?.params?.accountId]);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      if (!targetAccountId || loading) {
-        if (active) setViewAccount(account || null);
-        return;
-      }
-      if (isSelf) {
-        if (active) setViewAccount(account || null);
-        return;
-      }
-      try {
-        const other = await accountRemoteRepository.getById(targetAccountId);
-        if (active) setViewAccount(other);
-      } catch {
-        if (active) setViewAccount(null);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [targetAccountId, account]);
-
-  useEffect(() => {
-    if (postsError) {
-      toast.handleApiError(postsError, postsError);
-      return;
-    }
-  }, [postsError]);
 
   if (!viewAccount) {
     return null;
@@ -109,8 +66,8 @@ export default function Profile({ navigation, route }: ProfileProps) {
             title={isSelf ? "Seus posts" : "Posts"}
             posts={userPosts}
             account={viewAccount}
-            onEndReached={() => { if (targetAccountId) { return loadMoreUserPosts(targetAccountId); } }}
-            onRefresh={() => { if (targetAccountId) { return refreshUserPosts(targetAccountId); } }}
+            onEndReached={handleLoadMorePosts}
+            onRefresh={handleRefreshPosts}
             refreshing={postsLoading}
           />
         ) : activeTab === 'adopted' ? (

@@ -3,10 +3,10 @@ import { createMaterialTopTabNavigator, } from '@react-navigation/material-top-t
 import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
 import Profile from './profile/profile';
 import Donate from './donation/donate';
-import MatchPets from './matchPets';
-import Community from './community';
+import MatchPets from './matchPets/matchPets';
+import Community from './community/community';
 import { useTheme } from '../../context/ThemeContext';
-import NewPost from './newPost';
+import NewPost from './newPost/newPost';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAccount } from '../../context/AccountContext';
 import { useCamera } from '../../context/CameraContext';
