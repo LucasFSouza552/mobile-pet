@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createMaterialTopTabNavigator, } from '@react-navigation/material-top-tabs';
-import { AntDesign, FontAwesome5, FontAwesome6, FontAwesome } from '@expo/vector-icons';
+import { AntDesign, FontAwesome5, FontAwesome } from '@expo/vector-icons';
 import Profile from './profile/profile';
 import Donate from './donation/donate';
 import MatchPets from './matchPets/matchPets';
