@@ -38,11 +38,9 @@ describe('useNetworkSync', () => {
 
     try {
       await act(async () => {
-        // Aguarda a inicialização assíncrona
         await new Promise(resolve => setTimeout(resolve, 100));
       });
 
-      // Após a inicialização, isConnected deve ter um valor
       expect(result.current.isConnected).not.toBeNull();
     } finally {
       unmount();
@@ -56,7 +54,6 @@ describe('useNetworkSync', () => {
 
     try {
       await act(async () => {
-        // Aguarda a inicialização assíncrona
         await new Promise(resolve => setTimeout(resolve, 100));
       });
 
@@ -73,7 +70,6 @@ describe('useNetworkSync', () => {
 
     try {
       await act(async () => {
-        // Aguarda a inicialização assíncrona
         await new Promise(resolve => setTimeout(resolve, 100));
       });
 
@@ -96,7 +92,6 @@ describe('useNetworkSync', () => {
 
     try {
       await act(async () => {
-        // Aguarda a inicialização assíncrona
         await new Promise(resolve => setTimeout(resolve, 100));
       });
 
@@ -120,7 +115,6 @@ describe('useNetworkSync', () => {
 
     try {
       await act(async () => {
-        // Aguarda a inicialização assíncrona
         await new Promise(resolve => setTimeout(resolve, 100));
       });
 

@@ -20,91 +20,101 @@ async function enrichInteractionsWithLocalImages(
         return [];
     }
 
-    const petIds = new Set<string>();
-    interactions.forEach(item => {
-        if (typeof item.pet === 'string') {
-            petIds.add(item.pet);
-        } else if (item.pet && typeof item.pet === 'object' && item.pet.id) {
-            petIds.add(item.pet.id);
+    try {
+        const petIds = new Set<string>();
+        interactions.forEach(item => {
+            if (typeof item.pet === 'string') {
+                petIds.add(item.pet);
+            } else if (item.pet && typeof item.pet === 'object' && item.pet.id) {
+                petIds.add(item.pet.id);
+            }
+        });
+
+        const petsMap = new Map<string, any>();
+        const uniquePetIds = Array.from(petIds);
+
+        if (uniquePetIds.length > 0) {
+            await Promise.all(
+                uniquePetIds.map(async (petId) => {
+                    try {
+                        const cached = petCache.get(petId);
+                        if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+                            petsMap.set(petId, cached.data);
+                            return;
+                        }
+
+                        let fetchPromise = fetchingPets.get(petId);
+                        if (!fetchPromise) {
+                            fetchPromise = petSync.getById(petId).then(pet => {
+                                fetchingPets.delete(petId);
+                                if (pet) {
+                                    petCache.set(petId, { data: pet, timestamp: Date.now() });
+                                    petsMap.set(petId, pet);
+                                }
+                                return pet;
+                            }).catch(error => {
+                                fetchingPets.delete(petId);
+                                // Não lança erro, apenas loga - permite que continue sem o pet
+                                console.warn(`Erro ao buscar pet ${petId}:`, error);
+                                return null;
+                            });
+                            fetchingPets.set(petId, fetchPromise);
+                        }
+
+                        const pet = await fetchPromise;
+                        if (pet) {
+                            petsMap.set(petId, pet);
+                        }
+                    } catch (error) {
+                        // Não lança erro, apenas loga - permite que continue sem o pet
+                        console.warn(`Erro ao buscar pet ${petId}:`, error);
+                    }
+                })
+            );
         }
-    });
 
-    const petsMap = new Map<string, any>();
-    const uniquePetIds = Array.from(petIds);
-
-    if (uniquePetIds.length > 0) {
+        const imagesMap = new Map<string, string[]>();
         await Promise.all(
-            uniquePetIds.map(async (petId) => {
+            Array.from(petsMap.keys()).map(async (petId) => {
                 try {
-                    const cached = petCache.get(petId);
-                    if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-                        petsMap.set(petId, cached.data);
-                        return;
-                    }
-
-                    let fetchPromise = fetchingPets.get(petId);
-                    if (!fetchPromise) {
-                        fetchPromise = petSync.getById(petId).then(pet => {
-                            fetchingPets.delete(petId);
-                            if (pet) {
-                                petCache.set(petId, { data: pet, timestamp: Date.now() });
-                                petsMap.set(petId, pet);
-                            }
-                            return pet;
-                        }).catch(error => {
-                            fetchingPets.delete(petId);
-                            throw error;
-                        });
-                        fetchingPets.set(petId, fetchPromise);
-                    }
-
-                    const pet = await fetchPromise;
-                    if (pet) {
-                        petsMap.set(petId, pet);
+                    const images = await petImageLocalRepository.getByPetWithLocalPaths(petId);
+                    if (images.length > 0) {
+                        imagesMap.set(petId, images);
                     }
                 } catch (error) {
-                    throw error;
+                    // Não lança erro, apenas loga - permite que continue sem imagens
+                    console.warn(`Erro ao buscar imagens do pet ${petId}:`, error);
                 }
             })
         );
-    }
 
-    const imagesMap = new Map<string, string[]>();
-    await Promise.all(
-        Array.from(petsMap.keys()).map(async (petId) => {
-            try {
-                const images = await petImageLocalRepository.getByPetWithLocalPaths(petId);
-                if (images.length > 0) {
-                    imagesMap.set(petId, images);
+        return interactions.map((item) => {
+            let pet = item.pet;
+
+            if (typeof pet === 'string') {
+                pet = petsMap.get(pet) || pet;
+            }
+
+            if (pet && typeof pet === 'object' && pet.id) {
+                const images = imagesMap.get(pet.id);
+                if (images && images.length > 0) {
+                    pet = {
+                        ...pet,
+                        images: images,
+                    };
                 }
-            } catch (error) {
-                throw error;
             }
-        })
-    );
 
-    return interactions.map((item) => {
-        let pet = item.pet;
-
-        if (typeof pet === 'string') {
-            pet = petsMap.get(pet) || pet;
-        }
-
-        if (pet && typeof pet === 'object' && pet.id) {
-            const images = imagesMap.get(pet.id);
-            if (images && images.length > 0) {
-                pet = {
-                    ...pet,
-                    images: images,
-                };
-            }
-        }
-
-        return {
-            ...item,
-            pet: pet,
-        } as IAccountPetInteraction;
-    });
+            return {
+                ...item,
+                pet: pet,
+            } as IAccountPetInteraction;
+        });
+    } catch (error) {
+        // Se houver erro geral, retorna as interações sem enriquecimento
+        console.warn('Erro ao enriquecer interações com imagens locais:', error);
+        return interactions;
+    }
 }
 
 export const accountPetInteractionSync = {
@@ -113,47 +123,49 @@ export const accountPetInteractionSync = {
 
         try {
             const remote = await petInteractionRemoteRepository.getInteractionByAccount(accountId);
-            if (!remote?.length) {
-                await accountPetInteractionLocalRepository.deleteAll();
+            const rawList: any[] = Array.isArray(remote) ? remote : [];
+            const remoteIds = new Set<string>();
+
+            // Se remote está vazio, remove apenas as interações deste accountId específico
+            if (rawList.length === 0) {
+                const localInteractions = await accountPetInteractionLocalRepository.getByAccount(accountId);
+                for (const local of localInteractions) {
+                    try {
+                        await accountPetInteractionLocalRepository.delete(local.id);
+                    } catch (error) {
+                        console.error(`Erro ao remover interação local ${local.id}:`, error);
+                    }
+                }
                 return;
             }
 
-            const rawList: any[] = Array.isArray(remote) ? remote : [];
-            const remoteIds = new Set<string>();
-            const batchSize = 5;
+            // Insere/atualiza interações do servidor
+            // Processa todas de uma vez para garantir que sejam inseridas
+            await Promise.all(
+                rawList.map(async (it) => {
+                    try {
+                        const p = it?.pet || {};
+                        const petId = p?.id;
+                        if (!petId) return;
 
-            for (let i = 0; i < rawList.length; i += batchSize) {
-                const batch = rawList.slice(i, i + batchSize);
+                        const interaction: IAccountPetInteraction = {
+                            id: it?.id,
+                            account: String(it?.account ?? accountId),
+                            pet: petId,
+                            status: it?.status as "liked" | "disliked" | "viewed",
+                            createdAt: it?.createdAt ?? new Date().toISOString(),
+                            updatedAt: it?.updatedAt ?? it?.createdAt ?? new Date().toISOString(),
+                        };
+                        remoteIds.add(interaction.id);
+                        await accountPetInteractionLocalRepository.create(interaction);
 
-                await Promise.all(
-                    batch.map(async (it) => {
-                        try {
-                            const p = it?.pet || {};
-                            const petId = p?.id;
-                            if (!petId) return;
+                    } catch (error) {
+                        console.error("Erro ao sincronizar interação:", error);
+                    }
+                })
+            );
 
-                            const interaction: IAccountPetInteraction = {
-                                id: it?.id,
-                                account: String(it?.account ?? accountId),
-                                pet: petId,
-                                status: it?.status as "liked" | "disliked" | "viewed",
-                                createdAt: it?.createdAt ?? new Date().toISOString(),
-                                updatedAt: it?.updatedAt ?? it?.createdAt ?? new Date().toISOString(),
-                            };
-                            remoteIds.add(interaction.id);
-                            await accountPetInteractionLocalRepository.create(interaction);
-
-                        } catch (error) {
-                            console.error("Erro ao sincronizar interação:", error);
-                        }
-                    })
-                );
-
-                if (i + batchSize < rawList.length) {
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-            }
-
+            // Remove interações locais que não existem mais no servidor para este accountId
             const localInteractions = await accountPetInteractionLocalRepository.getByAccount(accountId);
             for (const local of localInteractions) {
                 if (!remoteIds.has(local.id)) {

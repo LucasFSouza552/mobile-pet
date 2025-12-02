@@ -131,6 +131,22 @@ export const accountPetInteractionLocalRepository = {
         await db.runAsync("DELETE FROM account_pet_interactions WHERE id = ?", [id]);
     },
 
+    bulkInsert: async (interactions: IAccountPetInteraction[]): Promise<void> => {
+        const db = await getLocalDb();
+        for (const interaction of interactions) {
+            try {
+                await accountPetInteractionLocalRepository.create(interaction);
+            } catch (error) {
+                // Se já existe, atualiza
+                try {
+                    await accountPetInteractionLocalRepository.update(interaction);
+                } catch (updateError) {
+                    console.error(`Erro ao inserir/atualizar interação ${interaction.id}:`, updateError);
+                }
+            }
+        }
+    },
+
     deleteAll: async (): Promise<void> => {
         const db = await getLocalDb();
         await db.runAsync("DELETE FROM account_pet_interactions");

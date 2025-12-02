@@ -2,7 +2,6 @@ import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
 import { AccountProvider, useAccount } from '@/context/AccountContext';
 import { accountSync } from '@/data/sync/accountSync';
-import { accountLocalRepository } from '@/data/local/repositories/accountLocalRepository';
 import { useToast } from '@/hooks/useToast';
 
 jest.mock('@/data/sync/accountSync');
@@ -16,7 +15,7 @@ const mockAccount = {
 };
 
 const TestComponent = () => {
-  const { account, loading, logout } = useAccount();
+  const { account } = useAccount();
   return <>{account ? account.name : 'no account'}</>;
 };
 

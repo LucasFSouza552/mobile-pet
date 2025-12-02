@@ -30,11 +30,9 @@ describe('network utils', () => {
     it('deve usar cache quando disponível', async () => {
       (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
       
-      // Primeira chamada
       const promise1 = isNetworkConnected();
       await promise1;
       
-      // Segunda chamada dentro do tempo de cache
       jest.advanceTimersByTime(1000);
       const promise2 = isNetworkConnected();
       const result = await promise2;
@@ -46,11 +44,9 @@ describe('network utils', () => {
     it('deve buscar novamente após expirar cache', async () => {
       (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
       
-      // Primeira chamada
       const promise1 = isNetworkConnected();
       await promise1;
       
-      // Avançar tempo além do cache
       jest.advanceTimersByTime(3000);
       const promise2 = isNetworkConnected();
       await promise2;
@@ -67,7 +63,7 @@ describe('network utils', () => {
       const promise2 = isNetworkConnected();
       const result = await promise2;
       
-      expect(result).toBe(true); // Retorna cache anterior
+      expect(result).toBe(true);
     });
 
     it('deve retornar false quando não há cache e ocorre erro', async () => {
@@ -85,7 +81,6 @@ describe('network utils', () => {
       
       clearNetworkCache();
       
-      // Próxima chamada deve buscar novamente
       const promise2 = isNetworkConnected();
       await promise2;
       expect(NetInfo.fetch).toHaveBeenCalledTimes(2);

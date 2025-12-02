@@ -201,48 +201,58 @@ export function PostProvider({ children }: { children: ReactNode }) {
     }, [isConnected]);
 
     const editPost = useCallback(async (postId: string, payload: Partial<IPost>) => {
-        if (!postId) return;
+        if (!postId) {
+            return;
+        }
         if (!isConnected) {
             throw new Error("Sem conexão com a internet");
         }
 
-        const updated = await postRepository.updatePost(postId, payload);
+        try {
+            setLoading(true);
+            const updated = await postRepository.updatePost(postId, payload);
 
-        const cached =
-            posts.find(post => post.id === postId) ||
-            userPosts.find(post => post.id === postId) ||
-            searchResults.find(post => post.id === postId);
+            const cached =
+                posts.find(post => post.id === postId) ||
+                userPosts.find(post => post.id === postId) ||
+                searchResults.find(post => post.id === postId);
 
-        const normalized: IPost = cached
-            ? {
-                ...cached,
-                ...updated,
-                account:
-                    typeof updated.account === "object" && updated.account !== null
-                        ? updated.account
-                        : cached.account,
-            }
-            : (updated as IPost);
+            const normalized: IPost = cached
+                ? {
+                    ...cached,
+                    ...updated,
+                    account:
+                        typeof updated.account === "object" && updated.account !== null
+                            ? updated.account
+                            : cached.account,
+                }
+                : (updated as IPost);
 
-        const mergeList = (list: IPost[]) =>
-            list.map(post =>
-                post.id === postId
-                    ? {
-                        ...post,
-                        ...normalized,
-                        account:
-                            typeof normalized.account === "object" && normalized.account !== null
-                                ? normalized.account
-                                : post.account,
-                    }
-                    : post
-            );
+            const mergeList = (list: IPost[]) =>
+                list.map(post =>
+                    post.id === postId
+                        ? {
+                            ...post,
+                            ...normalized,
+                            account:
+                                typeof normalized.account === "object" && normalized.account !== null
+                                    ? normalized.account
+                                    : post.account,
+                        }
+                        : post
+                );
 
-        setPosts(prev => mergeList(prev));
-        setUserPosts(prev => mergeList(prev));
-        setSearchResults(prev => mergeList(prev));
+            setPosts(prev => mergeList(prev));
+            setUserPosts(prev => mergeList(prev));
+            setSearchResults(prev => mergeList(prev));
+            setLoading(false);
 
-        return normalized;
+            return normalized;
+        } catch (error) {
+            setLoading(false);
+            console.error("Erro ao editar post:", error);
+            throw error;
+        }
     }, [isConnected, posts, userPosts, searchResults]);
 
 

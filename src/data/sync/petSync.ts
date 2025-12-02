@@ -6,6 +6,7 @@ import { pictureRepository } from "../remote/repositories/pictureRemoteRepositor
 import { isNetworkConnected } from "../../utils/network";
 
 const syncingPets = new Set<string>();
+const syncingPromises = new Map<string, Promise<void>>();
 
 export const petSync = {
     async getById(petId: string): Promise<IPet | null> {
@@ -15,7 +16,8 @@ export const petSync = {
             return localPet;
         }
 
-        if (!syncingPets.has(petId)) {
+        // Verifica se já está sincronizando antes de iniciar nova sincronização
+        if (!syncingPromises.has(petId) && !syncingPets.has(petId)) {
             this.syncFromServer(petId).catch(error => {
                 throw error;
             });
@@ -25,43 +27,69 @@ export const petSync = {
     },
 
     async syncFromServer(petId: string): Promise<void> {
-        if (syncingPets.has(petId)) {
-            return;
+        // Verifica se já está sincronizando - retorna a promise existente
+        if (syncingPromises.has(petId)) {
+            return syncingPromises.get(petId)!;
         }
 
-        if (!await isNetworkConnected()) {
-            return;
-        }
+        // Cria a promise ANTES de qualquer await para evitar race conditions
+        // A promise será resolvida mesmo se não houver rede
+        let resolvePromise: () => void;
+        let rejectPromise: (error: any) => void;
+        const syncPromise = new Promise<void>((resolve, reject) => {
+            resolvePromise = resolve;
+            rejectPromise = reject;
+        });
 
-        syncingPets.add(petId);
+        // Adiciona ao Map IMEDIATAMENTE (síncrono) para evitar race conditions
+        syncingPromises.set(petId, syncPromise);
 
-        try {
-            const remotePet = await petRemoteRepository.fetchPetById(petId);
-            if (!remotePet) {
-                return;
-            }
-
-            const normalizedPet = this.normalizePet(remotePet);
-            
-            let retries = 3;
-            while (retries > 0) {
-                try {
-                    await petLocalRepository.create(normalizedPet);
-                    break;
-                } catch (error: any) {
-                    if (error?.message?.includes('database is locked') && retries > 1) {
-                        retries--;
-                        await new Promise(resolve => setTimeout(resolve, 200 * (4 - retries)));
-                        continue;
-                    }
-                    throw error;
+        // Executa a sincronização de forma assíncrona
+        (async () => {
+            try {
+                if (!await isNetworkConnected()) {
+                    syncingPromises.delete(petId);
+                    resolvePromise!();
+                    return;
                 }
+
+                syncingPets.add(petId);
+                
+                const remotePet = await petRemoteRepository.fetchPetById(petId);
+                if (!remotePet) {
+                    syncingPromises.delete(petId);
+                    syncingPets.delete(petId);
+                    resolvePromise!();
+                    return;
+                }
+
+                const normalizedPet = this.normalizePet(remotePet);
+                
+                let retries = 3;
+                while (retries > 0) {
+                    try {
+                        await petLocalRepository.create(normalizedPet);
+                        break;
+                    } catch (error: any) {
+                        if (error?.message?.includes('database is locked') && retries > 1) {
+                            retries--;
+                            await new Promise(resolve => setTimeout(resolve, 200 * (4 - retries)));
+                            continue;
+                        }
+                        throw error;
+                    }
+                }
+                
+                resolvePromise!();
+            } catch (error) {
+                rejectPromise!(error);
+            } finally {
+                syncingPets.delete(petId);
+                syncingPromises.delete(petId);
             }
-        } catch (error) {
-            throw error;
-        } finally {
-            syncingPets.delete(petId);
-        }
+        })();
+
+        return syncPromise;
     },
 
     normalizePet(raw: any): IPet {
@@ -71,8 +99,25 @@ export const petSync = {
         
         const rawImages = Array.isArray(raw?.images) ? raw.images : [];
         const images = rawImages.map((img: string) => {
-            const source = pictureRepository.getSource(img);
-            return (source as { uri: string }).uri;
+            if (!img) return '';
+            // Se já é uma URL completa, retorna diretamente
+            if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('file://'))) {
+                return img;
+            }
+            // Caso contrário, usa o pictureRepository
+            try {
+                const source = pictureRepository.getSource(img);
+                // Verifica se source é um objeto com uri
+                if (source && typeof source === 'object' && source !== null && 'uri' in source) {
+                    return (source as { uri: string }).uri;
+                }
+                // Se source for um número (require), retorna a string original
+                // Se não tiver uri, retorna a string original
+                return img;
+            } catch (error) {
+                // Em caso de erro, retorna a string original
+                return img;
+            }
         });
 
         return {

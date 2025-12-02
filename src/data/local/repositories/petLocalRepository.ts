@@ -16,7 +16,7 @@ function normalizePet(raw: any): IPet {
     adopted: raw.adopted ?? false,
     account: raw.account,
 
-    adoptedAt: raw.adoptedAt ?? false,
+    adoptedAt: raw.adoptedAt ?? undefined,
 
     createdAt: raw.createdAt ?? now,
     updatedAt: raw.updatedAt ?? now,
