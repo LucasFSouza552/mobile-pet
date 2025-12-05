@@ -16,12 +16,15 @@ import { FontAwesome } from '@expo/vector-icons';
 import { Images } from '../../../../assets';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
+import RegisterProgress from '../../../components/RegisterProgress';
 
 type DocumentType = 'cpf' | 'cnpj' | null;
 
 export default function Register({ navigation }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, FONT_SIZE } = useTheme();
+  const scale = (size: number) => (width / 375) * size;
+  const verticalScale = (size: number) => (height / 812) * size;
   const registerStepStyles = makeStyles(width, height, COLORS, FONT_SIZE);
   const [selectedDocumentType, setSelectedDocumentType] = useState<DocumentType>(null);
 
@@ -63,23 +66,12 @@ export default function Register({ navigation }: any) {
                 </Text>
               </View>
 
-              <View style={registerStepStyles.progressContainer}>
-                <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                  <FontAwesome name="user" size={FONT_SIZE.regular} color={COLORS.text} />
-                </View>
-                <View style={registerStepStyles.progressLine} />
-                <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="envelope" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                </View>
-                <View style={registerStepStyles.progressLine} />
-                <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                </View>
-                <View style={registerStepStyles.progressLine} />
-                <View style={registerStepStyles.progressStep}>
-                  <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                </View>
-              </View>
+              <RegisterProgress 
+                currentStep={1} 
+                scale={scale} 
+                verticalScale={verticalScale} 
+                FONT_SIZE={FONT_SIZE} 
+              />
 
               <View style={registerStepStyles.formContainer}>
                 <Text style={registerStepStyles.title}>
@@ -214,39 +206,6 @@ function makeStyles(
       color: COLORS.text,
       opacity: 0.8,
       textAlign: 'center',
-    },
-    progressContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: verticalScale(40),
-      paddingHorizontal: scale(20),
-    },
-    progressStep: {
-      width: scale(50),
-      height: scale(50),
-      borderRadius: scale(25),
-      backgroundColor: COLORS.quinary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: COLORS.tertiary,
-    },
-    progressStepActive: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressStepCompleted: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressLine: {
-      width: scale(30),
-      height: 2,
-      backgroundColor: COLORS.tertiary,
-    },
-    progressLineActive: {
-      backgroundColor: COLORS.primary,
     },
     formContainer: {
       flex: 1,

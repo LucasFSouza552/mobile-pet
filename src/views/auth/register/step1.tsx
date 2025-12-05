@@ -4,7 +4,6 @@ import {
   Text, 
   TouchableOpacity, 
   Image, 
-  Alert, 
   Platform,
   useWindowDimensions,
   KeyboardAvoidingView,
@@ -15,21 +14,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { FontAwesome } from '@expo/vector-icons';
 import { Images } from '../../../../assets';
 import { validateName } from '../../../utils/validation';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
+import RegisterProgress from '../../../components/RegisterProgress';
 
 export default function RegisterStep1({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, FONT_SIZE } = useTheme();
+  const scale = (size: number) => (width / 375) * size;
+  const verticalScale = (size: number) => (height / 812) * size;
   const registerStepStyles = makeStyles(width, height, COLORS, FONT_SIZE);
-  const { documentType, name: initialName = '', avatar: initialAvatar = null, avatarFile: initialAvatarFile = null } = route.params || {};
+  const { documentType, name: initialName = '' } = route.params || {};
   const [name, setName] = useState(initialName);
-  const [avatar, setAvatar] = useState<string | null>(initialAvatar);
-  const [avatarFile, setAvatarFile] = useState<any>(initialAvatarFile);
   const [nameError, setNameError] = useState<string | undefined>();
   const [nameTouched, setNameTouched] = useState(false);
 
@@ -44,36 +43,6 @@ export default function RegisterStep1({ navigation, route }: any) {
       setName(initialName);
     }
   }, [initialName]);
-
-  useEffect(() => {
-    if (initialAvatar !== undefined) {
-      setAvatar(initialAvatar);
-    }
-    if (initialAvatarFile !== undefined) {
-      setAvatarFile(initialAvatarFile);
-    }
-  }, [initialAvatar, initialAvatarFile]);
-
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      Alert.alert('Permissão necessária', 'Precisamos de acesso à sua galeria de fotos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setAvatar(result.assets[0].uri);
-      setAvatarFile(result.assets[0]);
-    }
-  };
 
   const handleNameChange = (text: string) => {
     setName(text);
@@ -101,8 +70,6 @@ export default function RegisterStep1({ navigation, route }: any) {
     navigation.navigate('RegisterStep2', {
       documentType,
       name: name.trim(),
-      avatar,
-      avatarFile,
     });
   };
 
@@ -139,39 +106,15 @@ export default function RegisterStep1({ navigation, route }: any) {
                   </Text>
                 </View>
 
-                <View style={registerStepStyles.progressContainer}>
-                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                    <FontAwesome name="user" size={FONT_SIZE.regular} color={COLORS.text} />
-                  </View>
-                  <View style={registerStepStyles.progressLine} />
-                  <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="envelope" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                  </View>
-                  <View style={registerStepStyles.progressLine} />
-                  <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="id-card" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                  </View>
-                  <View style={registerStepStyles.progressLine} />
-                  <View style={registerStepStyles.progressStep}>
-                    <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} style={{ opacity: 0.5 }} />
-                  </View>
-                </View>
+                <RegisterProgress 
+                  currentStep={1} 
+                  scale={scale} 
+                  verticalScale={verticalScale} 
+                  FONT_SIZE={FONT_SIZE} 
+                />
 
                 <View style={registerStepStyles.formContainer}>
                   <Text style={registerStepStyles.title}>Como você quer{'\n'}ser conhecido(a)?</Text>
-
-                  <TouchableOpacity 
-                    style={registerStepStyles.avatarContainer}
-                    onPress={pickImage}
-                  >
-                    {avatar ? (
-                      <Image source={{ uri: avatar }} style={registerStepStyles.avatarImage} />
-                    ) : (
-                      <View style={registerStepStyles.avatarPlaceholder}>
-                        <FontAwesome name="camera" size={FONT_SIZE.xlarge} color={COLORS.primary} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
 
                   <View style={registerStepStyles.inputWrapper}>
                     <TextInput
@@ -263,39 +206,6 @@ function makeStyles(
       opacity: 0.8,
       textAlign: 'center',
     },
-    progressContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: verticalScale(40),
-      paddingHorizontal: scale(20),
-    },
-    progressStep: {
-      width: scale(50),
-      height: scale(50),
-      borderRadius: scale(25),
-      backgroundColor: COLORS.quinary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: COLORS.tertiary,
-    },
-    progressStepActive: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressStepCompleted: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressLine: {
-      width: scale(30),
-      height: 2,
-      backgroundColor: COLORS.tertiary,
-    },
-    progressLineActive: {
-      backgroundColor: COLORS.primary,
-    },
     formContainer: {
       flex: 1,
       alignItems: 'center',
@@ -308,26 +218,6 @@ function makeStyles(
       textAlign: 'center',
       marginBottom: verticalScale(40),
       lineHeight: scale(32),
-    },
-    avatarContainer: {
-      width: scale(150),
-      height: scale(150),
-      borderRadius: scale(75),
-      marginBottom: verticalScale(30),
-      overflow: 'hidden',
-      borderWidth: 3,
-      borderColor: COLORS.primary,
-    },
-    avatarImage: {
-      width: '100%',
-      height: '100%',
-    },
-    avatarPlaceholder: {
-      width: '100%',
-      height: '100%',
-      backgroundColor: COLORS.primary + '33',
-      justifyContent: 'center',
-      alignItems: 'center',
     },
     inputWrapper: {
       width: '100%',
@@ -350,7 +240,7 @@ function makeStyles(
       borderWidth: 2,
     },
     errorText: {
-      fontSize: FONT_SIZE.small,
+      fontSize: FONT_SIZE.regular * 0.85,
       color: COLORS.error,
       marginTop: verticalScale(-5),
       marginBottom: verticalScale(10),

@@ -18,7 +18,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { TextInput } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { IAccount } from '../../../models/IAccount';
 import { ITypeAccounts } from '../../../models/ITypeAccounts';
 import { accountSync } from '../../../data/sync/accountSync';
@@ -28,16 +27,17 @@ import { useToast } from '../../../hooks/useToast';
 import { validatePassword, validatePasswordConfirmation } from '../../../utils/validation';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
+import RegisterProgress from '../../../components/RegisterProgress';
 
 export default function RegisterStep4({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, FONT_SIZE } = useTheme();
+  const scale = (size: number) => (width / 375) * size;
+  const verticalScale = (size: number) => (height / 812) * size;
   const registerStepStyles = makeStyles(width, height, COLORS, FONT_SIZE);
   const {
     documentType,
     name,
-    avatar,
-    avatarFile,
     email,
     phone_number,
     cpf,
@@ -126,21 +126,6 @@ export default function RegisterStep4({ navigation, route }: any) {
 
       await authRemoteRepository.register(registerData as any);
 
-      if (avatarFile && avatar) {
-        try {
-          const formData = new FormData();
-          formData.append('avatar', {
-            uri: avatar,
-            type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
-            name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
-          } as any);
-
-          await accountRemoteRepository.uploadAvatar(formData);
-        } catch (avatarError: any) {
-          toast.info('Conta criada, mas houve um erro ao fazer upload da foto. Você pode adicionar uma foto depois no perfil.');
-        }
-      }
-
       await accountSync.syncFromServer();
       await refreshAccount();
 
@@ -160,8 +145,6 @@ export default function RegisterStep4({ navigation, route }: any) {
     navigation.navigate('RegisterStep3', {
       documentType,
       name,
-      avatar,
-      avatarFile,
       email,
       phone_number,
       cpf,
@@ -204,23 +187,12 @@ export default function RegisterStep4({ navigation, route }: any) {
                   </Text>
                 </View>
 
-                <View style={registerStepStyles.progressContainer}>
-                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
-                  </View>
-                  <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
-                  </View>
-                  <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepCompleted]}>
-                    <FontAwesome name="check" size={FONT_SIZE.regular} color={COLORS.text} />
-                  </View>
-                  <View style={[registerStepStyles.progressLine, registerStepStyles.progressLineActive]} />
-                  <View style={[registerStepStyles.progressStep, registerStepStyles.progressStepActive]}>
-                    <FontAwesome name="lock" size={FONT_SIZE.regular} color={COLORS.text} />
-                  </View>
-                </View>
+                <RegisterProgress 
+                  currentStep={4} 
+                  scale={scale} 
+                  verticalScale={verticalScale} 
+                  FONT_SIZE={FONT_SIZE} 
+                />
 
                 <View style={registerStepStyles.formContainer}>
                   <Text style={registerStepStyles.title}>
@@ -375,39 +347,6 @@ function makeStyles(
       opacity: 0.8,
       textAlign: 'center',
     },
-    progressContainer: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: verticalScale(40),
-      paddingHorizontal: scale(20),
-    },
-    progressStep: {
-      width: scale(50),
-      height: scale(50),
-      borderRadius: scale(25),
-      backgroundColor: COLORS.quinary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: COLORS.tertiary,
-    },
-    progressStepActive: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressStepCompleted: {
-      backgroundColor: COLORS.primary,
-      borderColor: COLORS.primary,
-    },
-    progressLine: {
-      width: scale(30),
-      height: 2,
-      backgroundColor: COLORS.tertiary,
-    },
-    progressLineActive: {
-      backgroundColor: COLORS.primary,
-    },
     formContainer: {
       flex: 1,
       alignItems: 'center',
@@ -453,21 +392,21 @@ function makeStyles(
       justifyContent: 'center',
     },
     hintText: {
-      fontSize: FONT_SIZE.small,
+      fontSize: FONT_SIZE.regular * 0.85,
       color: COLORS.warning,
       marginTop: verticalScale(-10),
       marginBottom: verticalScale(10),
       alignSelf: 'flex-start',
     },
     errorHintText: {
-      fontSize: FONT_SIZE.small,
+      fontSize: FONT_SIZE.regular * 0.85,
       color: COLORS.error,
       marginTop: verticalScale(-10),
       marginBottom: verticalScale(10),
       alignSelf: 'flex-start',
     },
     errorText: {
-      fontSize: FONT_SIZE.small,
+      fontSize: FONT_SIZE.regular * 0.85,
       color: COLORS.error,
       marginTop: verticalScale(-5),
       marginBottom: verticalScale(10),

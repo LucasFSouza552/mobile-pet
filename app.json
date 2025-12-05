@@ -7,6 +7,7 @@
     "icon": "./assets/img/logoPet.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "mobilepet",
     "splash": {
       "image": "./assets/img/logoPet.png",
       "resizeMode": "contain",
@@ -32,7 +33,19 @@
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.lucas552.mobilepet"
+      "package": "com.lucas552.mobilepet",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "mobilepet"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
