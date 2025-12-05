@@ -3,10 +3,12 @@ import { render, waitFor } from '@testing-library/react-native';
 import { AccountProvider, useAccount } from '@/context/AccountContext';
 import { accountSync } from '@/data/sync/accountSync';
 import { useToast } from '@/hooks/useToast';
+import { getStorage } from '@/utils/storange';
 
 jest.mock('@/data/sync/accountSync');
 jest.mock('@/data/local/repositories/accountLocalRepository');
 jest.mock('@/hooks/useToast');
+jest.mock('@/utils/storange');
 
 const mockAccount = {
   id: '123',
@@ -26,6 +28,7 @@ describe('AccountContext', () => {
       handleApiError: jest.fn(),
     });
     (accountSync.getProfile as jest.Mock).mockResolvedValue(mockAccount);
+    (getStorage as jest.Mock).mockResolvedValue('mock-token');
   });
 
   it('deve renderizar provider sem erros', () => {

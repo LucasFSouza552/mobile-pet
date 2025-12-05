@@ -23,7 +23,6 @@ export function useNewPostController() {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
-  // Resetar formulário quando a tela recebe foco
   useEffect(() => {
     if (isFocused) {
       setImages([]);

@@ -3,6 +3,7 @@ import { IAccount } from "../models/IAccount";
 import { accountLocalRepository } from "../data/local/repositories/accountLocalRepository";
 import { accountSync } from "../data/sync/accountSync";
 import { useToast } from "../hooks/useToast";
+import { getStorage } from "../utils/storange";
 interface AccountContextProps {
     account: IAccount | null;
     setAccount: (account: IAccount | null) => void;
@@ -21,12 +22,29 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const loadAccount = async () => {
         try {
             setLoading(true);
+
+            const token = await getStorage("@token");
+            if (!token) {
+                setAccount(null);
+                return;
+            }
+            
             const localAccount = await accountSync.getProfile();
             if (localAccount) {
                 setAccount(localAccount);
+            } else {
+                const currentToken = await getStorage("@token");
+                if (!currentToken) {
+                    setAccount(null);
+                }
             }
         } catch (error: any) {
-            toast.handleApiError(error, error?.data?.message || 'Erro ao carregar conta');
+            const token = await getStorage("@token");
+            if (!token) {
+                setAccount(null);
+            } else {
+                toast.handleApiError(error, error?.data?.message || 'Erro ao carregar conta');
+            }
         } finally {
             setLoading(false);
         }

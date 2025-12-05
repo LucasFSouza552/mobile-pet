@@ -74,7 +74,12 @@ export const accountSync = {
                 await accountLocalRepository.create(remoteAccount);
             }
             return remoteAccount;
-        } catch (error) {
+        } catch (error: any) {
+            const status = error?.status;
+            if (status === 401 || status === 403) {
+                await accountLocalRepository.logout();
+                return null;
+            }
             throw error;
         }
     },

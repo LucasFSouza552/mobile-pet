@@ -130,12 +130,10 @@ function areEqual(prev: PostCardProps, next: PostCardProps) {
 	const prevLikes = prev.post?.likes?.length || 0;
 	const nextLikes = next.post?.likes?.length || 0;
 	
-	// Compara avatar do usuário
 	const prevAvatar = prev.post?.account?.avatar;
 	const nextAvatar = next.post?.account?.avatar;
 	const avatarEqual = prevAvatar === nextAvatar;
 	
-	// Compara imagens do post
 	const prevImages = prev.post?.image || [];
 	const nextImages = next.post?.image || [];
 	const imagesEqual = 

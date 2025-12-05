@@ -8,11 +8,13 @@ import { createMockAccount } from '../helpers/integrationTestUtils';
 import { getMockLocalDb, resetMockLocalDb } from '../helpers/mockLocalDb';
 import { getLocalDb } from '@/data/local/database/LocalDb';
 import NetInfo from '@react-native-community/netinfo';
+import { getStorage } from '@/utils/storange';
 
 jest.mock('@/data/local/database/LocalDb');
 jest.mock('@/data/sync/accountSync');
 jest.mock('@/data/local/repositories/accountLocalRepository');
 jest.mock('@react-native-community/netinfo');
+jest.mock('@/utils/storange');
 
 describe('AuthFlow - Integração', () => {
   let mockDb: any;
@@ -25,7 +27,8 @@ describe('AuthFlow - Integração', () => {
     (getLocalDb as jest.Mock).mockResolvedValue(mockDb);
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
     
-    // Configurar mocks do accountLocalRepository
+    (getStorage as jest.Mock).mockResolvedValue('mock-token');
+    
     (accountLocalRepository.logout as jest.Mock) = jest.fn().mockResolvedValue(undefined);
   });
 

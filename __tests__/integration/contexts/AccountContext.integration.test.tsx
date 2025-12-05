@@ -8,11 +8,13 @@ import { createMockAccount, seedMockData, resetMockData } from '../helpers/integ
 import { getMockLocalDb, resetMockLocalDb } from '../helpers/mockLocalDb';
 import { getLocalDb } from '@/data/local/database/LocalDb';
 import NetInfo from '@react-native-community/netinfo';
+import { getStorage } from '@/utils/storange';
 
 jest.mock('@/data/local/database/LocalDb');
 jest.mock('@/data/sync/accountSync');
 jest.mock('@/data/local/repositories/accountLocalRepository');
 jest.mock('@react-native-community/netinfo');
+jest.mock('@/utils/storange');
 
 const TestComponent = () => {
   const { account, loading, refreshAccount, logout } = useAccount();
@@ -40,10 +42,10 @@ describe('AccountContext - Integração', () => {
     (getLocalDb as jest.Mock).mockResolvedValue(mockDb);
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
     
-    // Popula dados iniciais
+    (getStorage as jest.Mock).mockResolvedValue('mock-token');
+    
     seedMockData(mockDb);
     
-    // Configurar mocks do accountLocalRepository
     (accountLocalRepository.logout as jest.Mock) = jest.fn().mockResolvedValue(undefined);
   });
 

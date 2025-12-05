@@ -2,6 +2,7 @@ import axios, { AxiosHeaders } from "axios";
 import { getStorage } from "../../../utils/storange";
 import { API_URL } from '@env';
 import Constants from 'expo-constants';
+import { accountLocalRepository } from "../../local/repositories/accountLocalRepository";
 
 const BASE_URL = (API_URL && API_URL.trim().length > 0)
   ? API_URL
@@ -44,8 +45,23 @@ apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error) => {
     if (error?.response) {
+      const status = error.response.status;
+      
+      if (status === 401 || status === 403) {
+        try {
+          await accountLocalRepository.logout();
+          if (__DEV__) {
+            console.log("[AUTH ERROR] Usuário inválido ou não autorizado. Logout automático realizado.");
+          }
+        } catch (logoutError) {
+          if (__DEV__) {
+            console.log("[LOGOUT ERROR] Erro ao fazer logout automático:", logoutError);
+          }
+        }
+      }
+      
       return Promise.reject(error.response);
     } else {
       if (__DEV__)

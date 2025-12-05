@@ -170,24 +170,17 @@ export function useMatchPetsController({ PADDING }: UseMatchPetsControllerProps)
   }, [navigation, petFeed?.id]);
 
   return {
-    // Estados
     petFeed,
     loading,
     currentImageIndex,
     reactionType,
     reactionAnim,
-    
-    // Refs
     scrollViewRef,
     likeScale,
     dislikeScale,
-    
-    // Valores computados
     owner,
     infoChips,
     isOwnerVerified,
-    
-    // Handlers
     handleScroll,
     goToPreviousImage,
     goToNextImage,

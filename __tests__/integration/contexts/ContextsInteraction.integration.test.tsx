@@ -8,10 +8,12 @@ import { createMockAccount, createMockPost } from '../helpers/integrationTestUti
 import { getMockApiClient, resetMockApiClient, createSuccessResponse } from '../helpers/mockApiClient';
 import { apiClient } from '@/data/remote/api/apiClient';
 import { useNetInfo } from '@react-native-community/netinfo';
+import { getStorage } from '@/utils/storange';
 
 jest.mock('@/data/sync/accountSync');
 jest.mock('@/data/remote/api/apiClient');
 jest.mock('@react-native-community/netinfo');
+jest.mock('@/utils/storange');
 
 const CombinedTestComponent = () => {
   const { account } = useAccount();
@@ -40,6 +42,8 @@ describe('ContextsInteraction - Integração', () => {
     
     mockApi = getMockApiClient();
     (useNetInfo as jest.Mock).mockReturnValue({ isConnected: true });
+    
+    (getStorage as jest.Mock).mockResolvedValue('mock-token');
 
     (apiClient.get as jest.Mock).mockImplementation((url: string) => {
       const response = mockApi.getResponse('GET', url);
