@@ -54,7 +54,6 @@ async function enrichInteractionsWithLocalImages(
                                 return pet;
                             }).catch(error => {
                                 fetchingPets.delete(petId);
-                                // Não lança erro, apenas loga - permite que continue sem o pet
                                 console.warn(`Erro ao buscar pet ${petId}:`, error);
                                 return null;
                             });
@@ -66,7 +65,6 @@ async function enrichInteractionsWithLocalImages(
                             petsMap.set(petId, pet);
                         }
                     } catch (error) {
-                        // Não lança erro, apenas loga - permite que continue sem o pet
                         console.warn(`Erro ao buscar pet ${petId}:`, error);
                     }
                 })
@@ -82,7 +80,6 @@ async function enrichInteractionsWithLocalImages(
                         imagesMap.set(petId, images);
                     }
                 } catch (error) {
-                    // Não lança erro, apenas loga - permite que continue sem imagens
                     console.warn(`Erro ao buscar imagens do pet ${petId}:`, error);
                 }
             })
@@ -111,7 +108,6 @@ async function enrichInteractionsWithLocalImages(
             } as IAccountPetInteraction;
         });
     } catch (error) {
-        // Se houver erro geral, retorna as interações sem enriquecimento
         console.warn('Erro ao enriquecer interações com imagens locais:', error);
         return interactions;
     }
@@ -126,7 +122,6 @@ export const accountPetInteractionSync = {
             const rawList: any[] = Array.isArray(remote) ? remote : [];
             const remoteIds = new Set<string>();
 
-            // Se remote está vazio, remove apenas as interações deste accountId específico
             if (rawList.length === 0) {
                 const localInteractions = await accountPetInteractionLocalRepository.getByAccount(accountId);
                 for (const local of localInteractions) {
@@ -139,8 +134,6 @@ export const accountPetInteractionSync = {
                 return;
             }
 
-            // Insere/atualiza interações do servidor
-            // Processa todas de uma vez para garantir que sejam inseridas
             await Promise.all(
                 rawList.map(async (it) => {
                     try {
@@ -165,7 +158,6 @@ export const accountPetInteractionSync = {
                 })
             );
 
-            // Remove interações locais que não existem mais no servidor para este accountId
             const localInteractions = await accountPetInteractionLocalRepository.getByAccount(accountId);
             for (const local of localInteractions) {
                 if (!remoteIds.has(local.id)) {
@@ -211,7 +203,6 @@ export const accountPetInteractionSync = {
                 return localSorted;
             }
 
-            // ✅ Só chama callback se fornecido
             this.syncFromServer(accountId).then(async () => {
                 if (onRemoteLoaded) {
                     onRemoteLoaded();

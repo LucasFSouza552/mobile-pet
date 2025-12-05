@@ -53,13 +53,13 @@ describe('date utils', () => {
     it('deve formatar data completa para datas antigas', () => {
       const date = new Date('2024-01-01').toISOString();
       const result = formatDate(date);
-      expect(result).toMatch(/\d{2}/); // Deve conter números
+      expect(result).toMatch(/\d{2}/);
     });
 
     it('deve incluir ano quando includeYear é true', () => {
       const date = new Date('2023-12-31').toISOString();
       const result = formatDate(date, { includeYear: true });
-      expect(result).toMatch(/\d{4}/); // Deve conter um ano de 4 dígitos
+      expect(result).toMatch(/\d{4}/);
     });
   });
 

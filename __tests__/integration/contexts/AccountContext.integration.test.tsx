@@ -117,8 +117,6 @@ describe('AccountContext - Integração', () => {
     const initialAccount = createMockAccount({ id: 'account-1', name: 'Initial Name' });
     const updatedAccount = createMockAccount({ id: 'account-1', name: 'Updated Name' });
     
-    // Primeira chamada (carregamento inicial) retorna initialAccount
-    // Segunda chamada (refresh) retorna updatedAccount
     (accountSync.getProfile as jest.Mock)
       .mockResolvedValueOnce(initialAccount)
       .mockResolvedValue(updatedAccount);
@@ -128,10 +126,8 @@ describe('AccountContext - Integração', () => {
       const [hasRefreshed, setHasRefreshed] = React.useState(false);
       
       React.useEffect(() => {
-        // Aguarda o carregamento inicial e então faz refresh
         if (account && account.name === 'Initial Name' && !hasRefreshed) {
           setHasRefreshed(true);
-          // Pequeno delay para garantir que o estado inicial foi renderizado
           setTimeout(() => {
             refreshAccount();
           }, 100);
@@ -147,13 +143,11 @@ describe('AccountContext - Integração', () => {
       </AccountProvider>
     );
 
-    // Aguarda o carregamento inicial com "Initial Name"
     await waitFor(() => {
       const name = getByTestId('account-name').props.children;
       expect(name).toBe('Initial Name');
     }, { timeout: 5000 });
 
-    // Aguarda a atualização após refresh com "Updated Name"
     await waitFor(() => {
       const name = getByTestId('account-name').props.children;
       expect(name).toBe('Updated Name');

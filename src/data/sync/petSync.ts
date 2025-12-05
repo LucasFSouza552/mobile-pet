@@ -16,7 +16,6 @@ export const petSync = {
             return localPet;
         }
 
-        // Verifica se já está sincronizando antes de iniciar nova sincronização
         if (!syncingPromises.has(petId) && !syncingPets.has(petId)) {
             this.syncFromServer(petId).catch(error => {
                 throw error;
@@ -27,13 +26,10 @@ export const petSync = {
     },
 
     async syncFromServer(petId: string): Promise<void> {
-        // Verifica se já está sincronizando - retorna a promise existente
         if (syncingPromises.has(petId)) {
             return syncingPromises.get(petId)!;
         }
 
-        // Cria a promise ANTES de qualquer await para evitar race conditions
-        // A promise será resolvida mesmo se não houver rede
         let resolvePromise: () => void;
         let rejectPromise: (error: any) => void;
         const syncPromise = new Promise<void>((resolve, reject) => {
@@ -41,10 +37,8 @@ export const petSync = {
             rejectPromise = reject;
         });
 
-        // Adiciona ao Map IMEDIATAMENTE (síncrono) para evitar race conditions
         syncingPromises.set(petId, syncPromise);
 
-        // Executa a sincronização de forma assíncrona
         (async () => {
             try {
                 if (!await isNetworkConnected()) {
@@ -100,22 +94,16 @@ export const petSync = {
         const rawImages = Array.isArray(raw?.images) ? raw.images : [];
         const images = rawImages.map((img: string) => {
             if (!img) return '';
-            // Se já é uma URL completa, retorna diretamente
             if (typeof img === 'string' && (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('file://'))) {
                 return img;
             }
-            // Caso contrário, usa o pictureRepository
             try {
                 const source = pictureRepository.getSource(img);
-                // Verifica se source é um objeto com uri
                 if (source && typeof source === 'object' && source !== null && 'uri' in source) {
                     return (source as { uri: string }).uri;
                 }
-                // Se source for um número (require), retorna a string original
-                // Se não tiver uri, retorna a string original
                 return img;
             } catch (error) {
-                // Em caso de erro, retorna a string original
                 return img;
             }
         });

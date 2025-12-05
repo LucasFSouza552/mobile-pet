@@ -1,15 +1,8 @@
-/**
- * Utilitários de validação para formulários
- */
-
 export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
 
-/**
- * Valida formato de email
- */
 export function validateEmail(email: string): ValidationResult {
   if (!email || !email.trim()) {
     return { isValid: false, error: 'Email é obrigatório' };
@@ -23,9 +16,6 @@ export function validateEmail(email: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida telefone brasileiro
- */
 export function validatePhone(phone: string): ValidationResult {
   if (!phone || !phone.trim()) {
     return { isValid: false, error: 'Telefone é obrigatório' };
@@ -44,9 +34,6 @@ export function validatePhone(phone: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida CPF com dígitos verificadores
- */
 export function validateCPF(cpf: string): ValidationResult {
   if (!cpf || !cpf.trim()) {
     return { isValid: false, error: 'CPF é obrigatório' };
@@ -58,16 +45,13 @@ export function validateCPF(cpf: string): ValidationResult {
     return { isValid: false, error: 'CPF deve ter 11 dígitos' };
   }
 
-  // Verifica se todos os dígitos são iguais (CPF inválido)
   if (/^(\d)\1{10}$/.test(numbers)) {
     return { isValid: false, error: 'CPF inválido' };
   }
 
-  // Validação dos dígitos verificadores
   let sum = 0;
   let remainder: number;
 
-  // Valida primeiro dígito verificador
   for (let i = 1; i <= 9; i++) {
     sum += parseInt(numbers.substring(i - 1, i)) * (11 - i);
   }
@@ -77,7 +61,6 @@ export function validateCPF(cpf: string): ValidationResult {
     return { isValid: false, error: 'CPF inválido' };
   }
 
-  // Valida segundo dígito verificador
   sum = 0;
   for (let i = 1; i <= 10; i++) {
     sum += parseInt(numbers.substring(i - 1, i)) * (12 - i);
@@ -91,9 +74,6 @@ export function validateCPF(cpf: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida CNPJ com dígitos verificadores
- */
 export function validateCNPJ(cnpj: string): ValidationResult {
   if (!cnpj || !cnpj.trim()) {
     return { isValid: false, error: 'CNPJ é obrigatório' };
@@ -105,19 +85,16 @@ export function validateCNPJ(cnpj: string): ValidationResult {
     return { isValid: false, error: 'CNPJ deve ter 14 dígitos' };
   }
 
-  // Verifica se todos os dígitos são iguais (CNPJ inválido)
   if (/^(\d)\1{13}$/.test(numbers)) {
     return { isValid: false, error: 'CNPJ inválido' };
   }
 
-  // Validação dos dígitos verificadores
   let length = numbers.length - 2;
   let digits = numbers.substring(0, length);
   const checkDigits = numbers.substring(length);
   let sum = 0;
   let pos = length - 7;
 
-  // Valida primeiro dígito verificador
   for (let i = length; i >= 1; i--) {
     sum += parseInt(digits.charAt(length - i)) * pos--;
     if (pos < 2) pos = 9;
@@ -128,7 +105,6 @@ export function validateCNPJ(cnpj: string): ValidationResult {
     return { isValid: false, error: 'CNPJ inválido' };
   }
 
-  // Valida segundo dígito verificador
   length = length + 1;
   digits = numbers.substring(0, length);
   sum = 0;
@@ -147,9 +123,6 @@ export function validateCNPJ(cnpj: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida senha
- */
 export function validatePassword(password: string, minLength: number = 8): ValidationResult {
   if (!password || !password.trim()) {
     return { isValid: false, error: 'Senha é obrigatória' };
@@ -159,7 +132,6 @@ export function validatePassword(password: string, minLength: number = 8): Valid
     return { isValid: false, error: `Senha deve ter no mínimo ${minLength} caracteres` };
   }
 
-  // Verifica se tem pelo menos uma letra e um número
   const hasLetter = /[a-zA-Z]/.test(password);
   const hasNumber = /[0-9]/.test(password);
 
@@ -170,9 +142,6 @@ export function validatePassword(password: string, minLength: number = 8): Valid
   return { isValid: true };
 }
 
-/**
- * Valida confirmação de senha
- */
 export function validatePasswordConfirmation(
   password: string,
   confirmPassword: string
@@ -188,9 +157,6 @@ export function validatePasswordConfirmation(
   return { isValid: true };
 }
 
-/**
- * Valida nome
- */
 export function validateName(name: string): ValidationResult {
   if (!name || !name.trim()) {
     return { isValid: false, error: 'Nome é obrigatório' };
@@ -204,7 +170,6 @@ export function validateName(name: string): ValidationResult {
     return { isValid: false, error: 'Nome deve ter no máximo 100 caracteres' };
   }
 
-  // Verifica se tem apenas letras, espaços e alguns caracteres especiais
   const nameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
   if (!nameRegex.test(name.trim())) {
     return { isValid: false, error: 'Nome contém caracteres inválidos' };
@@ -213,9 +178,6 @@ export function validateName(name: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida peso (número positivo)
- */
 export function validateWeight(weight: string): ValidationResult {
   if (!weight || !weight.trim()) {
     return { isValid: false, error: 'Peso é obrigatório' };
@@ -238,15 +200,12 @@ export function validateWeight(weight: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida idade (número positivo)
- */
 export function validateAge(age: string, required: boolean = false): ValidationResult {
   if (!age || !age.trim()) {
     if (required) {
       return { isValid: false, error: 'Idade é obrigatória' };
     }
-    return { isValid: true }; // Idade é opcional
+    return { isValid: true };
   }
 
   const ageValue = Number(age);
@@ -270,9 +229,6 @@ export function validateAge(age: string, required: boolean = false): ValidationR
   return { isValid: true };
 }
 
-/**
- * Valida CEP
- */
 export function validateCEP(cep: string): ValidationResult {
   if (!cep || !cep.trim()) {
     return { isValid: false, error: 'CEP é obrigatório' };
@@ -287,9 +243,6 @@ export function validateCEP(cep: string): ValidationResult {
   return { isValid: true };
 }
 
-/**
- * Valida campo obrigatório genérico
- */
 export function validateRequired(value: string, fieldName: string): ValidationResult {
   if (!value || !value.trim()) {
     return { isValid: false, error: `${fieldName} é obrigatório` };
@@ -297,9 +250,6 @@ export function validateRequired(value: string, fieldName: string): ValidationRe
   return { isValid: true };
 }
 
-/**
- * Valida comprimento de texto
- */
 export function validateLength(
   value: string,
   min: number,

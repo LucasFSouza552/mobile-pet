@@ -1,6 +1,5 @@
 import '@testing-library/jest-native/extend-expect';
 
-// Mock do AsyncStorage
 jest.mock('@react-native-async-storage/async-storage', () => ({
   __esModule: true,
   default: {
@@ -15,7 +14,6 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   },
 }));
 
-// Mock do NetInfo
 jest.mock('@react-native-community/netinfo', () => ({
   __esModule: true,
   default: {
@@ -25,7 +23,6 @@ jest.mock('@react-native-community/netinfo', () => ({
   useNetInfo: jest.fn(() => ({ isConnected: true })),
 }));
 
-// Mock do Expo SQLite
 jest.mock('expo-sqlite', () => ({
   __esModule: true,
   default: {
@@ -39,7 +36,6 @@ jest.mock('expo-sqlite', () => ({
   },
 }));
 
-// Mock do React Native Toast Message
 jest.mock('react-native-toast-message', () => ({
   __esModule: true,
   default: {
@@ -48,13 +44,11 @@ jest.mock('react-native-toast-message', () => ({
   },
 }));
 
-// Mock do Expo
 jest.mock('expo', () => ({
   __esModule: true,
   default: {},
 }));
 
-// Mock do expo-constants
 jest.mock('expo-constants', () => ({
   __esModule: true,
   default: {
@@ -63,9 +57,6 @@ jest.mock('expo-constants', () => ({
   },
 }));
 
-// Mock do @env está em __mocks__/@env.js
-
-// Mock do React Native Appearance
 jest.mock('react-native', () => {
   const RN = jest.requireActual('react-native');
   RN.Appearance = {
@@ -76,7 +67,6 @@ jest.mock('react-native', () => {
   return RN;
 });
 
-// Mock do expo-camera
 jest.mock('expo-camera', () => ({
   __esModule: true,
   Camera: {
@@ -86,7 +76,6 @@ jest.mock('expo-camera', () => ({
   },
 }));
 
-// Mock do expo-image-picker
 jest.mock('expo-image-picker', () => ({
   __esModule: true,
   launchImageLibraryAsync: jest.fn(),
@@ -96,7 +85,6 @@ jest.mock('expo-image-picker', () => ({
   },
 }));
 
-// Mock do expo-location
 jest.mock('expo-location', () => ({
   __esModule: true,
   requestForegroundPermissionsAsync: jest.fn(() => Promise.resolve({ status: 'granted' })),
@@ -105,7 +93,6 @@ jest.mock('expo-location', () => ({
   })),
 }));
 
-// Mock do axios
 jest.mock('axios', () => ({
   __esModule: true,
   default: {
@@ -123,7 +110,6 @@ jest.mock('axios', () => ({
   },
 }));
 
-// Silenciar console durante testes (opcional)
 global.console = {
   ...console,
   error: jest.fn(),

@@ -64,9 +64,6 @@ describe('petSync - Integração', () => {
 
       expect(result).toBeDefined();
       
-      // Aguarda a sincronização assíncrona completar
-      // getById chama syncFromServer de forma assíncrona, então precisamos aguardar
-      // Aguarda até que o pet seja salvo no banco
       let attempts = 0;
       while (attempts < 50) {
         const localPets = mockDb.getTableData('pets');
@@ -115,7 +112,6 @@ describe('petSync - Integração', () => {
         createSuccessResponse(remotePet)
       );
 
-      // Iniciar duas sincronizações simultâneas
       const promise1 = petSync.syncFromServer(petId);
       const promise2 = petSync.syncFromServer(petId);
 

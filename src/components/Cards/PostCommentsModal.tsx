@@ -194,7 +194,6 @@ export default function PostCommentsModal({
 						keyExtractor={(item) => item.id}
 						renderItem={({ item }) => {
 							const isOwner = renderIsOwner(item);
-							// Garante que o account seja sempre um objeto, preservando os dados
 							const account = typeof item.account === 'object'
 								? item.account
 								: typeof item.account === 'string'

@@ -48,26 +48,20 @@ describe('PostContext - Integração', () => {
     mockDb = getMockLocalDb();
     mockApi = getMockApiClient();
     
-    // Popula dados iniciais
     seedMockData(mockDb);
     const mockData = getMockData();
     
-    // Mock postRepository para usar mockDb
     const { postRepository } = require('@/data/remote/repositories/postRemoteRepository');
     
-    // getAll() - retorna posts do mockDb
     postRepository.getAll = jest.fn(async () => {
       return mockDb.getAll('posts');
     });
     
-    // fetchPostsWithAuthor - retorna posts do mockDb
     postRepository.fetchPostsWithAuthor = jest.fn(async (query: any) => {
       const posts = mockDb.getAll('posts');
-      // Aplica filtros básicos se necessário
       return posts;
     });
     
-    // create() - insere no mockDb e retorna
     postRepository.createPost = jest.fn(async (data: any) => {
       const newPost = {
         id: `post-${Date.now()}`,
@@ -80,7 +74,6 @@ describe('PostContext - Integração', () => {
       return newPost;
     });
     
-    // update() - atualiza no mockDb e retorna
     postRepository.updatePost = jest.fn(async (id: string, data: any) => {
       const posts = mockDb.getAll('posts');
       const index = posts.findIndex((p: any) => p.id === id);
@@ -89,20 +82,17 @@ describe('PostContext - Integração', () => {
         const updated = { ...existing, ...data, updatedAt: new Date().toISOString() };
         posts[index] = updated;
         mockDb.setTableData('posts', posts);
-        // Retorna o post atualizado diretamente (não Promise.resolve)
         return updated;
       }
       throw new Error('Post not found');
     });
     
-    // like() - atualiza likes no mockDb
     postRepository.toggleLikePostById = jest.fn(async (id: string) => {
       const posts = mockDb.getAll('posts');
       const post = posts.find((p: any) => p.id === id);
       if (!post) throw new Error('Post not found');
       
-      // Simula toggle de like (assumindo que o accountId vem do contexto)
-      const accountId = 'account-1'; // Default para testes
+      const accountId = 'account-1';
       if (!post.likes) post.likes = [];
       const index = post.likes.indexOf(accountId);
       if (index >= 0) {
@@ -114,8 +104,6 @@ describe('PostContext - Integração', () => {
       return post;
     });
     
-    // Configura mocks padrão com dados do seed - IMPORTANTE: PostContext busca posts da API
-    // A rota pode ter query params diferentes, então mockamos várias variações
     const defaultPostsResponse = createSuccessResponse(mockData.posts);
     mockApi.mockGet('/post/with-author', defaultPostsResponse);
     mockApi.mockGet('/post/with-author?', defaultPostsResponse);
@@ -132,16 +120,13 @@ describe('PostContext - Integração', () => {
         return Promise.reject(response);
       }
       
-      // Se a URL é para posts e não encontrou resposta específica, retorna posts padrão
       if (url.includes('/post/with-author')) {
         if (!response || !response.data || (Array.isArray(response.data) && response.data.length === 0)) {
           return Promise.resolve(defaultPostsResponse);
         }
       }
       
-      // Sempre retorna uma resposta válida
       if (!response || !response.data) {
-        // Retorna resposta padrão vazia se não houver dados
         return Promise.resolve({ data: [], status: 200 });
       }
       
@@ -158,7 +143,6 @@ describe('PostContext - Integração', () => {
   });
 
   it('deve fornecer posts vazios inicialmente', () => {
-    // Override para retornar array vazio neste teste específico
     mockApi.mockGet('/post/with-author?page=1&limit=10&orderBy=createdAt&order=desc', createSuccessResponse([]));
     mockApi.mockGet('/post/with-author', createSuccessResponse([]));
 
@@ -168,8 +152,6 @@ describe('PostContext - Integração', () => {
       </PostProvider>
     );
 
-    // PostContext carrega posts automaticamente quando isConnected é true
-    // Mas neste teste específico queremos verificar o estado inicial
     expect(getByTestId('posts-count').props.children).toBe(0);
   });
 
@@ -177,8 +159,6 @@ describe('PostContext - Integração', () => {
     const mockData = getMockData();
     const mockPosts = mockData.posts;
     
-    // Garante que o mock retorna os posts corretos para todas as variações de URL
-    // PostContext usa buildQuery que pode gerar diferentes formatos
     mockApi.mockGet('/post/with-author', createSuccessResponse(mockPosts));
     mockApi.mockGet('/post/with-author?', createSuccessResponse(mockPosts));
     mockApi.mockGet('/post/with-author?page=1', createSuccessResponse(mockPosts));
@@ -191,10 +171,8 @@ describe('PostContext - Integração', () => {
       const [refreshed, setRefreshed] = React.useState(false);
       
       React.useEffect(() => {
-        // Aguarda o carregamento inicial terminar antes de fazer refresh
         if (!loading && !refreshed) {
           setRefreshed(true);
-          // Pequeno delay para garantir que o estado inicial foi processado
           setTimeout(() => {
             refresh();
           }, 50);
@@ -210,8 +188,6 @@ describe('PostContext - Integração', () => {
       </PostProvider>
     );
 
-    // Aguarda os posts serem carregados (PostContext carrega automaticamente no mount)
-    // Primeiro aguarda o carregamento inicial
     await waitFor(() => {
       const count = Number(getByTestId('posts-count').props.children);
       expect(count).toBeGreaterThan(0);
@@ -220,11 +196,9 @@ describe('PostContext - Integração', () => {
 
   it('deve atualizar like quando likePost é chamado', async () => {
     const mockData = getMockData();
-    // Usa o primeiro post do seed e garante que não tem likes inicialmente
     const mockPost = { ...mockData.posts[0], likes: [] };
     const likedPost = { ...mockPost, likes: ['user-1'] };
     
-    // Mocka a rota com query params
     mockApi.mockGet('/post/with-author?page=1&limit=10&orderBy=createdAt&order=desc', createSuccessResponse([mockPost]));
     mockApi.mockGet('/post/with-author', createSuccessResponse([mockPost]));
     mockApi.mockPost(`/post/${mockPost.id}/like`, createSuccessResponse(likedPost));
@@ -234,7 +208,6 @@ describe('PostContext - Integração', () => {
       const [liked, setLiked] = React.useState(false);
       
       React.useEffect(() => {
-        // Aguarda posts carregarem e então aplica like
         if (!loading && posts.length > 0 && !liked) {
           const post = posts.find(p => p.id === mockPost.id);
           if (post && (!post.likes || post.likes.length === 0)) {
@@ -255,13 +228,11 @@ describe('PostContext - Integração', () => {
       </PostProvider>
     );
 
-    // Aguarda os posts serem carregados
     await waitFor(() => {
       const count = Number(getByTestId('likes-count').props.children);
       expect(count).toBe(0);
     }, { timeout: 10000 });
 
-    // Aguarda o like ser aplicado
     await waitFor(() => {
       const count = Number(getByTestId('likes-count').props.children);
       expect(count).toBeGreaterThan(0);

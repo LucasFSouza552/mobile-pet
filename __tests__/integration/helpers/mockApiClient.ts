@@ -1,8 +1,3 @@
-/**
- * Wrapper para mockar respostas da API em testes de integração
- * Simula diferentes cenários: sucesso, erro, timeout, paginação
- */
-
 interface MockResponse {
   data?: any;
   status?: number;
@@ -66,32 +61,25 @@ class MockApiClient {
   }
 
   getResponse(method: string, url: string): MockResponse | Error {
-    // Remove query params para comparação
     const urlWithoutQuery = url.split('?')[0];
     const key = `${method.toUpperCase()}:${url}`;
     const keyWithoutQuery = `${method.toUpperCase()}:${urlWithoutQuery}`;
     
-    // Tenta encontrar exato primeiro (com query params completos)
     if (this.responses.has(key)) {
       return this.responses.get(key)!;
     }
 
-    // Tenta encontrar sem query params
     if (this.responses.has(keyWithoutQuery)) {
       return this.responses.get(keyWithoutQuery)!;
     }
 
-    // Tenta encontrar por substring (para URLs com query params diferentes)
-    // Exemplo: /post/with-author?page=1&limit=10 deve encontrar /post/with-author
     for (const [responseKey, response] of this.responses.entries()) {
       const [responseMethod, responseUrl] = responseKey.split(':');
       if (responseMethod === method.toUpperCase()) {
         const responseUrlWithoutQuery = responseUrl.split('?')[0];
-        // Compara sem query params - se a base da URL for igual, retorna
         if (urlWithoutQuery === responseUrlWithoutQuery) {
           return response;
         }
-        // Também verifica se a URL contém a resposta (para casos mais complexos)
         if (url.includes(responseUrlWithoutQuery) && responseUrlWithoutQuery.length > 0) {
           return response;
         }

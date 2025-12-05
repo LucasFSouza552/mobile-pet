@@ -8,8 +8,6 @@ module.exports = function (api) {
     }],
   ];
   
-  // Tenta adicionar o module-resolver apenas se estiver disponível
-  // O Jest usa moduleNameMapper ao invés do plugin do Babel para resolver paths
   try {
     require.resolve('babel-plugin-module-resolver');
     plugins.push([
@@ -22,8 +20,7 @@ module.exports = function (api) {
       },
     ]);
   } catch (e) {
-    // Se o plugin não estiver disponível, ignora
-    // O Jest usará o moduleNameMapper configurado no jest.config.js
+    console.error('Error resolving module-resolver:', e);
   }
   
   return {

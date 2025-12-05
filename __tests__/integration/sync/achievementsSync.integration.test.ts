@@ -57,8 +57,6 @@ describe('achievementsSync - Integração', () => {
       const accountId = 'account-1';
       const mockAchievements = [createMockAchievement()];
 
-      // A rota real é /account/${accountId}/status e retorna { achievements: [...] }
-      // O achievementsRemoteRepository.getByAccount espera response.data?.achievements || []
       mockApi.mockGet(
         `/account/${accountId}/status`,
         createSuccessResponse({ achievements: mockAchievements })
@@ -66,7 +64,6 @@ describe('achievementsSync - Integração', () => {
 
       await achievementsSync.syncFromServer(accountId);
 
-      // Aguarda um pouco para garantir que a sincronização completou
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const localAchievements = mockDb.getTableData('achievements');
@@ -110,8 +107,6 @@ describe('achievementsSync - Integração', () => {
       const accountId = 'account-1';
       const mockAchievements = [createMockAchievement()];
 
-      // A rota real é /account/${accountId}/status e retorna { achievements: [...] }
-      // O achievementsRemoteRepository.getByAccount espera response.data?.achievements || []
       mockApi.mockGet(
         `/account/${accountId}/status`,
         createSuccessResponse({ achievements: mockAchievements })
@@ -121,10 +116,8 @@ describe('achievementsSync - Integração', () => {
 
       expect(result.length).toBeGreaterThan(0);
       
-      // Aguarda um pouco para garantir que a sincronização completou
       await new Promise(resolve => setTimeout(resolve, 200));
       
-      // Verifica se foi salvo no banco
       const localAchievements = mockDb.getTableData('achievements');
       expect(localAchievements.length).toBeGreaterThan(0);
     });

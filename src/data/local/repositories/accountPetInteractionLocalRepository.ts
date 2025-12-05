@@ -137,9 +137,8 @@ export const accountPetInteractionLocalRepository = {
             try {
                 await accountPetInteractionLocalRepository.create(interaction);
             } catch (error) {
-                // Se já existe, atualiza
                 try {
-                    await accountPetInteractionLocalRepository.update(interaction);
+                    await accountPetInteractionLocalRepository.update(interaction.id, interaction);
                 } catch (updateError) {
                     console.error(`Erro ao inserir/atualizar interação ${interaction.id}:`, updateError);
                 }

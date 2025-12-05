@@ -51,7 +51,6 @@ describe('historySync - Integração', () => {
       const accountId = 'account-1';
       const mockHistory = [createMockHistory({ account: accountId })];
 
-      // A rota real é /history/profile/me (não usa accountId na URL)
       mockApi.mockGet(
         `/history/profile/me`,
         createSuccessResponse(mockHistory)
@@ -105,7 +104,6 @@ describe('historySync - Integração', () => {
       const accountId = 'account-1';
       const mockHistory = [createMockHistory({ account: accountId })];
 
-      // A rota real é /history/profile/me (não usa accountId na URL)
       mockApi.mockGet(
         `/history/profile/me`,
         createSuccessResponse(mockHistory)
@@ -115,7 +113,6 @@ describe('historySync - Integração', () => {
 
       expect(result).toBeDefined();
       
-      // Aguarda sincronização completar
       await new Promise(resolve => setTimeout(resolve, 200));
       
       const localHistory = mockDb.getTableData('history');
