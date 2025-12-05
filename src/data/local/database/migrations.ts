@@ -4,7 +4,7 @@ import createPetsTable from "./migrations/02_CreatePetsTable";
 import createHistoryTable from "./migrations/03_CreateHistoryTable";
 import createAccountPetInteractionsTable from "./migrations/04_CreateAccountPetInteractionsTable";
 import * as SQLite from 'expo-sqlite';
-import { getLocalDb } from "./LocalDb";
+import { getLocalDb, setDatabaseVersion } from "./LocalDb";
 import createPetImagesTable from "./migrations/05_CreatePetImagesTable";
 import addLastSyncedAtToAchievements from "./migrations/06_AddLastSyncedAtToAchievements";
 
@@ -68,6 +68,9 @@ export async function runMigrations() {
       throw error;
     }
   }
+
+  const maxMigrationId = Math.max(...migrations.map(m => m.id), 0);
+  await setDatabaseVersion(maxMigrationId);
 }
 
 export async function resetDatabase() {
