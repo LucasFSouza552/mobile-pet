@@ -32,7 +32,7 @@ export const extractErrorMessage = (error: any): string => {
       case 400:
         return 'Requisição inválida. Verifique os dados enviados.';
       case 401:
-        return 'Não autorizado. Faça login novamente.';
+        return 'Sessão expirada. Faça login novamente.';
       case 403:
         return 'Acesso negado. Você não tem permissão para esta ação.';
       case 404:
@@ -149,5 +149,21 @@ export const safeAsync = async <T>(
     const errorMessage = extractErrorMessage(error);
     return { data: null, error: errorMessage };
   }
+};
+
+export const handleSessionExpired = (error?: any): string => {
+  const message = 'Sessão expirada. Faça login novamente.';
+  
+  showErrorToast({
+    text1: 'Sessão expirada',
+    text2: message,
+    position: 'top',
+  });
+
+  if (__DEV__) {
+    console.error('[Session Expired]', error);
+  }
+
+  return message;
 };
 

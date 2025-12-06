@@ -38,7 +38,7 @@ export default function ResetPassword({ navigation, route }: any) {
     if (tokenParam) {
       setToken(tokenParam);
     } else {
-      toast.error('Token inválido', 'Link de recuperação inválido.');
+      toast.error('Link expirado', 'Link de recuperação inválido.');
       setTimeout(() => {
         navigation.navigate('Login');
       }, 2000);
@@ -69,7 +69,7 @@ export default function ResetPassword({ navigation, route }: any) {
     }
 
     if (!token) {
-      toast.error('Token inválido', 'Link de recuperação inválido.');
+      toast.error('Link inválido', 'Link de recuperação inválido.');
       return;
     }
 
@@ -105,7 +105,7 @@ export default function ResetPassword({ navigation, route }: any) {
         <SafeAreaView style={loginStepStyles.safeArea} edges={['top', 'left', 'right']}>
           <View style={loginStepStyles.content}>
             <View style={loginStepStyles.header}>
-              <Text style={loginStepStyles.headerTitle}>Token inválido</Text>
+              <Text style={loginStepStyles.headerTitle}>Link inválido</Text>
               <Text style={loginStepStyles.headerSubtitle}>
                 O link de recuperação é inválido ou expirou.
               </Text>

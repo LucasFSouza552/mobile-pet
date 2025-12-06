@@ -53,7 +53,7 @@ describe('errorHandler', () => {
           data: {},
         },
       };
-      expect(extractErrorMessage(error)).toBe('Não autorizado. Faça login novamente.');
+      expect(extractErrorMessage(error)).toBe('Sessão expirada. Faça login novamente.');
     });
 
     it('deve retornar mensagem padrão para status 403', () => {

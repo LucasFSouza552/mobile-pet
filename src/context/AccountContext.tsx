@@ -4,6 +4,7 @@ import { accountLocalRepository } from "../data/local/repositories/accountLocalR
 import { accountSync } from "../data/sync/accountSync";
 import { useToast } from "../hooks/useToast";
 import { getStorage } from "../utils/storange";
+import { setLogoutCallback, clearLogoutCallback } from "../data/remote/api/apiClient";
 interface AccountContextProps {
     account: IAccount | null;
     setAccount: (account: IAccount | null) => void;
@@ -19,29 +20,40 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const toast = useToast();
 
+    const logout = async () => {
+        await accountLocalRepository.logout();
+        setAccount(null);
+    }
+
     const loadAccount = async () => {
         try {
             setLoading(true);
 
             const token = await getStorage("@token");
             if (!token) {
-                setAccount(null);
+                await logout();
                 return;
             }
-            
+
             const localAccount = await accountSync.getProfile();
             if (localAccount) {
                 setAccount(localAccount);
             } else {
                 const currentToken = await getStorage("@token");
                 if (!currentToken) {
-                    setAccount(null);
+                    await logout();
                 }
             }
         } catch (error: any) {
+            const status = error?.status;
+            if (status === 401 || status === 403) {
+                await logout();
+                return;
+            }
+
             const token = await getStorage("@token");
             if (!token) {
-                setAccount(null);
+                await logout();
             } else {
                 toast.handleApiError(error, error?.data?.message || 'Erro ao carregar conta');
             }
@@ -55,13 +67,19 @@ export const AccountProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-       refreshAccount()
+        const handleLogout = async () => {
+            await logout();
+        };
+        
+        setLogoutCallback(handleLogout);
+        refreshAccount();
+
+        return () => {
+            clearLogoutCallback();
+        };
     }, []);
 
-    const logout = async () => {
-        await accountLocalRepository.logout();
-        setAccount(null);
-    }
+
 
     return (
         <AccountContext.Provider value={{
