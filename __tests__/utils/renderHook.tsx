@@ -1,7 +1,9 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, waitFor as rnWaitFor } from '@testing-library/react-native';
 import { act as rnAct } from '@testing-library/react-native';
 import { View } from 'react-native';
+
+export { rnWaitFor as waitFor };
 
 export function renderHook<T>(
   hook: () => T,
@@ -40,6 +42,7 @@ export function renderHook<T>(
     },
     unmount,
     act: rnAct,
+    waitFor: rnWaitFor,
   };
 }
 

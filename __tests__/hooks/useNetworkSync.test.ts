@@ -1,4 +1,4 @@
-import { renderHook } from '../utils/renderHook';
+import { renderHook, waitFor } from '../utils/renderHook';
 import { useNetworkSync } from '@/hooks/useNetworkSync';
 import NetInfo from '@react-native-community/netinfo';
 import { useAccount } from '@/context/AccountContext';
@@ -34,103 +34,83 @@ describe('useNetworkSync', () => {
   });
 
   it('deve inicializar com estado de conexão', async () => {
-    const { result, act, unmount } = renderHook(() => useNetworkSync());
+    const { result, waitFor, unmount } = renderHook(() => useNetworkSync());
 
-    try {
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      });
-
+    await waitFor(() => {
       expect(result.current.isConnected).not.toBeNull();
-    } finally {
-      unmount();
-    }
-  });
+    }, { timeout: 3000 });
+
+    unmount();
+  }, 10000);
 
   it('deve retornar isConnected correto', async () => {
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
     
-    const { result, act, unmount } = renderHook(() => useNetworkSync());
+    const { result, waitFor, unmount } = renderHook(() => useNetworkSync());
 
-    try {
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      });
-
+    await waitFor(() => {
       expect(result.current.isConnected).toBe(true);
-    } finally {
-      unmount();
-    }
-  });
+    }, { timeout: 3000 });
+
+    unmount();
+  }, 10000);
 
   it('deve sincronizar quando conectado', async () => {
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
     
-    const { result, act, unmount } = renderHook(() => useNetworkSync());
+    const { result, act, waitFor, unmount } = renderHook(() => useNetworkSync());
 
-    try {
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      });
-
+    await waitFor(() => {
       expect(result.current.isConnected).toBe(true);
+    }, { timeout: 3000 });
 
-      await act(async () => {
-        await result.current.syncNow();
-      });
+    await act(async () => {
+      await result.current.syncNow();
+    });
 
-      expect(accountSync.syncFromServer).toHaveBeenCalled();
-    } finally {
-      unmount();
-    }
-  });
+    expect(accountSync.syncFromServer).toHaveBeenCalled();
+    
+    unmount();
+  }, 10000);
 
   it('deve não sincronizar quando desconectado', async () => {
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: false });
     
-    const { result, act, unmount } = renderHook(() => useNetworkSync());
+    const { result, act, waitFor, unmount } = renderHook(() => useNetworkSync());
 
-    try {
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      });
-
+    await waitFor(() => {
       expect(result.current.isConnected).toBe(false);
+    }, { timeout: 3000 });
 
-      await act(async () => {
-        await result.current.syncNow();
-      });
+    await act(async () => {
+      await result.current.syncNow();
+    });
 
-      expect(accountSync.syncFromServer).not.toHaveBeenCalled();
-    } finally {
-      unmount();
-    }
-  });
+    expect(accountSync.syncFromServer).not.toHaveBeenCalled();
+    
+    unmount();
+  }, 10000);
 
   it('deve sincronizar múltiplos serviços quando account existe', async () => {
     (useAccount as jest.Mock).mockReturnValue({ account: { id: '123' } });
     (NetInfo.fetch as jest.Mock).mockResolvedValue({ isConnected: true });
     
-    const { result, act, unmount } = renderHook(() => useNetworkSync());
+    const { result, act, waitFor, unmount } = renderHook(() => useNetworkSync());
 
-    try {
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100));
-      });
-
+    await waitFor(() => {
       expect(result.current.isConnected).toBe(true);
+    }, { timeout: 3000 });
 
-      await act(async () => {
-        await result.current.syncNow();
-      });
+    await act(async () => {
+      await result.current.syncNow();
+    });
 
-      expect(accountSync.syncFromServer).toHaveBeenCalled();
-      expect(accountPetInteractionSync.syncFromServer).toHaveBeenCalledWith('123');
-      expect(historySync.syncFromServer).toHaveBeenCalledWith('123');
-      expect(achievementsSync.syncFromServer).toHaveBeenCalledWith('123');
-    } finally {
-      unmount();
-    }
-  });
+    expect(accountSync.syncFromServer).toHaveBeenCalled();
+    expect(accountPetInteractionSync.syncFromServer).toHaveBeenCalledWith('123');
+    expect(historySync.syncFromServer).toHaveBeenCalledWith('123');
+    expect(achievementsSync.syncFromServer).toHaveBeenCalledWith('123');
+    
+    unmount();
+  }, 10000);
 });
 
