@@ -6,13 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
-import { petSync } from '../../../data/sync/petSync';
 import { accountSync } from '../../../data/sync/accountSync';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import { petInteractionRemoteRepository } from '../../../data/remote/repositories/petInteractionRemoteRepository';
 import { useToast } from '../../../hooks/useToast';
 import { useAccount } from '../../../context/AccountContext';
 import { accountPetInteractionLocalRepository } from '../../../data/local/repositories/accountPetInteractionLocalRepository';
+import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
+import { petSync } from '../../../data/sync/petSync';
 
 interface PetDetailsProps {
   navigation: any;
@@ -37,7 +38,6 @@ export default function PetDetails(props: PetDetailsProps) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [hasAdoptionWish, setHasAdoptionWish] = useState(false);
   const loadingRef = useRef(false);
-
   const loadData = useCallback(async () => {
     if (!petId || loadingRef.current) {
       if (!petId) {
@@ -50,8 +50,8 @@ export default function PetDetails(props: PetDetailsProps) {
     try {
       loadingRef.current = true;
       setLoading(true);
-
-      const petData = await petSync.getById(petId);
+      await petSync.syncFromServer(petId);
+      const petData = await petRemoteRepository.fetchPetById(petId);
 
       if (!petData) {
         toast.error('Erro', 'Pet não encontrado');
