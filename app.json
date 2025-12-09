@@ -33,7 +33,7 @@
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.lucas552.mobilepet",
+      "package": "com.lucashero552.mobilepet",
       "intentFilters": [
         {
           "action": "VIEW",
@@ -43,21 +43,27 @@
               "scheme": "mobilepet"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": ["expo-sqlite"],
+    "plugins": [
+      "expo-sqlite"
+    ],
     "extra": {
       "eas": {
-        "projectId": "6e73d393-3951-4eb2-8682-b0977c705a0a"
+        "projectId": "5833eab9-af83-40a7-9c1c-0c7c33176860"
       }
     },
     "updates": {
       "fallbackToCacheTimeout": 0
-    }
+    },
+    "owner": "lucashero552"
   }
 }
