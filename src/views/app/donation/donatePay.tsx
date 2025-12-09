@@ -1,18 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../context/ThemeContext';
-import { IAccount } from '../../../models/IAccount';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
-import { useToast } from '../../../hooks/useToast';
 import { FontAwesome } from '@expo/vector-icons';
+import { useDonatePayController } from '../../../controllers/app/useDonatePayController';
 
 interface DonatePayProps {
   navigation: any;
   route: {
     params?: {
-      institution?: IAccount;
+      institution?: any;
       petId?: string;
     };
   };
@@ -21,72 +19,22 @@ interface DonatePayProps {
 export default function DonatePay({ navigation, route }: DonatePayProps) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
-  const toast = useToast();
-
-  const institution = route?.params?.institution;
-
-  const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const formatCurrency = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (!numbers) return '';
-
-    const cents = parseInt(numbers, 10);
-    const reais = (cents / 100).toFixed(2);
-
-    return reais.replace('.', ',');
-  };
-
-  const handleAmountChange = (text: string) => {
-    const formatted = formatCurrency(text);
-    setAmount(formatted);
-  };
-
-  const handleDonate = async () => {
-    if (!amount) {
-      toast.error('Valor inválido', 'Por favor, digite um valor para doação');
-      return;
-    }
-
-    const value = parseFloat(amount.replace(',', '.'));
-    if (isNaN(value) || value < 10) {
-      toast.error('Valor mínimo', 'O valor mínimo para doação é R$10,00');
-      return;
-    }
-
-    try {
-      setLoading(true);
-
-      const amountString = value.toFixed(2);
-      if (institution) {
-        const response = await accountRemoteRepository.sponsorInstitution(institution.id, amountString);
-        if (!response || !response.url) {
-          throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
-        }
-        navigation.navigate('DonationWebView', { url: response.url });
-      } else {
-        const response = await accountRemoteRepository.donate(amountString);
-        if (!response || !response.url) {
-          throw new Error('Resposta inválida do servidor. URL de pagamento não encontrada.');
-        }
-        navigation.navigate('DonationWebView', { url: response.url });
-      }
-
-      setAmount('');
-    } catch (error: any) {
-      toast.error('Erro ao realizar doação', error.data.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  const {
+    institution,
+    amount,
+    loading,
+    handleAmountChange,
+    handleDonate,
+    handleBack,
+  } = useDonatePayController();
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={handleBack}
         >
           <FontAwesome name="chevron-left" size={20} color={COLORS.text} />
         </TouchableOpacity>

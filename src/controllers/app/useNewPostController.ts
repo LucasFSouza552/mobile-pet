@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ExpoCamera from 'expo-camera';
-import { useAccount } from '../../../context/AccountContext';
-import { postRepository } from '../../../data/remote/repositories/postRemoteRepository';
-import { useToast } from '../../../hooks/useToast';
+import { useAccount } from '../../context/AccountContext';
+import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
+import { useToast } from '../../hooks/useToast';
 
 interface ImageFile {
   uri: string;
@@ -135,3 +135,4 @@ export function useNewPostController() {
     closeCamera,
   };
 }
+

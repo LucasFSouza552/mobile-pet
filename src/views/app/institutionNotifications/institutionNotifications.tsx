@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -9,88 +9,27 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { Linking } from "react-native";
-import { useAccount } from "../../../context/AccountContext";
 import { useTheme } from "../../../context/ThemeContext";
-import { notificationRemoteRepository } from "../../../data/remote/repositories/notificationRemoteRepository";
 import { pictureRepository } from "../../../data/remote/repositories/pictureRemoteRepository";
 import { INotification } from "../../../models/INotification";
 import { ThemeColors } from "../../../theme/types";
 import { formatDate } from "../../../utils/date";
-import { useToast } from "../../../hooks/useToast";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useInstitutionNotificationsController } from "../../../controllers/app/useInstitutionNotificationsController";
+
 export default function InstitutionNotifications({ navigation }: any) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
-  const { account, loading } = useAccount();
-  const [notifications, setNotifications] = useState<INotification[]>([]);
-  const [loadingList, setLoadingList] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const toast = useToast();
-  const loadNotifications = useCallback(async () => {
-    setLoadingList(true);
-    try {
-      const list = await notificationRemoteRepository.fetchAll();
-      setNotifications(list);
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || "Não foi possível carregar as notificações.");
-      return;
-    } finally {
-      setLoadingList(false);
-      setRefreshing(false);
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (!loading && account?.role !== "institution") {
-        navigation.goBack();
-        return;
-      }
-      loadNotifications();
-    }, [loading, account?.role, loadNotifications, navigation])
-  );
-
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadNotifications();
-    setRefreshing(false);
-  }, [loadNotifications]);
-
-  const getTypeConfig = (type: string) => {
-    switch (type) {
-      case "warning":
-        return {
-          icon: "exclamation-triangle",
-          label: "Alerta",
-          backgroundColor: "#ef4444",
-          iconColor: COLORS.iconBackground,
-        };
-      case "info":
-        return {
-          icon: "info-circle",
-          label: "Informação",
-          backgroundColor: "#3b82f6",
-          iconColor: COLORS.iconBackground,
-        };
-      case "like":
-        return {
-          icon: "heart",
-          label: "Curtida",
-          backgroundColor: "#ec4899",
-          iconColor: COLORS.iconBackground,
-        };
-      default:
-        return {
-          icon: "bell",
-          label: type.charAt(0).toUpperCase() + type.slice(1),
-          backgroundColor: COLORS.primary,
-          iconColor: COLORS.iconBackground,
-        };
-    }
-  };
+  
+  const {
+    notifications,
+    loadingList,
+    refreshing,
+    handleRefresh,
+    getTypeConfig,
+    handleOpenInMaps,
+  } = useInstitutionNotificationsController(COLORS);
 
   const renderNotification = ({ item }: { item: INotification }) => {
     const sender =
@@ -112,21 +51,6 @@ export default function InstitutionNotifications({ navigation }: any) {
       item.latitude <= 90 &&
       item.longitude >= -180 &&
       item.longitude <= 180;
-
-    const handleOpenInMaps = async () => {
-      if (!hasValidCoordinates) return;
-      const url = `https://www.google.com/maps/search/?api=1&query=${item.latitude},${item.longitude}`;
-      try {
-        const supported = await Linking.canOpenURL(url);
-        if (supported) {
-          await Linking.openURL(url);
-        } else {
-          toast.error("Erro", "Não foi possível abrir o mapa.");
-        }
-      } catch (error) {
-        toast.error("Erro", "Não foi possível abrir o mapa.");
-      }
-    };
 
     return (
       <View style={styles.card}>
@@ -190,7 +114,10 @@ export default function InstitutionNotifications({ navigation }: any) {
             <Text style={styles.mapLabel}>Localização</Text>
           </View>
           {hasValidCoordinates ? (
-            <TouchableOpacity style={styles.mapButton} onPress={handleOpenInMaps}>
+            <TouchableOpacity 
+              style={styles.mapButton} 
+              onPress={() => handleOpenInMaps(item.latitude, item.longitude)}
+            >
               <FontAwesome5 name="directions" size={16} color={COLORS.iconBackground} />
               <View style={{ flex: 1 }}>
                 <Text style={styles.mapButtonTitle}>Abrir no Google Maps</Text>

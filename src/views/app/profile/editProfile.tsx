@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -12,169 +12,41 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAccount } from '../../../context/AccountContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
-import { authRemoteRepository } from '../../../data/remote/repositories/authRemoteRepository';
+import { useAccount } from '../../../context/AccountContext';
 import { FontAwesome, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useToast } from '../../../hooks/useToast';
-import { IAccount } from '../../../models/IAccount';
-import IAddress from '../../../models/IAddress';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
-import { validateName, validatePhone, validatePassword, validatePasswordConfirmation, validateCEP } from '../../../utils/validation';
-import { useEditProfileReducer } from './useEditProfileReducer';
+import { useEditProfileController } from '../../../controllers/app/useEditProfileController';
 
 interface EditProfileProps {
   navigation: any;
 }
 
 export default function EditProfile({ navigation }: EditProfileProps) {
-  const { account, loading: accountLoading, refreshAccount } = useAccount();
+  const { account } = useAccount();
   const { COLORS } = useTheme();
-  const toast = useToast();
 
   const {
-    state,
-    setFormData,
+    formData,
+    address,
+    password,
+    avatarPreview,
+    loading,
+    accountLoading,
+    showPassword,
     updateFormField,
-    setAddress,
     updateAddressField,
     updatePasswordField,
-    setAvatarPreview,
-    setLoading,
     toggleShowPassword,
     handleAvatarChange,
-  } = useEditProfileReducer();
-
-  const { formData, address, password, avatarPreview, avatarFile, loading, showPassword } = state;
-
-  useEffect(() => {
-    if (account) {
-      setFormData({ ...account });
-      setAddress(
-        account.address || {
-          street: '',
-          number: '',
-          complement: '',
-          city: '',
-          cep: '',
-          state: '',
-          neighborhood: '',
-        }
-      );
-      const avatarSource = pictureRepository.getSource(account.avatar);
-      if (typeof avatarSource === 'object' && 'uri' in avatarSource) {
-        setAvatarPreview(avatarSource.uri || null);
-      }
-    }
-  }, [account, setFormData, setAddress, setAvatarPreview]);
-
-  const handleSubmit = async () => {
-    const displayFormData = formData || account;
-    if (!displayFormData) return;
-
-    setLoading(true);
-
-    try {
-      const nameValidation = validateName(displayFormData.name || '');
-      if (!nameValidation.isValid) {
-        toast.error('Validação', nameValidation.error || 'Nome é obrigatório');
-        return;
-      }
-
-      if (displayFormData.phone_number) {
-        const phoneValidation = validatePhone(displayFormData.phone_number);
-        if (!phoneValidation.isValid) {
-          toast.error('Validação', phoneValidation.error || 'Telefone inválido');
-          return;
-        }
-      }
-
-      if (address.cep) {
-        const cepValidation = validateCEP(address.cep);
-        if (!cepValidation.isValid) {
-          toast.error('Validação', cepValidation.error || 'CEP inválido');
-          return;
-        }
-      }
-
-      if (password.new || password.current || password.confirm) {
-        if (!password.current) {
-          toast.error('Senha atual obrigatória', 'Digite sua senha atual para alterar a senha');
-          return;
-        }
-
-        const passwordValidation = validatePassword(password.new, 6);
-        if (!passwordValidation.isValid) {
-          toast.error('Validação', passwordValidation.error || 'Senha inválida');
-          return;
-        }
-
-        const confirmValidation = validatePasswordConfirmation(password.new, password.confirm);
-        if (!confirmValidation.isValid) {
-          toast.error('Validação', confirmValidation.error || 'As senhas não coincidem');
-          return;
-        }
-
-        try {
-          await authRemoteRepository.changePassword(
-            password.current,
-            password.new
-          );
-        } catch (error: any) {
-          toast.handleApiError(error, error?.data?.message || 'Erro ao alterar senha');
-          return;
-        }
-      }
-
-      if (avatarFile) {
-        try {
-          const formDataAvatar = new FormData();
-          formDataAvatar.append('avatar', {
-            uri: avatarFile.uri,
-            type: avatarFile.mimeType || avatarFile.type || 'image/jpeg',
-            name: avatarFile.fileName || `avatar_${Date.now()}.jpg`,
-          } as any);
-
-          await accountRemoteRepository.uploadAvatar(formDataAvatar);
-        } catch (error: any) {
-
-          toast.handleApiError(error, error?.data?.message || 'Erro ao fazer upload da foto');
-          return;
-        }
-      }
-
-      try {
-        const updateData: Partial<IAccount> = {
-          name: displayFormData.name,
-          phone_number: displayFormData.phone_number,
-          address: address,
-        };
-
-        await accountRemoteRepository.updateAccount(updateData as IAccount);
-      } catch (error: any) {
-        toast.handleApiError(error, error?.data?.message || 'Erro ao atualizar dados do perfil');
-        return;
-      }
-
-      await refreshAccount();
-
-      toast.success('Perfil atualizado com sucesso!');
-
-      setTimeout(() => {
-        navigation.goBack();
-      }, 1500);
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Erro ao atualizar perfil');
-    } finally {
-      setLoading(false);
-    }
-  };
+    handleSubmit,
+  } = useEditProfileController();
 
   const styles = makeStyles(COLORS);
+  const displayFormData = formData || account;
 
   if (accountLoading) {
     return (
@@ -198,8 +70,6 @@ export default function EditProfile({ navigation }: EditProfileProps) {
       </SafeAreaView>
     );
   }
-
-  const displayFormData = formData || account;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -258,7 +128,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 style={styles.input}
                 placeholder="Seu nome completo"
                 placeholderTextColor={COLORS.text + '80'}
-                value={displayFormData.name || ''}
+                value={displayFormData?.name || ''}
                 onChangeText={(value) => updateFormField('name', value)}
               />
             </View>
@@ -269,7 +139,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 style={[styles.input, styles.inputDisabled]}
                 placeholder="seu@email.com"
                 placeholderTextColor={COLORS.text + '80'}
-                value={displayFormData.email || ''}
+                value={displayFormData?.email || ''}
                 editable={false}
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -283,7 +153,7 @@ export default function EditProfile({ navigation }: EditProfileProps) {
                 style={styles.input}
                 placeholder="(00) 00000-0000"
                 placeholderTextColor={COLORS.text + '80'}
-                value={displayFormData.phone_number || ''}
+                value={displayFormData?.phone_number || ''}
                 onChangeText={(value) => updateFormField('phone_number', value)}
                 keyboardType="phone-pad"
               />

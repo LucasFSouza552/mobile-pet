@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -14,48 +14,28 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
-import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
-import { useAccount } from '../../context/AccountContext';
-import { accountSync } from '../../data/sync/accountSync';
 import { Images } from '../../../assets';
-import { useToast } from '../../hooks/useToast';
 import { useTheme } from '../../context/ThemeContext';
 import { ThemeColors } from '../../theme/types';
+import { useLoginController } from '../../controllers/auth/useLoginController';
 
 export default function Login({ navigation }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, scale, verticalScale, FONT_SIZE } = useTheme();
   const loginStepStyles = makeStyles(COLORS, scale, verticalScale, FONT_SIZE);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const { refreshAccount } = useAccount();
-  const toast = useToast();
-  const handleLogin = async () => {
-    Keyboard.dismiss();
-    if (!email || !password) {
-      toast.info('Preencha todos os campos.');
-      return;
-    }
-
-    try {
-      const response = await authRemoteRepository.login(email, password);
-      if (!response?.token) {
-        toast.error('Email ou senha inválidos.');
-        throw new Error('Email ou senha inválidos.');
-      }
-      await accountSync.syncFromServer();
-      await refreshAccount();
-      navigation.navigate('Main');
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Email ou senha inválidos.');
-      return;
-    }
-  };
-
-  const handleRegister = () => {
-    navigation.navigate('Register');
-  };
+  
+  const {
+    email,
+    password,
+    showPassword,
+    loading,
+    setEmail,
+    setPassword,
+    toggleShowPassword,
+    handleLogin,
+    handleRegister,
+    handleForgotPassword,
+  } = useLoginController();
   
   return (
     <View style={loginStepStyles.container}>
@@ -108,7 +88,7 @@ export default function Login({ navigation }: any) {
                       />
                       <TouchableOpacity
                         style={loginStepStyles.eyeButton}
-                        onPress={() => setShowPassword(!showPassword)}
+                        onPress={toggleShowPassword}
                       >
                         <FontAwesome
                           name={showPassword ? 'eye' : 'eye-slash'}
@@ -122,7 +102,7 @@ export default function Login({ navigation }: any) {
                     
                   <TouchableOpacity
                     style={loginStepStyles.forgotPasswordLink}
-                    onPress={() => navigation.navigate('ForgotPassword')}
+                    onPress={handleForgotPassword}
                   >
                     <Text style={loginStepStyles.forgotPasswordText}>
                       Esqueci minha senha

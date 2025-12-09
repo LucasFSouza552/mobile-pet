@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useAccount } from '../../../context/AccountContext';
-import { usePost } from '../../../context/PostContext';
+import { useAccount } from '../../context/AccountContext';
+import { usePost } from '../../context/PostContext';
 import { useFocusEffect } from '@react-navigation/native';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
-import { useToast } from '../../../hooks/useToast';
+import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
+import { useToast } from '../../hooks/useToast';
 
 export type ProfileTab = 'posts' | 'pets' | 'adopted' | 'wishlist' | 'history';
 
@@ -94,3 +94,4 @@ export function useProfileController({ route, navigation }: UseProfileController
     handleRefreshPosts,
   };
 }
+

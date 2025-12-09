@@ -13,14 +13,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 
 import { useTheme } from '../../../context/ThemeContext';
-import { useAccount } from '../../../context/AccountContext';
-import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
 import PrimaryButton from '../../../components/Buttons/PrimaryButton';
 import SecondaryButton from '../../../components/Buttons/SecondaryButton';
 import { ThemeColors } from '../../../theme/types';
-import { useToast } from '../../../hooks/useToast';
-import { validateRequired, validateWeight, validateAge } from '../../../utils/validation';
-import { useNewPetReducer } from './useNewPetReducer';
+import { useNewPetController } from '../../../controllers/app/useNewPetController';
 
 const PET_TYPES = ['Cachorro', 'Gato', 'Pássaro', 'Outro'] as const;
 const GENDERS = [
@@ -30,89 +26,26 @@ const GENDERS = [
 
 export default function NewPet({ navigation }: any) {
   const { COLORS } = useTheme();
-  const { account } = useAccount();
   const styles = useMemo(() => makeStyles(COLORS), [COLORS]);
-  const toast = useToast();
   
   const {
-    state,
+    name,
+    description,
+    type,
+    gender,
+    age,
+    weight,
+    image,
+    loading,
     setName,
     setDescription,
     setType,
     setGender,
     setAge,
     setWeight,
-    setLoading,
     pickImage,
-  } = useNewPetReducer();
-
-  const { name, description, type, gender, age, weight, image, loading } = state;
-  const isInstitution = account?.role === 'institution';
-
-  const validate = () => {
-    if (!isInstitution) {
-      toast.error('Somente instituições podem cadastrar pets.');
-      return false;
-    }
-    
-    const nameValidation = validateRequired(name, 'Nome do pet');
-    if (!nameValidation.isValid) {
-      toast.error('Validação', nameValidation.error || 'Informe o nome do pet.');
-      return false;
-    }
-    
-    const weightValidation = validateWeight(weight);
-    if (!weightValidation.isValid) {
-      toast.error('Validação', weightValidation.error || 'Insira um peso válido.');
-      return false;
-    }
-    
-    if (age.trim()) {
-      const ageValidation = validateAge(age, false);
-      if (!ageValidation.isValid) {
-        toast.error('Validação', ageValidation.error || 'Idade inválida.');
-        return false;
-      }
-    }
-    
-    return true;
-  };
-
-  const handleSubmit = async () => {
-    if (!validate()) return;
-
-    const payload: any = {
-      name: name.trim(),
-      description: description.trim(),
-      type,
-      gender,
-      weight: Number(weight.replace(',', '.')),
-    };
-    if (age.trim()) {
-      payload.age = Number(age);
-    }
-
-    setLoading(true);
-    try {
-      const created = await petRemoteRepository.institutionCreatePet(payload);
-      if (created?.id && image) {
-        const formData = new FormData();
-        formData.append('images', {
-          uri: image.uri,
-          name: image.name,
-          type: image.type,
-        } as any);
-        await petRemoteRepository.updateImages(created.id, formData);
-      }
-      toast.success('Pet cadastrado com sucesso!');
-      navigation.goBack();
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Não foi possível cadastrar o pet.');
-      return;
-    } finally {
-      setLoading(false);
-    }
-  };
+    handleSubmit,
+  } = useNewPetController();
 
   return (
     <SafeAreaView style={styles.container}>

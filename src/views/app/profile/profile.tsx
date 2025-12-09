@@ -11,7 +11,7 @@ import InstitutionPetsList from './components/InstitutionPetsList';
 import InstitutionDesiredPetsList from './components/InstitutionDesiredPetsList';
 import UserHistoryList from './components/UserHistoryList';
 import ProfileHeader from './components/ProfileHeader';
-import { useProfileController } from './useProfileController';
+import { useProfileController } from '../../../controllers/app/useProfileController';
 
 const screenWidth = Dimensions.get('window').width;
 

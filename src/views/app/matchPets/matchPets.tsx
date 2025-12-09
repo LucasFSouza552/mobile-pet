@@ -5,7 +5,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import { ThemeColors, ThemeFontSize, ThemeGap, ThemePadding } from '../../../theme/types';
-import { useMatchPetsController } from './useMatchPetsController';
+import { useMatchPetsController } from '../../../controllers/app/useMatchPetsController';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

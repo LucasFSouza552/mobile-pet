@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React from "react";
 import {
   ActivityIndicator,
   Image,
@@ -9,148 +9,30 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import * as Location from "expo-location";
-import * as ExpoCamera from "expo-camera";
-import { useToast } from "../../../hooks/useToast";
-import { useAccount } from "../../../context/AccountContext";
 import { useTheme } from "../../../context/ThemeContext";
 import CameraView from "../../../components/CameraView";
-import {
-  NotificationPayload,
-  notificationRemoteRepository,
-} from "../../../data/remote/repositories/notificationRemoteRepository";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "@react-navigation/native";
+import { useNewNotificationController } from "../../../controllers/app/useNewNotificationController";
 
 export default function NewNotification({ navigation }: any) {
   const { COLORS, FONT_SIZE } = useTheme();
   const styles = makeStyles(COLORS);
-  const { account, loading } = useAccount();
-  const toast = useToast();
-  const [content, setContent] = useState("");
-  const [image, setImage] = useState<NotificationPayload["image"] | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const isFocused = useIsFocused();
-
-  useEffect(() => {
-    if (!loading) {
-      if (!account) {
-        navigation.navigate("Welcome");
-        return;
-      }
-      if (account.role === "institution") {
-        navigation.goBack();
-      }
-    }
-  }, [account, loading, navigation]);
-
-  const fetchLocation = useCallback(async () => {
-    setLocationLoading(true);
-
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        const message = "Permissão negada para obter localização.";
-        toast.info("Permissão necessária", message);
-        throw new Error(message);
-      }
-      const { coords } = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Highest,
-      });
-      const result = {
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-      };
-      setLocation(result);
-      return result;
-    } catch (error: any) {
-      const message =
-        error?.message || "Não foi possível obter a localização.";
-      toast.info("Erro", message);
-      throw new Error(message);
-    } finally {
-      setLocationLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchLocation().catch(() => { });
-  }, [fetchLocation]);
-
-  const openCamera = useCallback(async () => {
-    try {
-      const request =
-        (ExpoCamera as any).requestCameraPermissionsAsync ||
-        (ExpoCamera as any).Camera?.requestCameraPermissionsAsync;
-      const { status } = await (request ? request() : Promise.resolve({ status: 'denied' }));
-      if (status !== 'granted') {
-        toast.info('Permissão necessária', 'Precisamos de acesso à câmera para tirar fotos.');
-        return;
-      }
-      setIsCameraOpen(true);
-    } catch (e) {
-      toast.handleError(e, 'Não foi possível acessar a câmera');
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    if (isFocused) {
-      openCamera();
-    } else {
-      setIsCameraOpen(false);
-    }
-  }, [isFocused, openCamera]);
-
-
-  const handleCameraCapture = useCallback((photo: { uri: string; name: string; type: string }) => {
-    setImage(photo);
-  }, []);
-
-  const handleSubmit = async () => {
-    if (!content.trim()) {
-      toast.error("Validação", "Descreva o motivo da notificação");
-      return;
-    }
-
-    if (!image) {
-      toast.error("Validação", "Anexe uma imagem para a notificação");
-      return;
-    }
-
-    let coords = location;
-    if (!coords) {
-      try {
-        coords = await fetchLocation();
-      } catch {
-        return;
-      }
-    }
-
-    setSubmitting(true);
-
-    try {
-      await notificationRemoteRepository.createNotification({
-        content: content.trim(),
-        type: "warning",
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        image,
-      });
-
-      toast.success("Sucesso", "Notificação enviada");
-      navigation.goBack();
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || "Erro ao criar notificação");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const isBusy = submitting || locationLoading;
+  
+  const {
+    content,
+    image,
+    submitting,
+    locationLoading,
+    isCameraOpen,
+    isBusy,
+    setContent,
+    openCamera,
+    handleCameraCapture,
+    closeCamera,
+    removeImage,
+    handleSubmit,
+  } = useNewNotificationController();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -207,7 +89,7 @@ export default function NewNotification({ navigation }: any) {
                 />
                 <TouchableOpacity
                   style={styles.removeImage}
-                  onPress={() => setImage(null)}
+                  onPress={removeImage}
                   activeOpacity={0.8}
                 >
                   <Ionicons name="close-circle" size={FONT_SIZE.medium} color={COLORS.text} />
@@ -254,7 +136,7 @@ export default function NewNotification({ navigation }: any) {
 
       <CameraView
         visible={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
+        onClose={closeCamera}
         onCapture={handleCameraCapture}
       />
     </SafeAreaView>

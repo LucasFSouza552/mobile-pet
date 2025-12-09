@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -15,84 +15,30 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome, FontAwesome5 } from '@expo/vector-icons';
-import { authRemoteRepository } from '../../data/remote/repositories/authRemoteRepository';
 import { Images } from '../../../assets';
-import { useToast } from '../../hooks/useToast';
 import { useTheme } from '../../context/ThemeContext';
 import { ThemeColors } from '../../theme/types';
+import { useResetPasswordController } from '../../controllers/auth/useResetPasswordController';
 
 export default function ResetPassword({ navigation, route }: any) {
   const { width, height } = useWindowDimensions();
   const { COLORS, scale, verticalScale, FONT_SIZE } = useTheme();
   const loginStepStyles = makeStyles(COLORS, scale, verticalScale, FONT_SIZE);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
-  const toast = useToast();
-
-  useEffect(() => {
-    const tokenParam = route?.params?.token;
-    if (tokenParam) {
-      setToken(tokenParam);
-    } else {
-      toast.error('Link expirado', 'Link de recuperação inválido.');
-      setTimeout(() => {
-        navigation.navigate('Login');
-      }, 2000);
-    }
-  }, [route?.params?.token]);
-
-  const handleResetPassword = async () => {
-    Keyboard.dismiss();
-
-    if (!password.trim()) {
-      toast.info('Por favor, informe sua nova senha.');
-      return;
-    }
-
-    if (password.length < 8) {
-      toast.error('Senha muito curta', 'A senha deve ter no mínimo 8 caracteres.');
-      return;
-    }
-
-    if (!confirmPassword.trim()) {
-      toast.info('Por favor, confirme sua senha.');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.error('Senhas não coincidem', 'As senhas devem ser iguais.');
-      return;
-    }
-
-    if (!token) {
-      toast.error('Link inválido', 'Link de recuperação inválido.');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await authRemoteRepository.resetPassword(token, password);
-      toast.success('Senha redefinida!', 'Sua senha foi alterada com sucesso.');
-      setTimeout(() => {
-        navigation.navigate('Login');
-      }, 1500);
-    } catch (error: any) {
-      toast.handleApiError(
-        error,
-        error?.data?.message || 'Erro ao redefinir senha. O link pode ter expirado.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBackToLogin = () => {
-    navigation.navigate('Login');
-  };
+  
+  const {
+    password,
+    confirmPassword,
+    showPassword,
+    showConfirmPassword,
+    loading,
+    token,
+    setPassword,
+    setConfirmPassword,
+    toggleShowPassword,
+    toggleShowConfirmPassword,
+    handleResetPassword,
+    handleBackToLogin,
+  } = useResetPasswordController();
 
   if (!token) {
     return (
@@ -169,7 +115,7 @@ export default function ResetPassword({ navigation, route }: any) {
                       />
                       <TouchableOpacity
                         style={loginStepStyles.eyeButton}
-                        onPress={() => setShowPassword(!showPassword)}
+                        onPress={toggleShowPassword}
                       >
                         <FontAwesome
                           name={showPassword ? 'eye' : 'eye-slash'}
@@ -195,7 +141,7 @@ export default function ResetPassword({ navigation, route }: any) {
                       />
                       <TouchableOpacity
                         style={loginStepStyles.eyeButton}
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        onPress={toggleShowConfirmPassword}
                       >
                         <FontAwesome
                           name={showConfirmPassword ? 'eye' : 'eye-slash'}

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import CameraView from '../../../components/CameraView';
-import { useNewPostController } from './useNewPostController';
+import { useNewPostController } from '../../../controllers/app/useNewPostController';
 
 export default function NewPost({ navigation }: any) {
   const { COLORS, FONT_SIZE } = useTheme();

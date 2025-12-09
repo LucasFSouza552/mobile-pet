@@ -2,12 +2,12 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent, Animated, ScrollView, Dimensions } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
-import { petRemoteRepository } from '../../../data/remote/repositories/petRemoteRepository';
-import { useToast } from '../../../hooks/useToast';
-import { IPet } from '../../../models/IPet';
-import { IAccount } from '../../../models/IAccount';
-import { ThemePadding } from '../../../theme/types';
+import { accountRemoteRepository } from '../../data/remote/repositories/accountRemoteRepository';
+import { petRemoteRepository } from '../../data/remote/repositories/petRemoteRepository';
+import { useToast } from '../../hooks/useToast';
+import { IPet } from '../../models/IPet';
+import { IAccount } from '../../models/IAccount';
+import { ThemePadding } from '../../theme/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -189,3 +189,4 @@ export function useMatchPetsController({ PADDING }: UseMatchPetsControllerProps)
     handleShowDetails,
   };
 }
+

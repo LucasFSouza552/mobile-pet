@@ -1,83 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../../context/ThemeContext';
-import { accountRemoteRepository } from '../../../data/remote/repositories/accountRemoteRepository';
 import { pictureRepository } from '../../../data/remote/repositories/pictureRemoteRepository';
 import { IAccount } from '../../../models/IAccount';
-import { useToast } from '../../../hooks/useToast';
-import { useIsFocused } from '@react-navigation/native';
+import { useDonateController } from '../../../controllers/app/useDonateController';
 
 export default function Donate({ navigation }: any) {
   const { COLORS } = useTheme();
   const styles = makeStyles(COLORS);
-  const isFocused = useIsFocused();
-  const toast = useToast();
   
-  const [institutions, setInstitutions] = useState<IAccount[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadInstitutions = async () => {
-    try {
-      setLoading(true);
-      let accounts: IAccount[] = [];
-      
-      try {
-        const allAccounts = await accountRemoteRepository.adminFetchAllAccounts();
-        if (Array.isArray(allAccounts)) {
-          accounts = allAccounts;
-        }
-      } catch (adminError) {
-        try {
-          const searchResults = await accountRemoteRepository.searchAccount();
-          if (Array.isArray(searchResults)) {
-            accounts = searchResults;
-          }
-        } catch (searchError) {
-          try {
-            const emptySearch = await accountRemoteRepository.fetchAccountByName('');
-            if (Array.isArray(emptySearch)) {
-              accounts = emptySearch;
-            }
-          } catch {
-            accounts = [];
-          }
-        }
-      }
-      
-      const institutionsList = accounts.filter((acc: IAccount) => acc.role === 'institution');
-      setInstitutions(institutionsList);
-      
-      if (institutionsList.length === 0 && !loading) {
-        toast.info('Nenhuma instituição encontrada', 'Tente atualizar a lista');
-      }
-    } catch (error: any) {
-      toast.handleApiError(error, error?.data?.message || 'Erro ao carregar instituições');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isFocused) {
-      loadInstitutions();
-    }
-  }, [isFocused]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    loadInstitutions();
-  };
-
-  const handleDonate = (institution: IAccount | null) => {
-    navigation?.navigate('DonationPage', { institution: institution || null });
-  };
-
-  const handleDonateToUs = () => {
-    navigation?.navigate('DonationPage', { institution: null });
-  };
+  const {
+    institutions,
+    loading,
+    refreshing,
+    onRefresh,
+    handleDonate,
+    handleDonateToUs,
+  } = useDonateController();
 
   const renderInstitution = ({ item }: { item: IAccount }) => (
     <TouchableOpacity 

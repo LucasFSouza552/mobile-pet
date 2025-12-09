@@ -6,7 +6,7 @@ import TopPostCard from '../../../components/Cards/TopPostCard';
 import { useAccount } from '../../../context/AccountContext';
 import { useTheme } from '../../../context/ThemeContext';
 import { ThemeColors } from '../../../theme/types';
-import { useCommunityController } from './useCommunityController';
+import { useCommunityController } from '../../../controllers/app/useCommunityController';
 
 interface CommunityPageProps {
   navigation: any;

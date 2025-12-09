@@ -1,12 +1,12 @@
 import { useCallback, useReducer, useRef, useMemo } from 'react';
 import { NativeSyntheticEvent, NativeScrollEvent } from 'react-native';
-import { usePost } from '../../../context/PostContext';
-import { useAccount } from '../../../context/AccountContext';
+import { usePost } from '../../context/PostContext';
+import { useAccount } from '../../context/AccountContext';
 import { useFocusEffect } from '@react-navigation/native';
-import { postRepository } from '../../../data/remote/repositories/postRemoteRepository';
-import { IPost } from '../../../models/IPost';
-import { useToast } from '../../../hooks/useToast';
-import { ITypeAccounts } from '../../../models/ITypeAccounts';
+import { postRepository } from '../../data/remote/repositories/postRemoteRepository';
+import { IPost } from '../../models/IPost';
+import { useToast } from '../../hooks/useToast';
+import { ITypeAccounts } from '../../models/ITypeAccounts';
 
 export type RoleFilter = 'all' | ITypeAccounts;
 
